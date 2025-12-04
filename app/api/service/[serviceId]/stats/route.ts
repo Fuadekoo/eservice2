@@ -1,0 +1,134 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getAuthenticatedUser } from "@/lib/api/api-permissions";
+
+/**
+ * GET - Get service statistics (total apply, pending, approved, rejected)
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ serviceId: string }> | { serviceId: string } }
+) {
+  try {
+    // Handle params as Promise or object
+    const resolvedParams = await Promise.resolve(params);
+    const { serviceId } = resolvedParams;
+
+    // Get authenticated user
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get the authenticated user's office ID
+    const userStaff = await prisma.staff.findFirst({
+      where: { userId: authUser.id },
+      select: { officeId: true },
+    });
+
+    if (!userStaff) {
+      return NextResponse.json(
+        { success: false, error: "User office not found" },
+        { status: 403 }
+      );
+    }
+
+    // Verify service exists and belongs to user's office
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+      select: { officeId: true },
+    });
+
+    if (!service) {
+      return NextResponse.json(
+        { success: false, error: "Service not found" },
+        { status: 404 }
+      );
+    }
+
+    if (service.officeId !== userStaff.officeId) {
+      return NextResponse.json(
+        { success: false, error: "Access denied" },
+        { status: 403 }
+      );
+    }
+
+    // Get request statistics
+    const [
+      totalRequests,
+      pendingRequests,
+      approvedRequests,
+      rejectedRequests,
+      totalRequestsForOthers,
+      pendingRequestsForOthers,
+      approvedRequestsForOthers,
+      rejectedRequestsForOthers,
+    ] = await Promise.all([
+      // Regular requests
+      prisma.request.count({
+        where: { serviceId },
+      }),
+      prisma.request.count({
+        where: { serviceId, status: "pending" },
+      }),
+      prisma.request.count({
+        where: { serviceId, status: "approved" },
+      }),
+      prisma.request.count({
+        where: { serviceId, status: "rejected" },
+      }),
+      // Requests for others
+      prisma.requestForOther.count({
+        where: { serviceId },
+      }),
+      prisma.requestForOther.count({
+        where: { serviceId, status: "pending" },
+      }),
+      prisma.requestForOther.count({
+        where: { serviceId, status: "approved" },
+      }),
+      prisma.requestForOther.count({
+        where: { serviceId, status: "rejected" },
+      }),
+    ]);
+
+    // Combine statistics
+    const stats = {
+      totalApply: totalRequests + totalRequestsForOthers,
+      totalPending: pendingRequests + pendingRequestsForOthers,
+      totalApproved: approvedRequests + approvedRequestsForOthers,
+      totalRejected: rejectedRequests + rejectedRequestsForOthers,
+      breakdown: {
+        regular: {
+          total: totalRequests,
+          pending: pendingRequests,
+          approved: approvedRequests,
+          rejected: rejectedRequests,
+        },
+        forOthers: {
+          total: totalRequestsForOthers,
+          pending: pendingRequestsForOthers,
+          approved: approvedRequestsForOthers,
+          rejected: rejectedRequestsForOthers,
+        },
+      },
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error: any) {
+    console.error("❌ Error fetching service statistics:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to fetch service statistics",
+      },
+      { status: 500 }
+    );
+  }
+}
