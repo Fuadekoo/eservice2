@@ -70,7 +70,16 @@ const authConfig = {
         );
         const user = await prisma.user.findFirst({
           where: { username },
-          select: { id: true, role: true, password: true, isActive: true },
+          select: {
+            id: true,
+            role: {
+              select: {
+                name: true,
+              },
+            },
+            password: true,
+            isActive: true,
+          },
         });
         if (!user) throw new CustomError("Invalid Username");
         if (!user.password) throw new CustomError("Password Not Set");
@@ -80,7 +89,7 @@ const authConfig = {
           );
         if (!(await bcryptjs.compare(password, user.password)))
           throw new CustomError("Invalid Password");
-        return { id: user.id, role: user.role };
+        return { id: user.id, role: user.role?.name || "" };
       },
     }),
   ],

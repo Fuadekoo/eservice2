@@ -1,7 +1,7 @@
 import React from "react";
 
 function Page() {
-  return <div>Admin Overview Page</div>;
+  return <div>Staff Overview Page</div>;
 }
 
 export default Page;
