@@ -9,7 +9,7 @@ import {
   UserCog,
   Settings,
   Languages,
-  ImageIcon,
+  Images,
   Info,
 } from "lucide-react";
 import React from "react";
@@ -64,7 +64,7 @@ export default async function Layout({
       {
         key: "gallery",
         url: "configuration/gallery",
-        Icon: <ImageIcon className="size-6" />,
+        Icon: <Images className="size-6" />,
       },
       {
         key: "about",
