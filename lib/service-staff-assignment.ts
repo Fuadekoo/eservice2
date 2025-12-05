@@ -2,7 +2,7 @@
  * Utility functions for service-staff assignment validation
  */
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/db";
 
 /**
  * Check if a staff member can approve/reject requests for a specific service
