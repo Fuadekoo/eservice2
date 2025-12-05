@@ -79,7 +79,9 @@ export function ImageUpload({
     const chunkSize = 1024 * 1024; // 1MB chunks
     const totalChunks = Math.ceil(file.size / chunkSize);
     const ext = file.name.split(".").pop() || "jpg";
-    const filename = `${Date.now()}-${Math.floor(Math.random() * 100000)}.${ext}`;
+    const filename = `${Date.now()}-${Math.floor(
+      Math.random() * 100000
+    )}.${ext}`;
 
     for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
       const start = chunkIndex * chunkSize;
@@ -149,23 +151,19 @@ export function ImageUpload({
       const fileId = `file-${Date.now()}-${index}`;
 
       try {
-        const filename = await uploadFile(
-          file,
-          fileId,
-          (progress) => {
-            setUploadProgress((prev) => {
-              const newMap = new Map(prev);
-              const current = newMap.get(fileId);
-              if (current) {
-                newMap.set(fileId, {
-                  ...current,
-                  progress,
-                });
-              }
-              return newMap;
-            });
-          }
-        );
+        const filename = await uploadFile(file, fileId, (progress) => {
+          setUploadProgress((prev) => {
+            const newMap = new Map(prev);
+            const current = newMap.get(fileId);
+            if (current) {
+              newMap.set(fileId, {
+                ...current,
+                progress,
+              });
+            }
+            return newMap;
+          });
+        });
 
         // Mark as completed
         setUploadProgress((prev) => {
@@ -258,7 +256,7 @@ export function ImageUpload({
             <Button
               type="button"
               variant="destructive"
-              size="icon-sm"
+              size="icon"
               className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={() => handleRemove(preview.filename)}
             >
@@ -373,4 +371,3 @@ export function ImageUpload({
     </div>
   );
 }
-

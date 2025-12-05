@@ -66,7 +66,7 @@ export function GalleryCard({ gallery, onEdit, onDelete }: GalleryCardProps) {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                size="icon-sm"
+                size="icon"
                 onClick={() => setIsViewOpen(true)}
                 title="View Gallery"
               >
@@ -74,7 +74,7 @@ export function GalleryCard({ gallery, onEdit, onDelete }: GalleryCardProps) {
               </Button>
               <Button
                 variant="outline"
-                size="icon-sm"
+                size="icon"
                 onClick={() => onEdit(gallery)}
                 title="Edit Gallery"
               >
@@ -82,7 +82,7 @@ export function GalleryCard({ gallery, onEdit, onDelete }: GalleryCardProps) {
               </Button>
               <Button
                 variant="destructive"
-                size="icon-sm"
+                size="icon"
                 onClick={() => onDelete(gallery)}
                 title="Delete Gallery"
               >

@@ -157,7 +157,7 @@ export function SingleImageUpload({
             <Button
               type="button"
               variant="destructive"
-              size="icon-sm"
+              size="icon"
               className="absolute top-2 right-2"
               onClick={handleRemove}
             >

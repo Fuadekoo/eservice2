@@ -112,7 +112,7 @@ export function OfficeCard({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 className="shrink-0 h-8 w-8"
               >
                 <MoreVertical className="w-4 h-4" />

@@ -113,7 +113,7 @@ export function LogoUpload({ value, onChange, error }: LogoUploadProps) {
             <Button
               type="button"
               variant="destructive"
-              size="icon-sm"
+              size="icon"
               className="absolute top-1 right-1"
               onClick={handleRemove}
             >

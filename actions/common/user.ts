@@ -15,11 +15,10 @@ export async function getUser() {
     where: { id: session?.user?.id },
     select: {
       username: true,
-      phone: true,
-      isAdmin: true,
+      phoneNumber: true,
       isActive: true,
       role: true,
-    },
+    },  
   });
 
   return data;
@@ -42,5 +41,5 @@ export async function updateProfile({
   const session = await auth();
   if (!session?.user?.id) throw new Error("unauthenticated");
   const id = session?.user?.id;
-  await prisma.user.update({ where: { id }, data: { username, phone } });
+  await prisma.user.update({ where: { id }, data: { username, phoneNumber: phone } });
 }
