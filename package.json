@@ -44,6 +44,7 @@
     "embla-carousel-react": "^8.6.0",
     "ethiopic-date": "^1.0.4",
     "html2canvas": "^1.4.1",
+    "input-otp": "^1.4.2",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "ldrs": "^1.1.7",
