@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/api/api-permissions";
+import prisma from "@/lib/db";
+import { auth } from "@/auth";
 
 /**
  * GET - Get service statistics (total apply, pending, approved, rejected)
@@ -14,9 +14,9 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const { serviceId } = resolvedParams;
 
-    // Get authenticated user
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -25,7 +25,7 @@ export async function GET(
 
     // Get the authenticated user's office ID
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: authUser.id },
+      where: { userId: session.user.id },
       select: { officeId: true },
     });
 

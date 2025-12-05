@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, executeWithRetry } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/api/api-permissions";
+import prisma from "@/lib/db";
+import { auth } from "@/auth";
 import { randomUUID } from "crypto";
 
 // GET - Fetch all services with office information (with pagination and search)
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user's office
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Get the authenticated user's office ID from staff relation
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: authUser.id },
+      where: { userId: session.user.id },
       select: { officeId: true },
     });
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       search,
       page,
       pageSize,
-      userId: authUser.id,
+      userId: session.user.id,
     });
 
     // Build where clause - always filter by authenticated user's office
@@ -83,61 +83,53 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count for pagination
-    const total = await executeWithRetry(
-      () => prisma.service.count({ where }),
-      1,
-      5000
-    );
+    const total = await prisma.service.count({ where });
 
     // Fetch services with pagination
-    const services = await executeWithRetry(
-      () =>
-        prisma.service.findMany({
-          where,
+    const services = await prisma.service.findMany({
+      where,
+      include: {
+        office: {
+          select: {
+            id: true,
+            name: true,
+            roomNumber: true,
+            address: true,
+            status: true,
+          },
+        },
+        staffAssignments: {
           include: {
-            office: {
-              select: {
-                id: true,
-                name: true,
-                roomNumber: true,
-                address: true,
-                status: true,
-              },
-            },
-            staffAssignments: {
+            staff: {
               include: {
-                staff: {
-                  include: {
-                    user: {
-                      select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                      },
-                    },
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                    phoneNumber: true,
                   },
                 },
               },
             },
           },
-          orderBy: {
-            name: "asc",
-          },
-          skip,
-          take: pageSize,
-        }),
-      1,
-      10000
-    );
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+      skip,
+      take: pageSize,
+    });
 
     // Format response to include staff assignments
-    const formattedServices = services.map((service) => ({
+    const formattedServices = services.map((service: any) => ({
       ...service,
-      assignedStaff: service.staffAssignments.map((assignment) => ({
+      assignedStaff: service.staffAssignments.map((assignment: any) => ({
         id: assignment.staff.id,
         userId: assignment.staff.userId,
-        name: assignment.staff.user.name,
-        email: assignment.staff.user.email,
+        name: assignment.staff.user.username, // Use username as name
+        email: null, // User model doesn't have email
+        phoneNumber: assignment.staff.user.phoneNumber,
       })),
       staffAssignments: undefined, // Remove raw assignments from response
     }));
@@ -171,22 +163,32 @@ export async function GET(request: NextRequest) {
 // POST - Create a new service
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    // Get user with role from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin or manager
-    const isAdmin =
-      user.role?.name?.toLowerCase() === "admin" ||
-      user.role?.name?.toLowerCase() === "administrator";
-    const isManager =
-      user.role?.name?.toLowerCase() === "manager" ||
-      user.role?.name?.toLowerCase() === "office_manager";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
 
     if (!isAdmin && !isManager) {
       return NextResponse.json(
@@ -227,7 +229,7 @@ export async function POST(request: NextRequest) {
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
 
       if (!managerStaff || managerStaff.officeId !== officeId) {
@@ -242,31 +244,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Create service
-    const service = await executeWithRetry(
-      () =>
-        prisma.service.create({
-          data: {
-            id: randomUUID(),
-            name,
-            description,
-            timeToTake,
-            officeId,
+    const service = await prisma.service.create({
+      data: {
+        id: randomUUID(),
+        name,
+        description,
+        timeToTake,
+        officeId,
+      },
+      include: {
+        office: {
+          select: {
+            id: true,
+            name: true,
+            roomNumber: true,
+            address: true,
+            status: true,
           },
-          include: {
-            office: {
-              select: {
-                id: true,
-                name: true,
-                roomNumber: true,
-                address: true,
-                status: true,
-              },
-            },
-          },
-        }),
-      1,
-      10000
-    );
+        },
+      },
+    });
 
     console.log(`✅ Created service: ${service.id}`);
 

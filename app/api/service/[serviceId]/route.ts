@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, executeWithRetry } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/api/api-permissions";
+import prisma from "@/lib/db";
+import { auth } from "@/auth";
 
 /**
  * GET - Get a single service by ID
@@ -10,9 +10,9 @@ export async function GET(
   { params }: { params: Promise<{ serviceId: string }> | { serviceId: string } }
 ) {
   try {
-    // Get authenticated user
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -21,7 +21,7 @@ export async function GET(
 
     // Get the authenticated user's office ID
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: authUser.id },
+      where: { userId: session.user.id },
       select: { officeId: true },
     });
 
@@ -55,8 +55,7 @@ export async function GET(
                 user: {
                   select: {
                     id: true,
-                    name: true,
-                    email: true,
+                    username: true,
                     phoneNumber: true,
                   },
                 },
@@ -110,11 +109,11 @@ export async function GET(
       success: true,
       data: {
         ...service,
-        assignedStaff: service.staffAssignments.map((assignment) => ({
+        assignedStaff: service.staffAssignments.map((assignment: any) => ({
           id: assignment.staff.id,
           userId: assignment.staff.userId,
-          name: assignment.staff.user.name,
-          email: assignment.staff.user.email,
+          name: assignment.staff.user.username, // Use username as name
+          email: null, // User model doesn't have email
           phoneNumber: assignment.staff.user.phoneNumber,
         })),
         requirements: service.requirements,
@@ -146,22 +145,32 @@ export async function PATCH(
     const resolvedParams = await Promise.resolve(params);
     const { serviceId } = resolvedParams;
 
-    // Get authenticated user
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    // Get user with role from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin or manager
-    const isAdmin =
-      user.role?.name?.toLowerCase() === "admin" ||
-      user.role?.name?.toLowerCase() === "administrator";
-    const isManager =
-      user.role?.name?.toLowerCase() === "manager" ||
-      user.role?.name?.toLowerCase() === "office_manager";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
 
     if (!isAdmin && !isManager) {
       return NextResponse.json(
@@ -192,7 +201,7 @@ export async function PATCH(
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
 
       if (!managerStaff || managerStaff.officeId !== existingService.officeId) {
@@ -224,26 +233,21 @@ export async function PATCH(
     if (timeToTake !== undefined) updateData.timeToTake = timeToTake;
     if (officeId !== undefined && isAdmin) updateData.officeId = officeId;
 
-    const service = await executeWithRetry(
-      () =>
-        prisma.service.update({
-          where: { id: serviceId },
-          data: updateData,
-          include: {
-            office: {
-              select: {
-                id: true,
-                name: true,
-                roomNumber: true,
-                address: true,
-                status: true,
-              },
-            },
+    const service = await prisma.service.update({
+      where: { id: serviceId },
+      data: updateData,
+      include: {
+        office: {
+          select: {
+            id: true,
+            name: true,
+            roomNumber: true,
+            address: true,
+            status: true,
           },
-        }),
-      1,
-      10000
-    );
+        },
+      },
+    });
 
     console.log(`✅ Updated service: ${service.id}`);
 
@@ -253,6 +257,12 @@ export async function PATCH(
     });
   } catch (error: any) {
     console.error("❌ Error updating service:", error);
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { success: false, error: "Service not found" },
+        { status: 404 }
+      );
+    }
     return NextResponse.json(
       {
         success: false,
@@ -275,22 +285,32 @@ export async function DELETE(
     const resolvedParams = await Promise.resolve(params);
     const { serviceId } = resolvedParams;
 
-    // Get authenticated user
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    // Get user with role from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin or manager
-    const isAdmin =
-      user.role?.name?.toLowerCase() === "admin" ||
-      user.role?.name?.toLowerCase() === "administrator";
-    const isManager =
-      user.role?.name?.toLowerCase() === "manager" ||
-      user.role?.name?.toLowerCase() === "office_manager";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
 
     if (!isAdmin && !isManager) {
       return NextResponse.json(
@@ -318,7 +338,7 @@ export async function DELETE(
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
 
       if (!managerStaff || managerStaff.officeId !== existingService.officeId) {
@@ -333,11 +353,7 @@ export async function DELETE(
     }
 
     // Delete service (cascade will delete assignments)
-    await executeWithRetry(
-      () => prisma.service.delete({ where: { id: serviceId } }),
-      1,
-      10000
-    );
+    await prisma.service.delete({ where: { id: serviceId } });
 
     console.log(`✅ Deleted service: ${serviceId}`);
 
@@ -357,6 +373,13 @@ export async function DELETE(
             "Cannot delete service. It has associated requests. Please remove all requests first.",
         },
         { status: 400 }
+      );
+    }
+
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { success: false, error: "Service not found" },
+        { status: 404 }
       );
     }
 

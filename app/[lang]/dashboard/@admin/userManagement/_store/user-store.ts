@@ -54,7 +54,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       set({ isLoading: true });
       console.log("🔄 Fetching users...");
 
-      const response = await fetch("/api/user", {
+      const response = await fetch("/api/allUser", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -207,7 +207,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       set({ isSubmitting: true });
       console.log("📤 Creating user:", { ...data, password: "***" });
 
-      const response = await fetch("/api/user", {
+      const response = await fetch("/api/allUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -252,7 +252,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       set({ isSubmitting: true });
       console.log(`📤 Updating user ${id}:`, { ...data, password: data.password ? "***" : undefined });
 
-      const response = await fetch(`/api/user/${id}`, {
+      const response = await fetch(`/api/allUser/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -297,7 +297,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       set({ isSubmitting: true });
       console.log("🗑️ Deleting user:", id);
 
-      const response = await fetch(`/api/user/${id}`, {
+      const response = await fetch(`/api/allUser/${id}`, {
         method: "DELETE",
       });
 

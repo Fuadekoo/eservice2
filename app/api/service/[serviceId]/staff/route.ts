@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/api/api-permissions";
+import prisma from "@/lib/db";
+import { auth } from "@/auth";
 import { randomUUID } from "crypto";
 
 /**
@@ -15,9 +15,9 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const { serviceId } = resolvedParams;
 
-    // Get authenticated user
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -36,8 +36,7 @@ export async function GET(
                 user: {
                   select: {
                     id: true,
-                    name: true,
-                    email: true,
+                    username: true,
                     phoneNumber: true,
                   },
                 },
@@ -64,11 +63,11 @@ export async function GET(
           description: service.description,
           officeId: service.officeId,
         },
-        assignedStaff: service.staffAssignments.map((assignment) => ({
+        assignedStaff: service.staffAssignments.map((assignment: any) => ({
           id: assignment.staff.id,
           userId: assignment.staff.userId,
-          userName: assignment.staff.user.name,
-          userEmail: assignment.staff.user.email,
+          userName: assignment.staff.user.username, // Use username as name
+          userEmail: null, // User model doesn't have email
           userPhone: assignment.staff.user.phoneNumber,
           officeId: assignment.staff.officeId,
           assignedAt: assignment.createdAt,
@@ -102,22 +101,32 @@ export async function POST(
     const body = await request.json();
     const { staffIds } = body;
 
-    // Get authenticated user
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    // Get user with role from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin or manager
-    const isAdmin =
-      user.role?.name?.toLowerCase() === "admin" ||
-      user.role?.name?.toLowerCase() === "administrator";
-    const isManager =
-      user.role?.name?.toLowerCase() === "manager" ||
-      user.role?.name?.toLowerCase() === "office_manager";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
 
     if (!isAdmin && !isManager) {
       return NextResponse.json(
@@ -153,7 +162,7 @@ export async function POST(
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
 
       if (!managerStaff || managerStaff.officeId !== service.officeId) {
@@ -213,8 +222,7 @@ export async function POST(
                 user: {
                   select: {
                     id: true,
-                    name: true,
-                    email: true,
+                    username: true,
                   },
                 },
               },
@@ -229,10 +237,10 @@ export async function POST(
       message: `Successfully assigned service to ${assignments.length} staff member(s)`,
       data: {
         serviceId,
-        assignments: assignments.map((a) => ({
+        assignments: assignments.map((a: any) => ({
           id: a.id,
           staffId: a.staffId,
-          staffName: a.staff.user.name,
+          staffName: a.staff.user.username, // Use username as name
         })),
       },
     });
@@ -263,22 +271,32 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const staffId = searchParams.get("staffId");
 
-    // Get authenticated user
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    // Get user with role from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
     // Check if user is admin or manager
-    const isAdmin =
-      user.role?.name?.toLowerCase() === "admin" ||
-      user.role?.name?.toLowerCase() === "administrator";
-    const isManager =
-      user.role?.name?.toLowerCase() === "manager" ||
-      user.role?.name?.toLowerCase() === "office_manager";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
 
     if (!isAdmin && !isManager) {
       return NextResponse.json(
@@ -315,7 +333,7 @@ export async function DELETE(
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: user.id },
+        where: { userId: session.user.id },
       });
 
       if (!managerStaff || managerStaff.officeId !== service.officeId) {

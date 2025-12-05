@@ -1,26 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, executeWithRetry } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/api/api-permissions";
+import prisma from "@/lib/db";
+import { auth } from "@/auth";
+import { randomUUID } from "crypto";
 
 // POST - Create a custom role for an office
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    // Get user with role from database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
     // Check if user is manager
-    const isManager =
-      authUser.role?.name?.toLowerCase() === "manager" ||
-      authUser.role?.name?.toLowerCase() === "office_manager";
-    const isAdmin =
-      authUser.role?.name?.toLowerCase() === "admin" ||
-      authUser.role?.name?.toLowerCase() === "administrator";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isManager = roleName === "manager" || roleName === "office_manager";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
 
     const body = await request.json();
     const { name, officeId, permissionIds } = body;
@@ -40,11 +51,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate office exists
-    const office = await executeWithRetry(
-      () => prisma.office.findUnique({ where: { id: officeId } }),
-      2,
-      10000
-    );
+    const office = await prisma.office.findUnique({
+      where: { id: officeId },
+    });
 
     if (!office) {
       return NextResponse.json(
@@ -67,7 +76,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "Manager and Admin roles can only be created by administrators",
+            error:
+              "Manager and Admin roles can only be created by administrators",
           },
           { status: 403 }
         );
@@ -78,7 +88,7 @@ export async function POST(request: NextRequest) {
     if (isManager && !isAdmin) {
       // Get manager's office ID
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: authUser.id },
+        where: { userId: session.user.id },
         select: { officeId: true },
       });
 
@@ -105,17 +115,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if role with same name already exists for this office
-    const existingRole = await executeWithRetry(
-      () =>
-        prisma.role.findFirst({
-          where: {
-            name: roleNameUpper,
-            officeId: officeId,
-          },
-        }),
-      2,
-      10000
-    );
+    const existingRole = await prisma.role.findFirst({
+      where: {
+        name: roleNameUpper,
+        officeId: officeId,
+      },
+    });
 
     if (existingRole) {
       return NextResponse.json(
@@ -128,84 +133,75 @@ export async function POST(request: NextRequest) {
     }
 
     // Create role with permissions in a transaction
-    const role = await executeWithRetry(
-      async () => {
-        return await prisma.$transaction(async (tx) => {
-          // Create the role
-          const newRole = await tx.role.create({
-            data: {
-              name: roleNameUpper,
-              officeId: officeId,
-            },
-          });
+    const role = await prisma.$transaction(async (tx) => {
+      // Create the role
+      const newRole = await tx.role.create({
+        data: {
+          id: randomUUID(),
+          name: roleNameUpper,
+          officeId: officeId,
+        },
+      });
 
-          // Add permissions if provided
-          if (
-            permissionIds &&
-            Array.isArray(permissionIds) &&
-            permissionIds.length > 0
-          ) {
-            // Validate all permissions exist
-            const permissions = await tx.permission.findMany({
-              where: {
-                id: { in: permissionIds },
-              },
-            });
-
-            if (permissions.length !== permissionIds.length) {
-              throw new Error("One or more permissions not found");
-            }
-
-            // Create role-permission relationships
-            await tx.rolePermission.createMany({
-              data: permissionIds.map((permissionId: string) => ({
-                roleId: newRole.id,
-                permissionId,
-              })),
-            });
-          }
-
-          return newRole;
+      // Add permissions if provided
+      if (
+        permissionIds &&
+        Array.isArray(permissionIds) &&
+        permissionIds.length > 0
+      ) {
+        // Validate all permissions exist
+        const permissions = await tx.permission.findMany({
+          where: {
+            id: { in: permissionIds },
+          },
         });
-      },
-      2,
-      10000
-    );
+
+        if (permissions.length !== permissionIds.length) {
+          throw new Error("One or more permissions not found");
+        }
+
+        // Create role-permission relationships
+        await tx.rolePermission.createMany({
+          data: permissionIds.map((permissionId: string) => ({
+            id: randomUUID(),
+            roleId: newRole.id,
+            permissionId,
+          })),
+        });
+      }
+
+      return newRole;
+    });
 
     console.log(`✅ Successfully created custom role: ${role.id}`);
 
     // Fetch the created role with all relations
-    const createdRole = await executeWithRetry(
-      () =>
-        prisma.role.findUnique({
-          where: { id: role.id },
+    const createdRole = await prisma.role.findUnique({
+      where: { id: role.id },
+      include: {
+        office: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        rolePermissions: {
           include: {
-            office: {
+            permission: {
               select: {
                 id: true,
                 name: true,
               },
             },
-            rolePermissions: {
-              include: {
-                permission: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-            users: {
-              select: {
-                id: true,
-              },
-            },
           },
-        }),
-      2,
-      10000
-    );
+        },
+        users: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
 
     if (!createdRole) {
       throw new Error("Failed to fetch created role");
@@ -219,7 +215,7 @@ export async function POST(request: NextRequest) {
       office: createdRole.office,
       createdAt: createdRole.createdAt.toISOString(),
       updatedAt: createdRole.updatedAt.toISOString(),
-      permissions: createdRole.rolePermissions.map((rp) => ({
+      permissions: createdRole.rolePermissions.map((rp: any) => ({
         id: rp.permission.id,
         name: rp.permission.name,
       })),
@@ -245,9 +241,9 @@ export async function POST(request: NextRequest) {
 // GET - Get all permissions (for the custom role form)
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -255,18 +251,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all permissions
-    const permissions = await executeWithRetry(
-      () =>
-        prisma.permission.findMany({
-          orderBy: { name: "asc" },
-          select: {
-            id: true,
-            name: true,
-          },
-        }),
-      1,
-      5000
-    );
+    const permissions = await prisma.permission.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -283,4 +274,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

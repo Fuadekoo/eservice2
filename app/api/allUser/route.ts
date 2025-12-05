@@ -1,165 +1,135 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, executeWithRetry } from "@/lib/prisma";
-import { userSchema } from "@/app/[domain]/manager/userManagement/_schema";
+import prisma from "@/lib/db";
+import { auth } from "@/auth";
+import { userSchema } from "@/app/[lang]/dashboard/@admin/userManagement/_schema";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
-import { hash } from "bcryptjs";
+import bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
-import { getAuthenticatedUser } from "@/lib/api/api-permissions";
 
-// GET - Fetch all users with their roles and offices (with pagination and office filtering)
+// GET - Fetch all users with their roles and offices (admin only, with pagination and search)
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate and authorize user (admin only)
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Get the authenticated user's office ID from staff relation
-    const userStaff = await prisma.staff.findFirst({
-      where: { userId: authUser.id },
-      select: { officeId: true },
+    // Check if user is admin
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
     });
 
-    if (!userStaff) {
+    if (!dbUser) {
       return NextResponse.json(
-        { success: false, error: "User office not found" },
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
+    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden - Admin access required" },
         { status: 403 }
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const requestedOfficeId = searchParams.get("officeId");
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
     const skip = (page - 1) * pageSize;
 
-    // Always use the authenticated user's office ID (ignore requested officeId for security)
-    const officeId = userStaff.officeId;
-
     console.log("📥 Fetching users from database...", {
-      officeId,
-      requestedOfficeId,
-      search,
+      search: search || "none",
       page,
       pageSize,
-      userId: authUser.id,
     });
 
-    // Build where clause - always filter by authenticated user's office
-    const where: any = {
-      staffs: {
-        some: {
-          officeId: officeId,
-        },
-      },
-    };
+    // Build where clause
+    const where: any = {};
 
-    // Add fuzzy search if provided (combine with office filter)
+    // Add search if provided
     if (search && search.trim()) {
       const searchTerm = search.trim();
-      where.AND = [
+      where.OR = [
+        { username: { contains: searchTerm, mode: "insensitive" } },
+        { phoneNumber: { contains: searchTerm, mode: "insensitive" } },
+        {
+          role: {
+            name: { contains: searchTerm, mode: "insensitive" },
+          },
+        },
         {
           staffs: {
             some: {
-              officeId: officeId,
-            },
-          },
-        },
-        {
-          OR: [
-            { name: { contains: searchTerm, mode: "insensitive" } },
-            { phoneNumber: { contains: searchTerm, mode: "insensitive" } },
-            { username: { contains: searchTerm, mode: "insensitive" } },
-            {
-              role: {
+              office: {
                 name: { contains: searchTerm, mode: "insensitive" },
               },
             },
-            {
-              staffs: {
-                some: {
-                  office: {
-                    name: { contains: searchTerm, mode: "insensitive" },
-                  },
-                },
-              },
-            },
-          ],
+          },
         },
       ];
-      // Remove the top-level staffs filter since it's now in AND
-      delete where.staffs;
     }
 
     // Get total count for pagination
-    const total = await executeWithRetry(
-      () => prisma.user.count({ where }),
-      1,
-      5000
-    );
+    const total = await prisma.user.count({ where });
 
     // Fetch users with pagination
-    const users = await executeWithRetry(
-      () =>
-        prisma.user.findMany({
-          where,
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        role: {
           include: {
-            role: {
-              include: {
-                office: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+            office: {
+              select: {
+                id: true,
+                name: true,
               },
-            },
-            staffs: {
-              include: {
-                office: {
-                  select: {
-                    id: true,
-                    name: true,
-                    address: true,
-                    phoneNumber: true,
-                  },
-                },
-              },
-              take: 1, // Get the first staff assignment if any
             },
           },
-          orderBy: { createdAt: "desc" },
-          skip,
-          take: pageSize,
-        }),
-      2,
-      10000
-    );
+        },
+        staffs: {
+          include: {
+            office: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+                phoneNumber: true,
+              },
+            },
+          },
+          take: 1, // Get the first staff assignment if any
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: pageSize,
+    });
 
     console.log(
-      `✅ Successfully fetched ${
-        users.length
-      } users (page ${page} of ${Math.ceil(total / pageSize)})`
+      `✅ Successfully fetched ${users.length} users (page ${page} of ${Math.ceil(total / pageSize)})`
     );
 
-    // Transform users to include office from staff relation
-    const transformedUsers = (users || []).map((user) => {
+    // Transform users to match frontend expectations
+    const transformedUsers = users.map((user) => {
       const staff = user.staffs?.[0];
       return {
         id: user.id,
-        name: user.name,
-        email: user.email,
+        name: user.username, // Use username as name since schema doesn't have name field
+        email: null, // Schema doesn't have email field
         phoneNumber: user.phoneNumber,
-        phoneNumberVerified: user.phoneNumberVerified,
-        emailVerified: user.emailVerified,
-        image: user.image,
+        phoneNumberVerified: user.phoneVerified,
+        emailVerified: false, // Schema doesn't have emailVerified field
+        image: null, // Schema doesn't have image field
         username: user.username,
-        displayUsername: user.displayUsername,
+        displayUsername: user.username, // Use username as displayUsername
         roleId: user.roleId,
         role: user.role
           ? {
@@ -198,25 +168,38 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new user
+// POST - Create a new user (admin only)
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const authUser = await getAuthenticatedUser(request);
-    if (!authUser) {
+    // Authenticate and authorize user (admin only)
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Check if user is manager
-    const isManager =
-      authUser.role?.name?.toLowerCase() === "manager" ||
-      authUser.role?.name?.toLowerCase() === "office_manager";
-    const isAdmin =
-      authUser.role?.name?.toLowerCase() === "admin" ||
-      authUser.role?.name?.toLowerCase() === "administrator";
+    // Check if user is admin
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
+    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden - Admin access required" },
+        { status: 403 }
+      );
+    }
 
     const body = await request.json();
     console.log("📤 Creating user:", { ...body, password: "***" });
@@ -237,169 +220,95 @@ export async function POST(request: NextRequest) {
 
     const data = validationResult.data;
 
-    // Check if trying to assign manager role (only admins can do this)
-    if (data.roleId) {
-      const role = await prisma.role.findUnique({
-        where: { id: data.roleId },
-        select: { name: true },
-      });
-
-      if (role) {
-        const roleName = role.name.toUpperCase();
-        if (
-          roleName === "MANAGER" ||
-          roleName === "OFFICE_MANAGER" ||
-          roleName === "OFFICEMANAGER" ||
-          roleName === "OFFICE MANAGER"
-        ) {
-          // Managers cannot assign manager roles
-          if (isManager && !isAdmin) {
-            return NextResponse.json(
-              {
-                success: false,
-                error: "Manager roles can only be assigned by administrators",
-              },
-              { status: 403 }
-            );
-          }
-        }
-      }
-    }
-
     // Normalize phone number
     const normalizedPhone = normalizePhoneNumber(data.phoneNumber);
 
+    // Generate username if not provided (use name or phone number)
+    const username =
+      data.username && data.username.trim() !== ""
+        ? data.username.trim()
+        : data.name
+        ? data.name.toLowerCase().replace(/\s+/g, "_") +
+          "_" +
+          normalizedPhone.replace(/[^0-9]/g, "").slice(-4)
+        : "user_" + normalizedPhone.replace(/[^0-9]/g, "").slice(-8);
+
     // Check if user already exists
-    const existingUser = await executeWithRetry(
-      () =>
-        prisma.user.findFirst({
-          where: {
-            OR: [
-              { phoneNumber: normalizedPhone },
-              ...(data.email && data.email.trim() !== ""
-                ? [{ email: data.email }]
-                : []),
-              ...(data.username && data.username.trim() !== ""
-                ? [{ username: data.username }]
-                : []),
-            ],
-          },
-        }),
-      2,
-      10000
-    );
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phoneNumber: normalizedPhone },
+          { username: username },
+        ],
+      },
+    });
 
     if (existingUser) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "User with this phone number, email, or username already exists",
+            "User with this phone number or username already exists",
         },
         { status: 400 }
       );
     }
 
     // Hash password
-    const hashedPassword = await hash(data.password, 12);
+    const hashedPassword = await bcryptjs.hash(data.password, 12);
 
-    // Generate unique email if not provided
-    const email =
-      data.email && data.email.trim() !== ""
-        ? data.email
-        : `${normalizedPhone.replace(/[^0-9]/g, "")}@eservice.local`;
-
-    // Create user
-    const user = await executeWithRetry(
-      () =>
-        prisma.user.create({
-          data: {
-            id: randomUUID(),
-            name: data.name,
-            phoneNumber: normalizedPhone,
-            phoneNumberVerified: true,
-            email: email,
-            emailVerified: false,
-            roleId: data.roleId,
-            username:
-              data.username && data.username.trim() !== ""
-                ? data.username
-                : null,
-            displayUsername:
-              data.username && data.username.trim() !== ""
-                ? data.username
-                : null,
-          },
-        }),
-      2,
-      10000
-    );
-
-    // Create account with password
-    await executeWithRetry(
-      () =>
-        prisma.account.create({
-          data: {
-            id: randomUUID(),
-            userId: user.id,
-            accountId: user.id,
-            providerId: "credential",
-            password: hashedPassword,
-          },
-        }),
-      2,
-      10000
-    );
+    // Create user (adapt to actual schema - no name, email, image fields)
+    const user = await prisma.user.create({
+      data: {
+        id: randomUUID(),
+        username: username,
+        phoneNumber: normalizedPhone,
+        password: hashedPassword,
+        roleId: data.roleId || null,
+        isActive: true,
+        phoneVerified: false,
+      },
+    });
 
     // Create staff relation if officeId is provided
-    if (data.officeId) {
-      await executeWithRetry(
-        () =>
-          prisma.staff.create({
-            data: {
-              userId: user.id,
-              officeId: data.officeId!,
-            },
-          }),
-        2,
-        10000
-      );
+    if (data.officeId && data.officeId.trim() !== "") {
+      await prisma.staff.create({
+        data: {
+          userId: user.id,
+          officeId: data.officeId,
+        },
+      });
     }
 
     // Fetch created user with relations
-    const createdUser = await executeWithRetry(
-      () =>
-        prisma.user.findUnique({
-          where: { id: user.id },
+    const createdUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        role: {
           include: {
-            role: {
-              include: {
-                office: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+            office: {
+              select: {
+                id: true,
+                name: true,
               },
-            },
-            staffs: {
-              include: {
-                office: {
-                  select: {
-                    id: true,
-                    name: true,
-                    address: true,
-                    phoneNumber: true,
-                  },
-                },
-              },
-              take: 1,
             },
           },
-        }),
-      2,
-      10000
-    );
+        },
+        staffs: {
+          include: {
+            office: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+                phoneNumber: true,
+              },
+            },
+          },
+          take: 1,
+        },
+      },
+    });
 
     if (!createdUser) {
       throw new Error("Failed to fetch created user");
@@ -409,14 +318,14 @@ export async function POST(request: NextRequest) {
     const staff = createdUser.staffs?.[0];
     const transformedUser = {
       id: createdUser.id,
-      name: createdUser.name,
-      email: createdUser.email,
+      name: createdUser.username,
+      email: null,
       phoneNumber: createdUser.phoneNumber,
-      phoneNumberVerified: createdUser.phoneNumberVerified,
-      emailVerified: createdUser.emailVerified,
-      image: createdUser.image,
+      phoneNumberVerified: createdUser.phoneVerified,
+      emailVerified: false,
+      image: null,
       username: createdUser.username,
-      displayUsername: createdUser.displayUsername,
+      displayUsername: createdUser.username,
       roleId: createdUser.roleId,
       role: createdUser.role
         ? {

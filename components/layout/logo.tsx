@@ -22,9 +22,7 @@ export default function Logo() {
         href={"/"}
         className=" text-2xl tracking-wider font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
       >
-        {lang == "am"
-          ? "ኦሮሚያ ክልል ምስራቅ ሸዋ ዞን መታወቂያ"
-          : "Oromia,East Shoa Id Card"}
+        {lang == "am" ? "E-service" : "East shoa E-service"}
       </Link>
     </div>
   );
