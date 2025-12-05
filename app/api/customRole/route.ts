@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
-import { randomUUID } from "crypto";
 
 // POST - Create a custom role for an office
 export async function POST(request: NextRequest) {
@@ -134,10 +133,9 @@ export async function POST(request: NextRequest) {
 
     // Create role with permissions in a transaction
     const role = await prisma.$transaction(async (tx) => {
-      // Create the role
+      // Create the role (let Prisma generate the id with cuid default)
       const newRole = await tx.role.create({
         data: {
-          id: randomUUID(),
           name: roleNameUpper,
           officeId: officeId,
         },
@@ -161,13 +159,17 @@ export async function POST(request: NextRequest) {
         }
 
         // Create role-permission relationships
-        await tx.rolePermission.createMany({
-          data: permissionIds.map((permissionId: string) => ({
-            id: randomUUID(),
-            roleId: newRole.id,
-            permissionId,
-          })),
-        });
+        // Use individual creates to respect default values
+        await Promise.all(
+          permissionIds.map((permissionId: string) =>
+            tx.rolePermission.create({
+              data: {
+                roleId: newRole.id,
+                permissionId,
+              },
+            })
+          )
+        );
       }
 
       return newRole;
