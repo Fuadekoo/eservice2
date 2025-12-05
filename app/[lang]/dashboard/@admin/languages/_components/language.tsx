@@ -35,7 +35,7 @@ import {
   useLanguagesStore,
   Language,
   TranslationKey,
-} from "@/app/admin/languages/_store";
+} from "../_store/language-store";
 import {
   Globe,
   Languages,

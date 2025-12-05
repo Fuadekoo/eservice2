@@ -1,4 +1,4 @@
-import { LanguagesPage } from "@/app/admin/languages/_components/language";
+import { LanguagesPage } from "./_components/language";
 
 export default function Languages() {
   return <LanguagesPage />;
