@@ -68,10 +68,8 @@ interface Service {
 
 interface Manager {
   id: string;
-  name: string;
-  email: string | null;
-  phoneNumber: string | null;
-  image: string | null;
+  username: string;
+  phoneNumber: string;
   role: {
     id: string;
     name: string;
@@ -330,7 +328,9 @@ export default function OfficeDetailPage() {
     if (!manager) return;
 
     if (
-      !confirm(`Are you sure you want to remove ${manager.name} as manager?`)
+      !confirm(
+        `Are you sure you want to remove ${manager.username} as manager?`
+      )
     ) {
       return;
     }
@@ -685,26 +685,14 @@ export default function OfficeDetailPage() {
             ) : manager ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  {manager.image ? (
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
-                      <Image
-                        src={manager.image}
-                        alt={manager.name}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <UserCheck className="w-5 h-5 text-primary" />
-                    </div>
-                  )}
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCheck className="w-5 h-5 text-primary" />
+                  </div>
                   <div className="flex-1">
-                    <p className="font-medium">{manager.name}</p>
-                    {manager.email && (
+                    <p className="font-medium">{manager.username}</p>
+                    {manager.phoneNumber && (
                       <p className="text-sm text-muted-foreground">
-                        {manager.email}
+                        {manager.phoneNumber}
                       </p>
                     )}
                   </div>
