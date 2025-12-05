@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Gallery,
   GalleryImage,
-} from "@/app/admin/configuration/gallery/_types";
+} from "@/app/[lang]/dashboard/@admin/configuration/gallery/_types";
 import {
   Dialog,
   DialogContent,

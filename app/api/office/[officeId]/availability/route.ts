@@ -29,7 +29,7 @@ export async function GET(
       availability = await prisma.officeAvailability.create({
         data: {
           officeId,
-          defaultSchedule: getDefaultSchedule(),
+          defaultSchedule: JSON.parse(JSON.stringify(getDefaultSchedule())),
           slotDuration: 30,
           unavailableDateRanges: [],
           unavailableDates: [],
@@ -144,7 +144,8 @@ export async function PUT(
       where: { officeId },
       create: {
         officeId,
-        defaultSchedule: defaultSchedule || getDefaultSchedule(),
+        defaultSchedule:
+          defaultSchedule || JSON.parse(JSON.stringify(getDefaultSchedule())),
         slotDuration: slotDuration || 30,
         unavailableDateRanges: unavailableDateRanges || [],
         unavailableDates: unavailableDates || [],
