@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { auth } from "@/auth";
 
-const FILEDATA_DIR = path.join(process.cwd(), "public", "filedata");
+const FILEDATA_DIR = path.join(process.cwd(), "filedata");
 
 /**
  * Ensure the upload directory exists
@@ -97,8 +97,8 @@ export async function POST(request: NextRequest) {
 
     await fs.writeFile(filePath, buffer);
 
-    // Return the file path (relative to public directory)
-    const filepath = `/filedata/${filename}`;
+    // Return the file path (will be served via API endpoint)
+    const filepath = `filedata/${filename}`;
 
     return NextResponse.json({
       success: true,

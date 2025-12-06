@@ -1,7 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "upload", "logo");
+// Logos are stored in filedata/upload/logo (not in public)
+const UPLOAD_DIR = path.join(process.cwd(), "filedata", "upload", "logo");
 
 /**
  * Ensure the upload directory exists, create it if it doesn't
@@ -23,10 +24,10 @@ export function getUploadPath(filename: string): string {
 }
 
 /**
- * Get the public URL for an uploaded file
+ * Get the API URL for an uploaded file (served via API endpoint)
  */
 export function getUploadUrl(filename: string): string {
-  return `/upload/logo/${filename}`;
+  return `/api/upload/logo/${filename}`;
 }
 
 /**
@@ -50,4 +51,3 @@ export async function deleteUploadedFile(filename: string): Promise<void> {
     console.error(`Failed to delete file ${filename}:`, error);
   }
 }
-

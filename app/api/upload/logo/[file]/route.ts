@@ -5,8 +5,8 @@ import { promisify } from "util";
 const readFileAsync = promisify(fs.readFile);
 const statAsync = promisify(fs.stat);
 
-// Files are stored in filedata folder (not in public)
-const FILE_STORAGE_PATH = path.resolve(process.cwd(), "filedata");
+// Logos are stored in filedata/upload/logo
+const LOGO_STORAGE_PATH = path.resolve(process.cwd(), "filedata", "upload", "logo");
 
 function getMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
@@ -20,12 +20,8 @@ function getMimeType(filePath: string): string {
       return "image/gif";
     case ".webp":
       return "image/webp";
-    case ".pdf":
-      return "application/pdf";
-    case ".txt":
-      return "text/plain";
     default:
-      return "application/octet-stream";
+      return "image/jpeg";
   }
 }
 
@@ -34,8 +30,6 @@ export async function GET(
   { params }: { params: Promise<{ file: string }> }
 ) {
   const filename = (await params).file;
-  // console.log(filename);
-  // return Response.json({ ak: "ak" });
 
   if (!filename) {
     return new Response(JSON.stringify({ error: "Filename is required" }), {
@@ -44,14 +38,15 @@ export async function GET(
     });
   }
 
-  if (filename.includes("..") || filename.includes("/")) {
+  // Security: prevent path traversal
+  if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
     return new Response(JSON.stringify({ error: "Invalid filename" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  const filePath = path.join(FILE_STORAGE_PATH, filename);
+  const filePath = path.join(LOGO_STORAGE_PATH, filename);
 
   try {
     const stats = await statAsync(filePath);
@@ -70,6 +65,7 @@ export async function GET(
       headers: {
         "Content-Type": mimeType,
         "Content-Length": stats.size.toString(),
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch (error) {
@@ -84,10 +80,11 @@ export async function GET(
         headers: { "Content-Type": "application/json" },
       });
     }
-    console.error("Error serving file:", error);
+    console.error("Error serving logo file:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }
 }
+

@@ -25,7 +25,15 @@ export const officeSchema = z.object({
       (val) => {
         if (!val || val === "") return true;
 
-        // Allow relative paths (uploaded files) like /upload/logo/file.jpg
+        // Allow API paths (uploaded files) like /api/upload/logo/file.jpg
+        if (
+          val.startsWith("/api/upload/logo/") ||
+          val.startsWith("/api/filedata/")
+        ) {
+          return true;
+        }
+
+        // Allow relative paths (for backward compatibility)
         if (val.startsWith("/")) {
           // Validate it's a valid path format
           return /^\/[^\/].*/.test(val);

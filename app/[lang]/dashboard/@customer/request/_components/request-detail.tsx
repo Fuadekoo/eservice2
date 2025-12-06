@@ -99,26 +99,27 @@ export function RequestDetail({
     return filepath.toLowerCase().endsWith(".pdf");
   };
 
-  const getFileUrl = (filepath: string, useApi: boolean = false) => {
+  const getFileUrl = (filepath: string, useApi: boolean = true) => {
     // If filepath is already a full URL, return it
     if (filepath.startsWith("http")) {
       return filepath;
     }
 
     // Extract filename from filepath
-    // Handle paths like "/filedata/filename.pdf" or "filedata/filename.pdf" or just "filename.pdf"
+    // Handle paths like "filedata/filename.pdf" or "filedata/upload/logo/filename.jpg" or just "filename.pdf"
     let filename = filepath;
     if (filepath.includes("/")) {
       filename = filepath.split("/").pop() || filepath;
     }
 
-    // Use API endpoint for better control (especially for PDFs)
-    if (useApi) {
-      return `/api/filedata/${filename}`;
+    // All files are now served via API endpoint (not in public folder)
+    // Check if it's a logo file (from upload/logo)
+    if (filepath.includes("upload/logo")) {
+      return `/api/upload/logo/${filename}`;
     }
 
-    // For direct access (images work better with direct paths)
-    return `/filedata/${filename}`;
+    // Regular filedata files
+    return `/api/filedata/${filename}`;
   };
 
   return (
