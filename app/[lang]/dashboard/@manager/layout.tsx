@@ -1,5 +1,11 @@
 import UserLayout from "@/components/layout/userLayout";
-import { BadgeDollarSignIcon, User, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  Settings,
+  Clock,
+} from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
 
@@ -11,29 +17,33 @@ export default async function Layout({
   const menu = [
     [
       {
-        key: "home",
-        url: "home",
-        Icon: <User className="size-6" />,
+        key: "overview",
+        url: "overview",
+        Icon: <LayoutDashboard className="size-6" />,
+      },
+    ],
+    [
+      {
+        key: "services",
+        url: "services",
+        Icon: <Briefcase className="size-6" />,
       },
       {
-        key: "dashboard",
-        url: "dashboard",
+        key: "staff",
+        url: "staff",
         Icon: <Users className="size-6" />,
       },
+    ],
+    [
       {
-        key: "orders",
-        url: "citizenCard",
-        Icon: <Users className="size-6" />,
+        key: "configuration",
+        url: "configuration/office",
+        Icon: <Settings className="size-6" />,
       },
       {
-        key: "reports",
-        url: "printralReport",
-        Icon: <Users className="size-6" />,
-      },
-      {
-        key: "profile",
-        url: "profile",
-        Icon: <BadgeDollarSignIcon className="size-6" />,
+        key: "availability",
+        url: "configuration/avaibility",
+        Icon: <Clock className="size-6" />,
       },
     ],
   ];

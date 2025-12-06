@@ -389,8 +389,12 @@ export default function ApplyServicePage() {
                     <Input
                       type="date"
                       value={
-                        field.value
-                          ? new Date(field.value).toISOString().split("T")[0]
+                        field.value && field.value instanceof Date
+                          ? field.value.toISOString().split("T")[0]
+                          : field.value
+                          ? new Date(field.value as string | number | Date)
+                              .toISOString()
+                              .split("T")[0]
                           : ""
                       }
                       onChange={(e) => {

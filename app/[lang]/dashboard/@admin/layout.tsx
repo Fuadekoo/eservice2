@@ -1,16 +1,14 @@
 import UserLayout from "@/components/layout/userLayout";
 import {
-  BadgeDollarSignIcon,
   User,
   Users,
   LayoutDashboard,
   Building2,
-  Shield,
-  UserCog,
-  Settings,
   Languages,
   Images,
   Info,
+  FileText,
+  Newspaper,
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
@@ -27,11 +25,6 @@ export default async function Layout({
         url: "overview",
         Icon: <LayoutDashboard className="size-6" />,
       },
-      {
-        key: "dashboard",
-        url: "dashboard",
-        Icon: <LayoutDashboard className="size-6" />,
-      },
     ],
     [
       {
@@ -43,16 +36,6 @@ export default async function Layout({
         key: "userManagement",
         url: "userManagement",
         Icon: <Users className="size-6" />,
-      },
-      {
-        key: "roles",
-        url: "roles",
-        Icon: <Shield className="size-6" />,
-      },
-      {
-        key: "setPermission",
-        url: "setPermission",
-        Icon: <UserCog className="size-6" />,
       },
     ],
     [
@@ -74,9 +57,14 @@ export default async function Layout({
     ],
     [
       {
-        key: "profile",
-        url: "profile",
-        Icon: <User className="size-6" />,
+        key: "news",
+        url: "news",
+        Icon: <Newspaper className="size-6" />,
+      },
+      {
+        key: "report",
+        url: "report",
+        Icon: <FileText className="size-6" />,
       },
     ],
   ];

@@ -242,7 +242,7 @@ export default function AvailabilityPage() {
                   key={day.key}
                   className="flex items-center gap-4 p-4 border rounded-lg"
                 >
-                  <div className="w-24 flex-shrink-0">
+                  <div className="w-24 shrink-0">
                     <Label className="font-medium">{day.label}</Label>
                   </div>
                   <div className="flex items-center gap-2">
