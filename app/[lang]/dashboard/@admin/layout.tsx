@@ -66,6 +66,11 @@ export default async function Layout({
         url: "report",
         Icon: <FileText className="size-6" />,
       },
+      {
+        key: "requestManagement",
+        url: "requestManagement",
+        Icon: <FileText className="size-6" />,
+      },
     ],
   ];
 

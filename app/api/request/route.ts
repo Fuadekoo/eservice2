@@ -16,7 +16,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { serviceId, currentAddress, date, status = "pending", files = [], notes } = body;
+    const {
+      serviceId,
+      currentAddress,
+      date,
+      status = "pending",
+      files = [],
+      notes,
+    } = body;
 
     // Validate required fields
     if (!serviceId || !currentAddress || !date) {
@@ -53,16 +60,23 @@ export async function POST(request: NextRequest) {
         currentAddress,
         date: new Date(date),
         status: status as "pending" | "approved" | "rejected",
-        fileData: files.length > 0
-          ? {
-              create: files.map((file: { name: string; filepath: string; description?: string }) => ({
-                id: randomUUID(),
-                name: file.name,
-                filepath: file.filepath,
-                description: file.description || notes || null,
-              })),
-            }
-          : undefined,
+        fileData:
+          files.length > 0
+            ? {
+                create: files.map(
+                  (file: {
+                    name: string;
+                    filepath: string;
+                    description?: string;
+                  }) => ({
+                    id: randomUUID(),
+                    name: file.name,
+                    filepath: file.filepath,
+                    description: file.description || notes || null,
+                  })
+                ),
+              }
+            : undefined,
       },
       include: {
         user: {
@@ -159,7 +173,12 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId") || session.user.id;
+    const userId = searchParams.get("userId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const search = searchParams.get("search") || "";
+    const officeId = searchParams.get("officeId") || "";
+    const status = searchParams.get("status") || "";
 
     // Only allow users to fetch their own requests (unless admin)
     const dbUser = await prisma.user.findUnique({
@@ -171,16 +190,72 @@ export async function GET(request: NextRequest) {
       dbUser?.role?.name?.toLowerCase() === "admin" ||
       dbUser?.role?.name?.toLowerCase() === "administrator";
 
-    if (!isAdmin && userId !== session.user.id) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    // Build where clause
+    const where: any = {};
+
+    // If not admin, only show user's own requests
+    if (!isAdmin) {
+      where.userId = session.user.id;
+    } else if (userId) {
+      // Admin can filter by userId
+      where.userId = userId;
     }
 
+    // Office filter (only for admin)
+    if (isAdmin && officeId) {
+      where.service = {
+        officeId: officeId,
+      };
+    }
+
+    // Status filter
+    if (status) {
+      where.status = status;
+    }
+
+    // Search filter (search in service name, office name, user username)
+    if (search) {
+      where.OR = [
+        {
+          service: {
+            name: {
+              contains: search,
+            },
+          },
+        },
+        {
+          service: {
+            office: {
+              name: {
+                contains: search,
+              },
+            },
+          },
+        },
+        {
+          user: {
+            username: {
+              contains: search,
+            },
+          },
+        },
+      ];
+    }
+
+    // Get total count for pagination
+    const total = await prisma.request.count({ where });
+
+    // Fetch requests with pagination
     const requests = await prisma.request.findMany({
-      where: { userId },
+      where,
       include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            phoneNumber: true,
+          },
+        },
         service: {
           include: {
             office: {
@@ -217,9 +292,31 @@ export async function GET(request: NextRequest) {
           },
         },
         fileData: true,
-        appointments: true,
+        appointments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+            approveStaff: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
     return NextResponse.json({
@@ -234,7 +331,19 @@ export async function GET(request: NextRequest) {
           createdAt: file.createdAt.toISOString(),
           updatedAt: file.updatedAt.toISOString(),
         })),
+        appointments: req.appointments.map((apt) => ({
+          ...apt,
+          date: apt.date.toISOString(),
+          createdAt: apt.createdAt.toISOString(),
+          updatedAt: apt.updatedAt.toISOString(),
+        })),
       })),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
     });
   } catch (error: any) {
     console.error("❌ Error fetching requests:", error);
@@ -247,4 +356,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
