@@ -33,7 +33,7 @@ export default function Page() {
     useRegistration(authenticate, loginSchema, (state) => {
       if (state.status) {
         setAuthError(null);
-        router.refresh();
+        router.push(`/${lang}/dashboard`);
       } else {
         // Set authentication error message
         setAuthError(state.message || "Authentication failed");

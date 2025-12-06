@@ -36,9 +36,9 @@ const authConfig = {
   callbacks: {
     authorized: async ({ auth, request: { nextUrl } }) => {
       const { pathname } = nextUrl;
-      // If logged-in user hits /en/signin, send to dashboard
+      // If logged-in user hits /en/login, send to dashboard
       if (auth && pathname.startsWith("/en/login")) {
-        return Response.redirect(new URL("/en/dashboard/dashboard", nextUrl));
+        return Response.redirect(new URL("/en/dashboard", nextUrl));
       }
 
       // Public pages accessible without login

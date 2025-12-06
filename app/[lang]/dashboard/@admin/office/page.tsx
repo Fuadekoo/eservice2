@@ -36,10 +36,12 @@ import {
 } from "@/components/ui/select";
 import { Plus, Building2, Loader2, Trash2 } from "lucide-react";
 import { useOfficeStore } from "./_store/office-store";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function OfficePage() {
   const router = useRouter();
+  const params = useParams<{ lang: string }>();
+  const lang = params.lang || "en";
 
   // Zustand store
   const {
@@ -162,7 +164,7 @@ export default function OfficePage() {
 
   // Handle view details
   const handleViewDetails = (office: Office) => {
-    router.push(`/dashboard/office/${office.id}`);
+    router.push(`/${lang}/dashboard/office/${office.id}`);
   };
 
   const Pagination = () => {
@@ -201,7 +203,8 @@ export default function OfficePage() {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-4">
         {loading && data.length === 0 && (
           <div className="flex items-center justify-center p-8 text-muted-foreground">
             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -283,6 +286,7 @@ export default function OfficePage() {
             ))}
           </div>
           <Pagination />
+        </div>
         </div>
       </div>
 

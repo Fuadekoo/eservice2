@@ -84,8 +84,9 @@ interface User {
 }
 
 export default function OfficeDetailPage() {
-  const params = useParams();
+  const params = useParams<{ lang: string; id: string }>();
   const router = useRouter();
+  const lang = params.lang || "en";
   const officeId = params.id as string;
 
   const [office, setOffice] = useState<Office | null>(null);
@@ -371,10 +372,12 @@ export default function OfficeDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading office details...</p>
+      <div className="w-full h-full overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Loading office details...</p>
+          </div>
         </div>
       </div>
     );
@@ -382,17 +385,19 @@ export default function OfficeDetailPage() {
 
   if (error || !office) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Building2 className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">Office not found</h3>
-          <p className="text-muted-foreground mb-6">
-            {error || "The office you're looking for doesn't exist."}
-          </p>
-          <Button onClick={() => router.push("/dashboard/office")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Offices
-          </Button>
+      <div className="w-full h-full overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Building2 className="w-20 h-20 text-muted-foreground mb-6" />
+            <h3 className="text-xl font-semibold mb-2">Office not found</h3>
+            <p className="text-muted-foreground mb-6">
+              {error || "The office you're looking for doesn't exist."}
+            </p>
+            <Button onClick={() => router.push(`/${lang}/dashboard/office`)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Offices
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -401,14 +406,15 @@ export default function OfficeDetailPage() {
   const hasValidLogo = office.logo && isValidUrl(office.logo);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push("/dashboard/office")}
+            onClick={() => router.push(`/${lang}/dashboard/office`)}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -450,7 +456,7 @@ export default function OfficeDetailPage() {
             />
             Refresh
           </Button>
-          <Link href={`/dashboard/office?edit=${office.id}`}>
+          <Link href={`/${lang}/dashboard/office?edit=${office.id}`}>
             <Button variant="outline" size="sm">
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -996,6 +1002,7 @@ export default function OfficeDetailPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
