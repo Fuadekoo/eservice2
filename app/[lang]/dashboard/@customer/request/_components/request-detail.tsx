@@ -30,6 +30,7 @@ import {
 import { format } from "date-fns";
 import { useCustomerRequestStore } from "../_store";
 import Image from "next/image";
+import { calculateOverallStatus } from "@/lib/request-status";
 
 interface RequestDetailProps {
   request: Request | null;
@@ -82,7 +83,11 @@ export function RequestDetail({
 
   if (!request) return null;
 
-  const statusInfo = statusConfig[request.status];
+  const overallStatus = calculateOverallStatus(
+    request.statusbystaff,
+    request.statusbyadmin
+  );
+  const statusInfo = statusConfig[overallStatus];
   const StatusIcon = statusInfo.icon;
 
   const handleViewFile = (file: FileData) => {
@@ -295,19 +300,19 @@ export function RequestDetail({
                         {statusInfo.label}
                       </Badge>
                     </div>
-                    {request.status === RequestStatus.PENDING && (
+                    {overallStatus === RequestStatus.PENDING && (
                       <p className="text-sm text-muted-foreground">
                         Your request is pending review. You can edit or delete
                         it until it's approved.
                       </p>
                     )}
-                    {request.status === RequestStatus.APPROVED && (
+                    {overallStatus === RequestStatus.APPROVED && (
                       <p className="text-sm text-muted-foreground">
                         Your request has been approved. You can view
                         appointments and track progress.
                       </p>
                     )}
-                    {request.status === RequestStatus.REJECTED && (
+                    {overallStatus === RequestStatus.REJECTED && (
                       <p className="text-sm text-muted-foreground">
                         Your request has been rejected. Please contact the
                         office for more information.

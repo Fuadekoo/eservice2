@@ -243,15 +243,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status, approveNote } = body;
-
-    // Validate status
-    if (!status || !["pending", "approved", "rejected"].includes(status)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid status" },
-        { status: 400 }
-      );
-    }
+    const { approveNote } = body;
 
     // Get the request
     const requestData = await prisma.request.findUnique({
@@ -265,11 +257,12 @@ export async function PATCH(
       );
     }
 
-    // Update the request
+    // Note: Admins can only view requests, not approve/reject them
+    // This endpoint is kept for backward compatibility but doesn't update status
+    // Status is managed by staff (statusbystaff) and managers (statusbyadmin)
     const updatedRequest = await prisma.request.update({
       where: { id: requestId },
       data: {
-        status: status as "pending" | "approved" | "rejected",
         approveNote: approveNote || null,
       },
       include: {

@@ -228,6 +228,12 @@ enum requestStatus {
   rejected
 }
 
+enum requestStatusAdmin {
+  pending
+  approved
+  rejected
+}
+
 model request {
   id                   String                @id @default(cuid())
   userId               String
@@ -236,7 +242,8 @@ model request {
   service              service               @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   currentAddress       String
   date                 DateTime
-  status               requestStatus
+  statusbystaff        requestStatus
+  statusbyadmin        requestStatusAdmin
   // add the the approve requst staff id and note write by the approve staff
   approveStaffId       String?
   approveStaff         staff?                @relation("ApproveStaff", fields: [approveStaffId], references: [id])

@@ -33,6 +33,7 @@ import { format } from "date-fns";
 import { useRequestManagementStore } from "../_store/request-management-store";
 import Image from "next/image";
 import { toast } from "sonner";
+import { calculateOverallStatus } from "@/lib/request-status";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -167,9 +168,14 @@ export function RequestDetail({
 
   if (!request) return null;
 
-  const statusInfo = statusConfig[request.status];
+  const overallStatus = calculateOverallStatus(
+    request.statusbystaff,
+    request.statusbyadmin
+  );
+  const statusInfo = statusConfig[overallStatus];
   const StatusIcon = statusInfo.icon;
-  const canApprove = !request.approveManager && request.status === "pending";
+  const canApprove =
+    !request.approveManager && request.statusbyadmin === "pending";
 
   return (
     <>

@@ -20,6 +20,7 @@ import { FileText, Loader2, RefreshCw, Plus } from "lucide-react";
 import { useCustomerRequestStore } from "./_store";
 import { CustomerRequestFormValues } from "./_schema";
 import { toast } from "sonner";
+import { calculateOverallStatus } from "@/lib/request-status";
 import {
   Select,
   SelectContent,
@@ -96,7 +97,11 @@ export default function CustomerRequestPage() {
 
   // Handle edit
   const handleEdit = (request: Request) => {
-    if (request.status !== RequestStatus.PENDING) {
+    const overallStatus = calculateOverallStatus(
+      request.statusbystaff,
+      request.statusbyadmin
+    );
+    if (overallStatus !== RequestStatus.PENDING) {
       toast.error("You can only edit pending requests");
       return;
     }
@@ -107,7 +112,11 @@ export default function CustomerRequestPage() {
   // Handle delete
   const handleDelete = async () => {
     if (!selectedRequest?.id) return;
-    if (selectedRequest.status !== RequestStatus.PENDING) {
+    const overallStatus = calculateOverallStatus(
+      selectedRequest.statusbystaff,
+      selectedRequest.statusbyadmin
+    );
+    if (overallStatus !== RequestStatus.PENDING) {
       toast.error("You can only delete pending requests");
       return;
     }
@@ -121,7 +130,11 @@ export default function CustomerRequestPage() {
 
   // Handle delete click
   const handleDeleteClick = (request: Request) => {
-    if (request.status !== RequestStatus.PENDING) {
+    const overallStatus = calculateOverallStatus(
+      request.statusbystaff,
+      request.statusbyadmin
+    );
+    if (overallStatus !== RequestStatus.PENDING) {
       toast.error("You can only delete pending requests");
       return;
     }
@@ -149,7 +162,11 @@ export default function CustomerRequestPage() {
     try {
       if (selectedRequest) {
         // Update existing request
-        if (selectedRequest.status !== RequestStatus.PENDING) {
+        const overallStatus = calculateOverallStatus(
+          selectedRequest.statusbystaff,
+          selectedRequest.statusbyadmin
+        );
+        if (overallStatus !== RequestStatus.PENDING) {
           toast.error("You can only edit pending requests");
           return;
         }

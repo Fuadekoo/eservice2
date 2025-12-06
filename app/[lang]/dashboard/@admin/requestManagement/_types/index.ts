@@ -36,7 +36,8 @@ export interface Request {
   serviceId: string;
   currentAddress: string;
   date: string;
-  status: RequestStatus;
+  statusbystaff: RequestStatus;
+  statusbyadmin: RequestStatus;
   createdAt: string;
   updatedAt: string;
   approveStaffId?: string | null;

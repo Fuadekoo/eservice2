@@ -98,43 +98,24 @@ export async function POST(
       );
     }
 
-    // Determine new status based on both staff and manager actions
-    let newStatus: "pending" | "approved" | "rejected" = requestData.status;
+    // Determine staff status based on action
+    const staffStatus: "pending" | "approved" | "rejected" =
+      action === "approve" ? "approved" : "rejected";
     const hasManagerApproved = !!requestData.approveManagerId;
-    const hasManagerRejected = requestData.status === "rejected" && !hasManagerApproved;
-    
-    if (action === "approve") {
-      // Staff approves: set approveStaffId
-      // If manager has also approved, set status to "approved"
-      if (hasManagerApproved) {
-        newStatus = "approved";
-      } else {
-        // Manager hasn't approved yet, keep status as "pending"
-        newStatus = "pending";
-      }
-    } else if (action === "reject") {
-      // Staff rejects: don't set approveStaffId (it stays null)
-      if (hasManagerApproved) {
-        // Manager has approved but staff rejects - conflict, set to "pending"
-        newStatus = "pending";
-      } else if (hasManagerRejected) {
-        // Manager has also rejected, both rejected → "rejected"
-        newStatus = "rejected";
-      } else {
-        // Manager hasn't acted yet, set status to "rejected" (will be updated when manager acts)
-        newStatus = "rejected";
-      }
-    }
+    const managerStatus = requestData.statusbyadmin || "pending";
 
     // Update the request with staff approval/rejection
     const updateData: any = {
+      statusbystaff: staffStatus,
       approveNote: note || null,
-      status: newStatus,
     };
 
     // Only set approveStaffId if approving
     if (action === "approve") {
       updateData.approveStaffId = staffRecord.id;
+    } else {
+      // If rejecting, clear approveStaffId
+      updateData.approveStaffId = null;
     }
 
     const updatedRequest = await prisma.request.update({
@@ -222,4 +203,3 @@ export async function POST(
     );
   }
 }
-

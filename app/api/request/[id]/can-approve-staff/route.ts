@@ -57,7 +57,7 @@ export async function GET(
       select: {
         serviceId: true,
         approveStaffId: true,
-        status: true,
+        statusbystaff: true,
       },
     });
 
@@ -76,8 +76,8 @@ export async function GET(
       });
     }
 
-    // Check if request is pending
-    if (requestData.status !== "pending") {
+    // Check if request is pending (staff hasn't acted yet)
+    if (requestData.statusbystaff !== "pending") {
       return NextResponse.json({
         success: true,
         canApprove: false,
@@ -105,4 +105,3 @@ export async function GET(
     );
   }
 }
-

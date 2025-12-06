@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/pagination";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { calculateOverallStatus } from "@/lib/request-status";
 
 export default function RequestManagementPage() {
   const {
@@ -249,7 +250,14 @@ export default function RequestManagementPage() {
                       <TableCell>
                         {format(new Date(request.date), "MMM dd, yyyy")}
                       </TableCell>
-                      <TableCell>{getStatusBadge(request.status)}</TableCell>
+                      <TableCell>
+                        {getStatusBadge(
+                          calculateOverallStatus(
+                            request.statusbystaff,
+                            request.statusbyadmin
+                          )
+                        )}
+                      </TableCell>
                       <TableCell>{getStaffApproval(request)}</TableCell>
                       <TableCell>{getManagerApproval(request)}</TableCell>
                       <TableCell className="text-right">
@@ -351,4 +359,3 @@ export default function RequestManagementPage() {
     </div>
   );
 }
-

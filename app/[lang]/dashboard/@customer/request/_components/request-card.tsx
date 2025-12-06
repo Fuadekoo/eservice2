@@ -39,7 +39,10 @@ interface RequestCardProps {
   onDelete: (request: Request) => void;
 }
 
-const statusConfig: Record<RequestStatus, { label: string; variant: "default" | "secondary" | "destructive"; icon: any }> = {
+const statusConfig: Record<
+  RequestStatus,
+  { label: string; variant: "default" | "secondary" | "destructive"; icon: any }
+> = {
   pending: {
     label: "Pending",
     variant: "secondary",
@@ -63,10 +66,14 @@ export function RequestCard({
   onEdit,
   onDelete,
 }: RequestCardProps) {
-  const statusInfo = statusConfig[request.status];
+  const overallStatus = calculateOverallStatus(
+    request.statusbystaff,
+    request.statusbyadmin
+  );
+  const statusInfo = statusConfig[overallStatus];
   const StatusIcon = statusInfo.icon;
-  const canEdit = request.status === RequestStatus.PENDING;
-  const canDelete = request.status === RequestStatus.PENDING;
+  const canEdit = overallStatus === RequestStatus.PENDING;
+  const canDelete = overallStatus === RequestStatus.PENDING;
 
   return (
     <Card className="relative overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/20">
@@ -154,7 +161,10 @@ export function RequestCard({
 
       <CardFooter className="pt-3 border-t">
         <div className="flex items-center justify-between w-full">
-          <Badge variant={statusInfo.variant} className="flex items-center gap-1.5">
+          <Badge
+            variant={statusInfo.variant}
+            className="flex items-center gap-1.5"
+          >
             <StatusIcon className="w-3 h-3" />
             {statusInfo.label}
           </Badge>
@@ -166,4 +176,3 @@ export function RequestCard({
     </Card>
   );
 }
-

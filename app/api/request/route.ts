@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
         serviceId,
         currentAddress,
         date: new Date(date),
-        status: status as "pending" | "approved" | "rejected",
+        statusbystaff: "pending",
+        statusbyadmin: "pending",
         fileData:
           files.length > 0
             ? {
@@ -278,9 +279,22 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Status filter
+    // Status filter - filter by both statusbystaff and statusbyadmin
+    // If status is provided, we'll filter where both are that status (for approved/rejected)
+    // or where at least one is pending (for pending)
     if (status) {
-      where.status = status;
+      if (status === "pending") {
+        where.OR = [
+          { statusbystaff: "pending" },
+          { statusbyadmin: "pending" },
+        ];
+      } else {
+        // For approved/rejected, both must match
+        where.AND = [
+          { statusbystaff: status },
+          { statusbyadmin: status },
+        ];
+      }
     }
 
     // Search filter (search in service name, office name, user username)

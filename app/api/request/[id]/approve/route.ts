@@ -88,46 +88,24 @@ export async function POST(
       );
     }
 
-    // Determine new status based on both staff and manager actions
-    let newStatus: "pending" | "approved" | "rejected" = requestData.status;
+    // Determine manager status based on action
+    const managerStatus: "pending" | "approved" | "rejected" =
+      action === "approve" ? "approved" : "rejected";
     const hasStaffApproved = !!requestData.approveStaffId;
-    const hasStaffRejected = requestData.status === "rejected" && !hasStaffApproved;
-    
-    if (action === "approve") {
-      // Manager approves: set approveManagerId
-      // If staff has also approved, set status to "approved"
-      if (hasStaffApproved) {
-        newStatus = "approved";
-      } else if (hasStaffRejected) {
-        // Staff has rejected but manager approves - conflict, set to "pending"
-        newStatus = "pending";
-      } else {
-        // Staff hasn't approved yet, keep status as "pending"
-        newStatus = "pending";
-      }
-    } else if (action === "reject") {
-      // Manager rejects: don't set approveManagerId (it stays null)
-      if (hasStaffApproved) {
-        // Staff has approved but manager rejects - conflict, set to "pending"
-        newStatus = "pending";
-      } else if (hasStaffRejected) {
-        // Staff has also rejected, both rejected → "rejected"
-        newStatus = "rejected";
-      } else {
-        // Staff hasn't acted yet, set status to "rejected" (will be updated when staff acts)
-        newStatus = "rejected";
-      }
-    }
+    const staffStatus = requestData.statusbystaff || "pending";
 
     // Update the request with manager approval/rejection
     const updateData: any = {
+      statusbyadmin: managerStatus,
       approveNote: note || null,
-      status: newStatus,
     };
 
     // Only set approveManagerId if approving
     if (action === "approve") {
       updateData.approveManagerId = managerStaff.id;
+    } else {
+      // If rejecting, clear approveManagerId
+      updateData.approveManagerId = null;
     }
 
     const updatedRequest = await prisma.request.update({
@@ -215,4 +193,3 @@ export async function POST(
     );
   }
 }
-

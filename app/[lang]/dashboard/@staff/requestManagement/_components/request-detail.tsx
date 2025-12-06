@@ -33,6 +33,7 @@ import { format } from "date-fns";
 import { useRequestManagementStore } from "../_store/request-management-store";
 import Image from "next/image";
 import { toast } from "sonner";
+import { calculateOverallStatus } from "@/lib/request-status";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,7 +96,9 @@ export function RequestDetail({
   // Check if staff can approve this service
   const checkCanApprove = async (requestId: string) => {
     try {
-      const response = await fetch(`/api/request/${requestId}/can-approve-staff`);
+      const response = await fetch(
+        `/api/request/${requestId}/can-approve-staff`
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -186,9 +189,16 @@ export function RequestDetail({
 
   if (!request) return null;
 
-  const statusInfo = statusConfig[request.status];
+  const overallStatus = calculateOverallStatus(
+    request.statusbystaff,
+    request.statusbyadmin
+  );
+  const statusInfo = statusConfig[overallStatus];
   const StatusIcon = statusInfo.icon;
-  const canApprove = canApproveService && !request.approveStaff && request.status === "pending";
+  const canApprove =
+    canApproveService &&
+    !request.approveStaff &&
+    request.statusbystaff === "pending";
 
   return (
     <>
@@ -330,7 +340,9 @@ export function RequestDetail({
               {/* Service Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Service Information</CardTitle>
+                  <CardTitle className="text-base">
+                    Service Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
@@ -373,8 +385,7 @@ export function RequestDetail({
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Current Address:</strong>{" "}
-                      {request.currentAddress}
+                      <strong>Current Address:</strong> {request.currentAddress}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -652,4 +663,3 @@ export function RequestDetail({
     </>
   );
 }
-

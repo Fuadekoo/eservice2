@@ -44,7 +44,8 @@ export interface Request {
   serviceId: string;
   currentAddress: string;
   date: Date;
-  status: RequestStatus;
+  statusbystaff: RequestStatus;
+  statusbyadmin: RequestStatus;
   createdAt: Date;
   updatedAt: Date;
   approveStaffId?: string | null;
