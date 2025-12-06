@@ -1,5 +1,6 @@
 /**
  * Utility functions for calculating request status
+ * cSpell:ignore statusbystaff statusbyadmin
  */
 
 export type RequestStatus = "pending" | "approved" | "rejected";

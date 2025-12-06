@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { StaffForm } from "../_components/staff-form";
-import { StaffFormValues } from "../_schema";
+import { StaffCreateValues, StaffUpdateValues } from "../_schema";
 import { useStaffStore } from "../_store/staff-store";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -32,9 +32,15 @@ export default function AddStaffPage() {
     fetchOfficeId();
   }, []);
 
-  const handleSubmit = async (data: StaffFormValues) => {
+  const handleSubmit = async (data: StaffCreateValues | StaffUpdateValues) => {
     try {
-      const success = await createStaff(data);
+      // Since this is the add page, the form will always pass StaffCreateValues
+      // But TypeScript doesn't know this, so we ensure the required fields exist
+      if (!data.username || !data.phoneNumber || !data.password) {
+        toast.error("All fields are required");
+        return;
+      }
+      const success = await createStaff(data as StaffCreateValues);
       if (success) {
         toast.success("Staff created successfully");
         router.push(`/${lang}/dashboard/staff`);

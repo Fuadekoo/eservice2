@@ -12,20 +12,25 @@ export interface FileData {
 export interface Appointment {
   id: string;
   date: string;
+  time?: string | null;
   status: string;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
-  userId: string;
-  approveStaffId?: string | null;
-  user: {
+  userId?: string | null;
+  staffId?: string | null;
+  user?: {
     id: string;
-    name: string;
-  };
+    name?: string;
+    username?: string;
+    phoneNumber?: string;
+  } | null;
   approveStaff?: {
     id: string;
     user: {
       id: string;
       username: string;
+      phoneNumber?: string;
     };
   } | null;
 }

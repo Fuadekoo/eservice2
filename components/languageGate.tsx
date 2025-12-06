@@ -74,8 +74,7 @@ export function LanguageGate() {
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent
-        showCloseButton={false}
-        className="max-w-md"
+        className="max-w-md [&>button]:hidden"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}

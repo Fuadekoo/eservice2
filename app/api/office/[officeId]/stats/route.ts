@@ -47,31 +47,44 @@ export async function GET(
           },
         },
       }),
-      // Pending requests
+      // Pending requests (not both approved and not both rejected)
       prisma.request.count({
         where: {
           service: {
             officeId: officeId,
           },
-          status: "pending",
+          NOT: {
+            OR: [
+              {
+                statusbystaff: "approved",
+                statusbyadmin: "approved",
+              },
+              {
+                statusbystaff: "rejected",
+                statusbyadmin: "rejected",
+              },
+            ],
+          },
         },
       }),
-      // Approved requests
+      // Approved requests (both approved)
       prisma.request.count({
         where: {
           service: {
             officeId: officeId,
           },
-          status: "approved",
+          statusbystaff: "approved",
+          statusbyadmin: "approved",
         },
       }),
-      // Rejected requests
+      // Rejected requests (both rejected)
       prisma.request.count({
         where: {
           service: {
             officeId: officeId,
           },
-          status: "rejected",
+          statusbystaff: "rejected",
+          statusbyadmin: "rejected",
         },
       }),
       // Total appointments (through staff)

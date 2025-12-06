@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AppointmentForm } from "./appointment-form";
 
 interface RequestDetailProps {
   request: Request | null;
@@ -88,6 +89,7 @@ export function RequestDetail({
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [serviceStaff, setServiceStaff] = useState<any[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
 
   const { fetchRequestById, approveRequest, isSubmitting } =
     useRequestManagementStore();
@@ -176,6 +178,16 @@ export function RequestDetail({
   const StatusIcon = statusInfo.icon;
   const canApprove =
     !request.approveManager && request.statusbyadmin === "pending";
+  const canCreateAppointment =
+    request.statusbystaff === "approved" &&
+    request.statusbyadmin === "approved";
+
+  const handleAppointmentSuccess = () => {
+    // Refresh request to get updated appointments
+    if (request) {
+      fetchRequestById(request.id);
+    }
+  };
 
   return (
     <>
@@ -491,6 +503,19 @@ export function RequestDetail({
             </TabsContent>
 
             <TabsContent value="appointments" className="space-y-4 mt-4">
+              {canCreateAppointment && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <Button
+                      onClick={() => setIsAppointmentFormOpen(true)}
+                      className="w-full"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Create New Appointment
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
               {request.appointments.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
@@ -508,10 +533,25 @@ export function RequestDetail({
                             <span className="text-sm font-medium">
                               {format(new Date(apt.date), "PPP")}
                             </span>
+                            {apt.time && (
+                              <span className="text-sm text-muted-foreground">
+                                at {apt.time}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary">{apt.status}</Badge>
                           </div>
+                          {apt.notes && (
+                            <p className="text-sm text-muted-foreground">
+                              {apt.notes}
+                            </p>
+                          )}
+                          {apt.approveStaff && (
+                            <div className="text-xs text-muted-foreground">
+                              Assigned to: {apt.approveStaff.user.username}
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -637,6 +677,17 @@ export function RequestDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Appointment Form Dialog */}
+      {request && (
+        <AppointmentForm
+          open={isAppointmentFormOpen}
+          onOpenChange={setIsAppointmentFormOpen}
+          requestId={request.id}
+          staffList={serviceStaff}
+          onSuccess={handleAppointmentSuccess}
+        />
+      )}
     </>
   );
 }

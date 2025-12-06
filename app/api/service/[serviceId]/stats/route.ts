@@ -71,14 +71,39 @@ export async function GET(
       prisma.request.count({
         where: { serviceId },
       }),
+      // Pending requests (not both approved and not both rejected)
       prisma.request.count({
-        where: { serviceId, status: "pending" },
+        where: {
+          serviceId,
+          NOT: {
+            OR: [
+              {
+                statusbystaff: "approved",
+                statusbyadmin: "approved",
+              },
+              {
+                statusbystaff: "rejected",
+                statusbyadmin: "rejected",
+              },
+            ],
+          },
+        },
       }),
+      // Approved requests (both approved)
       prisma.request.count({
-        where: { serviceId, status: "approved" },
+        where: {
+          serviceId,
+          statusbystaff: "approved",
+          statusbyadmin: "approved",
+        },
       }),
+      // Rejected requests (both rejected)
       prisma.request.count({
-        where: { serviceId, status: "rejected" },
+        where: {
+          serviceId,
+          statusbystaff: "rejected",
+          statusbyadmin: "rejected",
+        },
       }),
       // Requests for others
       prisma.requestForOther.count({

@@ -186,7 +186,7 @@ export default function CustomerRequestPage() {
   const filteredRequests =
     statusFilter === "all"
       ? requests
-      : requests.filter((req) => req.status === statusFilter);
+      : requests.filter((req) => calculateOverallStatus(req.statusbystaff, req.statusbyadmin) === statusFilter);
 
   return (
     <div className="container mx-auto py-6 space-y-6">

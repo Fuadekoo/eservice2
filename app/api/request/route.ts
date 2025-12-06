@@ -8,12 +8,15 @@ export async function POST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
+
+    // Store userId after validation
+    const userId = session.user.id;
 
     const body = await request.json();
     const {
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
     const newRequest = await prisma.request.create({
       data: {
         id: randomUUID(),
-        userId: session.user.id,
+        userId: userId,
         serviceId,
         currentAddress,
         date: new Date(date),
