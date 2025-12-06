@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { auth } from "@/auth";
 import {
   getAvailableTimeSlots,
   getDefaultSchedule,
@@ -119,6 +120,15 @@ export async function PUT(
   { params }: { params: Promise<{ officeId: string }> }
 ) {
   try {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { officeId } = await params;
     const body = await request.json();
 
@@ -136,7 +146,51 @@ export async function PUT(
     });
 
     if (!office) {
-      return NextResponse.json({ error: "Office not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Office not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if user is admin or manager of this office
+    const userStaff = await prisma.staff.findFirst({
+      where: { userId: session.user.id },
+      include: {
+        user: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    const isAdmin =
+      userStaff?.user?.role?.name?.toLowerCase() === "admin" ||
+      userStaff?.user?.role?.name?.toLowerCase() === "administrator";
+
+    // If not admin, verify user is manager of this office
+    if (!isAdmin) {
+      if (!userStaff || userStaff.officeId !== officeId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "You can only update availability for your own office",
+          },
+          { status: 403 }
+        );
+      }
+
+      // Verify user has manager role
+      const roleName = userStaff.user?.role?.name?.toLowerCase() || "";
+      if (roleName !== "manager" && roleName !== "office_manager") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Only managers can update office availability",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Update or create availability
@@ -169,7 +223,10 @@ export async function PUT(
   } catch (error: any) {
     console.error("Error updating availability:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to update availability" },
+      {
+        success: false,
+        error: error.message || "Failed to update availability",
+      },
       { status: 500 }
     );
   }

@@ -46,19 +46,27 @@ export function ServiceAssignmentDialog({
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/staff?officeId=${service.officeId}`);
+      // Fetch all staff for the office (API automatically filters by authenticated user's office)
+      const response = await fetch(`/api/staff?page=1&pageSize=100`);
       const result = await response.json();
 
       if (result.success && result.data) {
+        // Filter to only show staff with "staff" role (exclude manager/admin)
+        const staffWithStaffRole = result.data.filter((s: any) => {
+          const roleName = s.role?.name?.toLowerCase() || "";
+          return roleName === "staff";
+        });
+
         // Format staff data to match Staff interface
-        const formattedStaff: Staff[] = result.data.map((s: any) => ({
+        const formattedStaff: Staff[] = staffWithStaffRole.map((s: any) => ({
           id: s.id,
           userId: s.userId,
-          userName: s.userName,
-          userEmail: s.userEmail,
-          userPhone: s.userPhone,
+          username: s.username,
+          phoneNumber: s.phoneNumber,
+          isActive: s.isActive,
+          role: s.role,
           officeId: s.officeId,
-          officeName: s.officeName,
+          office: s.office,
         }));
         setStaffList(formattedStaff);
       } else {
@@ -172,21 +180,23 @@ export function ServiceAssignmentDialog({
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium">{staff.userName}</p>
+                        <p className="font-medium">{staff.username}</p>
                         {isSelected && (
                           <Badge variant="secondary" className="text-xs">
                             Assigned
                           </Badge>
                         )}
                       </div>
-                      {staff.userEmail && (
+                      <div className="flex items-center gap-2 mt-1">
                         <p className="text-sm text-muted-foreground">
-                          {staff.userEmail}
+                          {staff.phoneNumber}
                         </p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        {staff.userPhone}
-                      </p>
+                        {staff.role && (
+                          <Badge variant="outline" className="text-xs">
+                            {staff.role.name}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {isSelected && (
                       <UserCheck className="w-5 h-5 text-primary" />

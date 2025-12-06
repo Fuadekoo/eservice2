@@ -95,7 +95,7 @@ export default function EditServicePage() {
   }
 
   return (
-    <div className="w-full h-full py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -113,7 +113,7 @@ export default function EditServicePage() {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="w-full pb-6">
         <ServiceForm
           service={service}
           onSubmit={handleSubmit}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { auth } from "@/auth";
 import { officeSchema } from "@/app/[lang]/dashboard/@admin/office/_schema";
 
 // GET - Fetch a single office by ID
@@ -56,6 +57,15 @@ export async function PATCH(
   { params }: { params: Promise<{ officeId: string }> | { officeId: string } }
 ) {
   try {
+    // Authenticate user
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     // Handle params - in Next.js 15+ params might be a Promise
     const resolvedParams = await Promise.resolve(params);
     const officeId = resolvedParams.officeId;
@@ -91,6 +101,68 @@ export async function PATCH(
 
     const data = validationResult.data;
     console.log("✅ Validation passed, data:", data);
+
+    // Check if user is admin or manager of this office
+    const userStaff = await prisma.staff.findFirst({
+      where: { userId: session.user.id },
+      include: {
+        user: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    const isAdmin =
+      userStaff?.user?.role?.name?.toLowerCase() === "admin" ||
+      userStaff?.user?.role?.name?.toLowerCase() === "administrator";
+
+    // If not admin, verify user is manager of this office
+    if (!isAdmin) {
+      if (!userStaff || userStaff.officeId !== officeId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "You can only update your own office",
+          },
+          { status: 403 }
+        );
+      }
+
+      // Verify user has manager role
+      const roleName = userStaff.user?.role?.name?.toLowerCase() || "";
+      if (roleName !== "manager" && roleName !== "office_manager") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Only managers can update office information",
+          },
+          { status: 403 }
+        );
+      }
+
+      // Managers cannot update subdomain or status
+      if (data.subdomain !== undefined) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "You cannot update subdomain",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (data.status !== undefined) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "You cannot update office status",
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     // If subdomain is being updated, check if it already exists (and is not the current office)
     if (data.subdomain !== undefined) {

@@ -2,25 +2,25 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ServiceForm } from "../_components/service-form";
-import { ServiceFormValues } from "../_schema";
-import { useServiceStore } from "../_store/service-store";
+import { StaffForm } from "../_components/staff-form";
+import { StaffFormValues } from "../_schema";
+import { useStaffStore } from "../_store/staff-store";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function AddServicePage() {
+export default function AddStaffPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
-  const { createService, isLoading } = useServiceStore();
+  const { createStaff, isLoading } = useStaffStore();
   const [managerOfficeId, setManagerOfficeId] = useState<string | null>(null);
 
-  // Get manager's office ID from services
+  // Get manager's office ID from staff
   useEffect(() => {
     const fetchOfficeId = async () => {
       try {
-        const response = await fetch("/api/service?page=1&pageSize=1");
+        const response = await fetch("/api/staff?page=1&pageSize=1");
         const result = await response.json();
         if (result.success && result.data.length > 0) {
           setManagerOfficeId(result.data[0].officeId);
@@ -32,20 +32,20 @@ export default function AddServicePage() {
     fetchOfficeId();
   }, []);
 
-  const handleSubmit = async (data: ServiceFormValues) => {
+  const handleSubmit = async (data: StaffFormValues) => {
     try {
-      const success = await createService(data);
+      const success = await createStaff(data);
       if (success) {
-        toast.success("Service created successfully");
-        router.push(`/${lang}/dashboard/services`);
+        toast.success("Staff created successfully");
+        router.push(`/${lang}/dashboard/staff`);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to create service");
+      toast.error(error.message || "Failed to create staff");
     }
   };
 
   const handleCancel = () => {
-    router.push(`/${lang}/dashboard/services`);
+    router.push(`/${lang}/dashboard/staff`);
   };
 
   if (!managerOfficeId) {
@@ -59,7 +59,7 @@ export default function AddServicePage() {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-full py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -70,15 +70,15 @@ export default function AddServicePage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Service</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Add Staff</h1>
           <p className="text-muted-foreground mt-1">
-            Add a new service for your office
+            Add a new staff member to your office
           </p>
         </div>
       </div>
 
-      <div className="w-full pb-6">
-        <ServiceForm
+      <div className="w-full">
+        <StaffForm
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isLoading={isLoading}
@@ -88,3 +88,4 @@ export default function AddServicePage() {
     </div>
   );
 }
+

@@ -144,7 +144,7 @@ export default function ServiceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 overflow-y-auto h-full">
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
           <p className="text-muted-foreground">Loading service details...</p>
@@ -155,7 +155,7 @@ export default function ServiceDetailPage() {
 
   if (error || !service) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 overflow-y-auto h-full">
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <XCircle className="w-20 h-20 text-destructive mb-4" />
           <h3 className="text-xl font-semibold mb-2">Error</h3>
@@ -169,7 +169,7 @@ export default function ServiceDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-6 overflow-y-auto h-full pb-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -259,7 +259,7 @@ export default function ServiceDetailPage() {
                 {service.requirements.map((requirement) => (
                   <div key={requirement.id} className="space-y-2">
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-primary mt-1 shrink-0" />
                       <div className="flex-1">
                         <h4 className="font-medium">{requirement.name}</h4>
                         {requirement.description && (
@@ -294,7 +294,7 @@ export default function ServiceDetailPage() {
                 {service.serviceFors.map((serviceFor) => (
                   <div key={serviceFor.id} className="space-y-2">
                     <div className="flex items-start gap-2">
-                      <Users className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                      <Users className="w-4 h-4 text-primary mt-1 shrink-0" />
                       <div className="flex-1">
                         <h4 className="font-medium">{serviceFor.name}</h4>
                         {serviceFor.description && (

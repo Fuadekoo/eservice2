@@ -41,11 +41,21 @@ export interface AssignedStaff {
 export interface Staff {
   id: string;
   userId: string;
-  userName: string;
-  userEmail: string | null;
-  userPhone: string;
+  username: string;
+  phoneNumber: string;
+  isActive: boolean;
+  role: {
+    id: string;
+    name: string;
+  } | null;
   officeId: string;
-  officeName: string;
+  office?: {
+    id: string;
+    name: string;
+    roomNumber: string;
+    address: string;
+    status: boolean;
+  };
 }
 
 export interface ServiceFormData {
