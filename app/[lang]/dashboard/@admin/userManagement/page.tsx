@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { User } from "./_types";
 import { UserFormValues } from "./_schema";
-import { UserCard } from "./_components/user-card";
 import { UserForm } from "./_components/user-form";
 import {
   Dialog,
@@ -24,8 +23,54 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Users as UsersIcon, Loader2, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  Plus,
+  Users as UsersIcon,
+  Loader2,
+  RefreshCw,
+  Search,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Shield,
+  Building2,
+  Phone,
+  Mail,
+} from "lucide-react";
 import { useUserStore } from "./_store";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function UserManagementPage() {
   // Get state and actions from Zustand store
@@ -36,6 +81,11 @@ export default function UserManagementPage() {
     isFormOpen,
     isDeleteDialogOpen,
     selectedUser,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    search,
     fetchUsers,
     refreshUsers,
     createUser,
@@ -44,13 +94,31 @@ export default function UserManagementPage() {
     setFormOpen,
     setDeleteDialogOpen,
     setSelectedUser,
+    setPage,
+    setPageSize,
+    setSearch,
   } = useUserStore();
+
+  // Local search state for debouncing
+  const [searchInput, setSearchInput] = useState(search);
 
   // Fetch users on mount
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // fetchUsers is stable from Zustand store
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== search) {
+        setSearch(searchInput);
+        fetchUsers({ page: 1, pageSize, search: searchInput });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle form submission
   const handleSubmit = async (data: UserFormValues) => {
@@ -99,6 +167,68 @@ export default function UserManagementPage() {
   const handleDeleteClick = (user: User) => {
     setSelectedUser(user);
     setDeleteDialogOpen(true);
+  };
+
+  // Get initials from name
+  const getInitials = (name: string): string => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Generate pagination items
+  const getPaginationItems = () => {
+    const items = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(i);
+      }
+    } else {
+      // Show first page
+      items.push(1);
+
+      // Calculate start and end
+      let start = Math.max(2, page - 1);
+      let end = Math.min(totalPages - 1, page + 1);
+
+      // Adjust if near start
+      if (page <= 3) {
+        end = Math.min(4, totalPages - 1);
+      }
+
+      // Adjust if near end
+      if (page >= totalPages - 2) {
+        start = Math.max(2, totalPages - 3);
+      }
+
+      // Add ellipsis after first if needed
+      if (start > 2) {
+        items.push("ellipsis-start");
+      }
+
+      // Add middle pages
+      for (let i = start; i <= end; i++) {
+        items.push(i);
+      }
+
+      // Add ellipsis before last if needed
+      if (end < totalPages - 1) {
+        items.push("ellipsis-end");
+      }
+
+      // Show last page
+      if (totalPages > 1) {
+        items.push(totalPages);
+      }
+    }
+
+    return items;
   };
 
   return (
@@ -154,6 +284,37 @@ export default function UserManagementPage() {
         </div>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users by name, phone, role, or office..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Show:</span>
+          <Select
+            value={pageSize.toString()}
+            onValueChange={(value) => setPageSize(parseInt(value))}
+          >
+            <SelectTrigger className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Table */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
@@ -164,25 +325,197 @@ export default function UserManagementPage() {
           <UsersIcon className="w-20 h-20 text-muted-foreground mb-6" />
           <h3 className="text-xl font-semibold mb-2">No users found</h3>
           <p className="text-muted-foreground mb-6 max-w-md">
-            Get started by creating your first user. Assign roles and offices to
-            manage access and permissions.
+            {search
+              ? "No users match your search criteria. Try a different search term."
+              : "Get started by creating your first user. Assign roles and offices to manage access and permissions."}
           </p>
-          <Button onClick={handleCreateNew} size="lg">
-            <Plus className="w-5 h-5 mr-2" />
-            Add Your First User
-          </Button>
+          {!search && (
+            <Button onClick={handleCreateNew} size="lg">
+              <Plus className="w-5 h-5 mr-2" />
+              Add Your First User
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {users.map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-            />
-          ))}
-        </div>
+        <>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Office</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => {
+                  const initials = getInitials(user.name || user.username || "U");
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage
+                              src={user.image || undefined}
+                              alt={user.name || user.username || "User"}
+                            />
+                            <AvatarFallback>{initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <div className="font-medium">
+                              {user.name || user.username || "N/A"}
+                            </div>
+                            {user.username && (
+                              <div className="text-sm text-muted-foreground">
+                                @{user.username}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {user.email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              <span className="truncate max-w-[200px]">
+                                {user.email}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <span>{user.phoneNumber}</span>
+                            {user.phoneNumberVerified && (
+                              <Badge variant="outline" className="text-xs">
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.role ? (
+                          <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                            <Shield className="h-3 w-3" />
+                            {user.role.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No role</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.office ? (
+                          <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                            <Building2 className="h-3 w-3" />
+                            {user.office.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No office</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge
+                            variant={user.phoneNumberVerified ? "default" : "secondary"}
+                            className="w-fit text-xs"
+                          >
+                            {user.phoneNumberVerified ? "Active" : "Inactive"}
+                          </Badge>
+                          {user.emailVerified && (
+                            <Badge variant="outline" className="w-fit text-xs">
+                              Email Verified
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(user)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(user)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {(page - 1) * pageSize + 1} to{" "}
+                {Math.min(page * pageSize, total)} of {total} users
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setPage(Math.max(1, page - 1))}
+                      className={
+                        page === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                  {getPaginationItems().map((item, index) => {
+                    if (item === "ellipsis-start" || item === "ellipsis-end") {
+                      return (
+                        <PaginationItem key={`ellipsis-${index}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    const pageNum = item as number;
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => setPage(pageNum)}
+                          isActive={page === pageNum}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setPage(Math.min(totalPages, page + 1))}
+                      className={
+                        page === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -190,7 +523,7 @@ export default function UserManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the user "{selectedUser?.name}". This
+              This will permanently delete the user "{selectedUser?.name || selectedUser?.username}". This
               action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -114,7 +114,9 @@ export async function GET(request: NextRequest) {
     });
 
     console.log(
-      `✅ Successfully fetched ${users.length} users (page ${page} of ${Math.ceil(total / pageSize)})`
+      `✅ Successfully fetched ${
+        users.length
+      } users (page ${page} of ${Math.ceil(total / pageSize)})`
     );
 
     // Transform users to match frontend expectations
@@ -236,10 +238,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          { phoneNumber: normalizedPhone },
-          { username: username },
-        ],
+        OR: [{ phoneNumber: normalizedPhone }, { username: username }],
       },
     });
 
@@ -247,8 +246,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "User with this phone number or username already exists",
+          error: "User with this phone number or username already exists",
         },
         { status: 400 }
       );
@@ -257,6 +255,17 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcryptjs.hash(data.password, 12);
 
+    // Validate roleId is provided (schema should catch this, but double-check)
+    if (!data.roleId || data.roleId.trim() === "") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Role is required",
+        },
+        { status: 400 }
+      );
+    }
+
     // Create user (adapt to actual schema - no name, email, image fields)
     const user = await prisma.user.create({
       data: {
@@ -264,7 +273,7 @@ export async function POST(request: NextRequest) {
         username: username,
         phoneNumber: normalizedPhone,
         password: hashedPassword,
-        roleId: data.roleId || null,
+        roleId: data.roleId.trim(), // Use trimmed roleId, don't convert to null
         isActive: true,
         phoneVerified: false,
       },

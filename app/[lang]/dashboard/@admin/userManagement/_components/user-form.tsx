@@ -73,6 +73,31 @@ export function UserForm({
     fetchRoles();
   }, [fetchOffices, fetchRoles]);
 
+  // Reset form when user changes (switching between create/edit)
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        name: user.name,
+        phoneNumber: user.phoneNumber,
+        email: user.email || "",
+        password: "",
+        roleId: user.roleId,
+        officeId: user.officeId || "",
+        username: user.username || "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        phoneNumber: "",
+        email: "",
+        password: "",
+        roleId: "",
+        officeId: "",
+        username: "",
+      });
+    }
+  }, [user, form]);
+
   // Fetch roles when office selection changes
   const watchedOfficeId = form.watch("officeId");
   useEffect(() => {
@@ -86,6 +111,16 @@ export function UserForm({
   }, [watchedOfficeId, fetchRoles, setSelectedOfficeId]);
 
   const handleSubmit = async (data: UserFormValues | UserUpdateValues) => {
+    // Ensure roleId is set for new users
+    if (!user && (!data.roleId || data.roleId.trim() === "")) {
+      form.setError("roleId", {
+        type: "manual",
+        message: "Role is required",
+      });
+      return;
+    }
+
+    console.log("📤 Form submission data:", { ...data, password: "***" });
     await onSubmit(data as UserFormValues);
   };
 
@@ -189,8 +224,11 @@ export function UserForm({
           render={({ field, fieldState }) => (
             <>
               <Select
-                value={field.value || undefined}
-                onValueChange={field.onChange}
+                value={field.value || ""}
+                onValueChange={(value) => {
+                  console.log("Role selected:", value);
+                  field.onChange(value);
+                }}
                 disabled={availableRoles.length === 0}
               >
                 <SelectTrigger

@@ -15,11 +15,27 @@ interface UserStore {
   selectedUser: User | null;
   selectedOfficeId: string | null; // For filtering roles by office
 
+  // Pagination state
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  search: string;
+
   // Actions - Fetch
-  fetchUsers: () => Promise<void>;
+  fetchUsers: (params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  }) => Promise<void>;
   fetchRoles: (officeId?: string | null) => Promise<void>;
   fetchOffices: () => Promise<void>;
   refreshUsers: () => Promise<void>;
+
+  // Pagination actions
+  setPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+  setSearch: (query: string) => void;
 
   // Actions - CRUD
   createUser: (data: UserFormValues) => Promise<boolean>;
@@ -47,14 +63,36 @@ export const useUserStore = create<UserStore>((set, get) => ({
   isDeleteDialogOpen: false,
   selectedUser: null,
   selectedOfficeId: null,
+  page: 1,
+  pageSize: 10,
+  total: 0,
+  totalPages: 0,
+  search: "",
 
-  // Fetch users from API
-  fetchUsers: async () => {
+  // Fetch users from API with pagination and search
+  fetchUsers: async (params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  }) => {
     try {
       set({ isLoading: true });
-      console.log("🔄 Fetching users...");
+      const state = get();
+      const page = params?.page ?? state.page;
+      const pageSize = params?.pageSize ?? state.pageSize;
+      const search = params?.search ?? state.search;
 
-      const response = await fetch("/api/allUser", {
+      console.log("🔄 Fetching users...", { page, pageSize, search });
+
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      });
+      if (search && search.trim()) {
+        queryParams.append("search", search.trim());
+      }
+
+      const response = await fetch(`/api/allUser?${queryParams.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +121,13 @@ export const useUserStore = create<UserStore>((set, get) => ({
           updatedAt: user.updatedAt ? new Date(user.updatedAt) : new Date(),
         }));
 
-        set({ users: usersWithDates });
+        set({
+          users: usersWithDates,
+          total: result.total || 0,
+          totalPages: result.totalPages || 0,
+          page: result.page || page,
+          pageSize: result.pageSize || pageSize,
+        });
 
         if (usersWithDates.length === 0) {
           console.log("ℹ️ No users found in database");
@@ -91,7 +135,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       } else {
         console.error("❌ API returned error:", result.error);
         toast.error(result.error || "Failed to fetch users");
-        set({ users: [] });
+        set({ users: [], total: 0, totalPages: 0 });
       }
     } catch (error: any) {
       console.error("❌ Error fetching users:", error);
@@ -99,7 +143,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
         error.message ||
           "Failed to fetch users. Please check your connection and try again."
       );
-      set({ users: [] });
+      set({ users: [], total: 0, totalPages: 0 });
     } finally {
       set({ isLoading: false });
     }
@@ -108,9 +152,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
   // Fetch roles from API
   fetchRoles: async (officeId?: string | null) => {
     try {
-      const url = officeId
-        ? `/api/role?officeId=${officeId}`
-        : "/api/role";
+      const url = officeId ? `/api/role?officeId=${officeId}` : "/api/role";
 
       const response = await fetch(url, {
         method: "GET",
@@ -198,7 +240,35 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
   // Refresh users (alias for fetchUsers)
   refreshUsers: async () => {
-    await get().fetchUsers();
+    const state = get();
+    await get().fetchUsers({
+      page: state.page,
+      pageSize: state.pageSize,
+      search: state.search,
+    });
+  },
+
+  // Set page
+  setPage: (page: number) => {
+    set({ page });
+    const state = get();
+    get().fetchUsers({
+      page,
+      pageSize: state.pageSize,
+      search: state.search,
+    });
+  },
+
+  // Set page size
+  setPageSize: (size: number) => {
+    set({ pageSize: size, page: 1 }); // Reset to page 1 when changing page size
+    const state = get();
+    get().fetchUsers({ page: 1, pageSize: size, search: state.search });
+  },
+
+  // Set search
+  setSearch: (query: string) => {
+    set({ search: query, page: 1 }); // Reset to page 1 when searching
   },
 
   // Create a new user
@@ -227,7 +297,12 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
       if (result.success) {
         toast.success("User created successfully");
-        await get().fetchUsers(); // Refresh the list
+        const state = get();
+        await get().fetchUsers({
+          page: state.page,
+          pageSize: state.pageSize,
+          search: state.search,
+        }); // Refresh the list
         set({ isFormOpen: false, selectedUser: null });
         return true;
       } else {
@@ -250,7 +325,10 @@ export const useUserStore = create<UserStore>((set, get) => ({
   updateUser: async (id: string, data: Partial<UserFormValues>) => {
     try {
       set({ isSubmitting: true });
-      console.log(`📤 Updating user ${id}:`, { ...data, password: data.password ? "***" : undefined });
+      console.log(`📤 Updating user ${id}:`, {
+        ...data,
+        password: data.password ? "***" : undefined,
+      });
 
       const response = await fetch(`/api/allUser/${id}`, {
         method: "PATCH",
@@ -272,7 +350,12 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
       if (result.success) {
         toast.success("User updated successfully");
-        await get().fetchUsers(); // Refresh the list
+        const state = get();
+        await get().fetchUsers({
+          page: state.page,
+          pageSize: state.pageSize,
+          search: state.search,
+        }); // Refresh the list
         set({ isFormOpen: false, selectedUser: null });
         return true;
       } else {
@@ -313,7 +396,12 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
       if (result.success) {
         toast.success("User deleted successfully");
-        await get().fetchUsers(); // Refresh the list
+        const state = get();
+        await get().fetchUsers({
+          page: state.page,
+          pageSize: state.pageSize,
+          search: state.search,
+        }); // Refresh the list
         set({ isDeleteDialogOpen: false, selectedUser: null });
         return true;
       } else {
@@ -344,4 +432,3 @@ export const useUserStore = create<UserStore>((set, get) => ({
     return get().users.find((user) => user.id === id);
   },
 }));
-

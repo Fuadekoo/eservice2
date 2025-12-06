@@ -201,7 +201,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, timeToTake, officeId } = body;
+    const {
+      name,
+      description,
+      timeToTake,
+      officeId,
+      requirements,
+      serviceFors,
+    } = body;
 
     // Validate input
     if (!name || !description || !timeToTake || !officeId) {
@@ -243,7 +250,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create service
+    // Create service with requirements and serviceFors
     const service = await prisma.service.create({
       data: {
         id: randomUUID(),
@@ -251,6 +258,26 @@ export async function POST(request: NextRequest) {
         description,
         timeToTake,
         officeId,
+        requirements:
+          requirements && Array.isArray(requirements)
+            ? {
+                create: requirements.map((req: any) => ({
+                  id: randomUUID(),
+                  name: req.name,
+                  description: req.description || null,
+                })),
+              }
+            : undefined,
+        serviceFors:
+          serviceFors && Array.isArray(serviceFors)
+            ? {
+                create: serviceFors.map((sf: any) => ({
+                  id: randomUUID(),
+                  name: sf.name,
+                  description: sf.description || null,
+                })),
+              }
+            : undefined,
       },
       include: {
         office: {
@@ -262,6 +289,8 @@ export async function POST(request: NextRequest) {
             status: true,
           },
         },
+        requirements: true,
+        serviceFors: true,
       },
     });
 

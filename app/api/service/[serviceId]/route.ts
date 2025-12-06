@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
+import { randomUUID } from "crypto";
 
 /**
  * GET - Get a single service by ID
@@ -183,7 +184,14 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, description, timeToTake, officeId } = body;
+    const {
+      name,
+      description,
+      timeToTake,
+      officeId,
+      requirements,
+      serviceFors,
+    } = body;
 
     // Get existing service
     const existingService = await prisma.service.findUnique({
@@ -233,6 +241,42 @@ export async function PATCH(
     if (timeToTake !== undefined) updateData.timeToTake = timeToTake;
     if (officeId !== undefined && isAdmin) updateData.officeId = officeId;
 
+    // Handle requirements update
+    if (requirements !== undefined && Array.isArray(requirements)) {
+      // Delete existing requirements
+      await prisma.requirement.deleteMany({
+        where: { serviceId: serviceId },
+      });
+      // Create new requirements
+      if (requirements.length > 0) {
+        updateData.requirements = {
+          create: requirements.map((req: any) => ({
+            id: randomUUID(),
+            name: req.name,
+            description: req.description || null,
+          })),
+        };
+      }
+    }
+
+    // Handle serviceFors update
+    if (serviceFors !== undefined && Array.isArray(serviceFors)) {
+      // Delete existing serviceFors
+      await prisma.serviceFor.deleteMany({
+        where: { serviceId: serviceId },
+      });
+      // Create new serviceFors
+      if (serviceFors.length > 0) {
+        updateData.serviceFors = {
+          create: serviceFors.map((sf: any) => ({
+            id: randomUUID(),
+            name: sf.name,
+            description: sf.description || null,
+          })),
+        };
+      }
+    }
+
     const service = await prisma.service.update({
       where: { id: serviceId },
       data: updateData,
@@ -246,6 +290,8 @@ export async function PATCH(
             status: true,
           },
         },
+        requirements: true,
+        serviceFors: true,
       },
     });
 
