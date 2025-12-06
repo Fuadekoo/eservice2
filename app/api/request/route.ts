@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
     const officeId = searchParams.get("officeId") || "";
     const status = searchParams.get("status") || "";
 
-    // Only allow users to fetch their own requests (unless admin)
+    // Only allow users to fetch their own requests (unless admin or manager)
     const dbUser = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { role: true },
@@ -190,11 +190,81 @@ export async function GET(request: NextRequest) {
       dbUser?.role?.name?.toLowerCase() === "admin" ||
       dbUser?.role?.name?.toLowerCase() === "administrator";
 
+    const isManager = dbUser?.role?.name?.toLowerCase() === "manager";
+    const isStaff = dbUser?.role?.name?.toLowerCase() === "staff";
+
     // Build where clause
     const where: any = {};
+    let managerStaff: { officeId: string } | null = null;
+    let staffRecord: { id: string } | null = null;
 
-    // If not admin, only show user's own requests
-    if (!isAdmin) {
+    // If manager, filter by manager's office
+    if (isManager) {
+      // Get manager's office from staff relation
+      managerStaff = await prisma.staff.findFirst({
+        where: { userId: session.user.id },
+        select: { officeId: true },
+      });
+
+      if (!managerStaff?.officeId) {
+        // Manager has no office, return empty
+        return NextResponse.json({
+          success: true,
+          data: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+    } else if (isStaff) {
+      // Staff can only see requests for services they're assigned to
+      staffRecord = await prisma.staff.findFirst({
+        where: { userId: session.user.id },
+        select: { id: true },
+      });
+
+      if (!staffRecord) {
+        // Staff has no record, return empty
+        return NextResponse.json({
+          success: true,
+          data: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+
+      // Get services assigned to this staff
+      const assignedServices = await prisma.serviceStaffAssignment.findMany({
+        where: { staffId: staffRecord.id },
+        select: { serviceId: true },
+      });
+
+      const serviceIds = assignedServices.map((a) => a.serviceId);
+
+      if (serviceIds.length === 0) {
+        // No services assigned, return empty
+        return NextResponse.json({
+          success: true,
+          data: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+
+      where.serviceId = { in: serviceIds };
+    } else if (!isAdmin) {
+      // Regular users only see their own requests
       where.userId = session.user.id;
     } else if (userId) {
       // Admin can filter by userId
@@ -215,31 +285,74 @@ export async function GET(request: NextRequest) {
 
     // Search filter (search in service name, office name, user username)
     if (search) {
-      where.OR = [
-        {
-          service: {
-            name: {
-              contains: search,
-            },
-          },
-        },
-        {
-          service: {
-            office: {
+      const searchConditions = {
+        OR: [
+          {
+            service: {
               name: {
                 contains: search,
+                mode: "insensitive" as const,
               },
             },
           },
-        },
-        {
-          user: {
-            username: {
-              contains: search,
+          {
+            service: {
+              office: {
+                name: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
             },
           },
-        },
-      ];
+          {
+            user: {
+              username: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        ],
+      };
+
+      // For managers, we need to combine the office filter with search
+      if (isManager && managerStaff?.officeId) {
+        where.AND = [
+          {
+            service: {
+              officeId: managerStaff.officeId,
+            },
+          },
+          searchConditions,
+        ];
+      } else if (isStaff && staffRecord) {
+        // For staff, combine service assignment filter with search
+        const assignedServices = await prisma.serviceStaffAssignment.findMany({
+          where: { staffId: staffRecord.id },
+          select: { serviceId: true },
+        });
+        const serviceIds = assignedServices.map((a) => a.serviceId);
+        
+        if (serviceIds.length > 0) {
+          where.AND = [
+            {
+              serviceId: { in: serviceIds },
+            },
+            searchConditions,
+          ];
+        }
+      } else {
+        where.OR = searchConditions.OR;
+      }
+    } else if (isManager && managerStaff?.officeId) {
+      // Manager filter without search
+      where.service = {
+        officeId: managerStaff.officeId,
+      };
+    } else if (isStaff && staffRecord) {
+      // Staff filter without search (already set above)
+      // No additional filter needed as serviceId is already set
     }
 
     // Get total count for pagination

@@ -107,13 +107,71 @@ export async function GET(
     const isAdmin =
       dbUser?.role?.name?.toLowerCase() === "admin" ||
       dbUser?.role?.name?.toLowerCase() === "administrator";
+    
+    const isManager = dbUser?.role?.name?.toLowerCase() === "manager";
+    const isStaff = dbUser?.role?.name?.toLowerCase() === "staff";
 
-    // Only allow users to view their own requests (unless admin)
-    if (!isAdmin && requestData.userId !== session.user.id) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    // Check access permissions
+    if (isAdmin) {
+      // Admins can view any request
+    } else if (isManager) {
+      // Managers can view requests from their office
+      const managerStaff = await prisma.staff.findFirst({
+        where: { userId: session.user.id },
+        select: { officeId: true },
+      });
+
+      if (!managerStaff?.officeId) {
+        return NextResponse.json(
+          { success: false, error: "Manager office not found" },
+          { status: 403 }
+        );
+      }
+
+      if (requestData.service.officeId !== managerStaff.officeId) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 }
+        );
+      }
+    } else if (isStaff) {
+      // Staff can view requests for services they're assigned to
+      const staffRecord = await prisma.staff.findFirst({
+        where: { userId: session.user.id },
+        select: { id: true },
+      });
+
+      if (!staffRecord) {
+        return NextResponse.json(
+          { success: false, error: "Staff record not found" },
+          { status: 403 }
+        );
+      }
+
+      // Check if staff is assigned to this service
+      const assignment = await prisma.serviceStaffAssignment.findUnique({
+        where: {
+          serviceId_staffId: {
+            serviceId: requestData.serviceId,
+            staffId: staffRecord.id,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Regular users can only view their own requests
+      if (requestData.userId !== session.user.id) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 }
+        );
+      }
     }
 
     // Serialize dates

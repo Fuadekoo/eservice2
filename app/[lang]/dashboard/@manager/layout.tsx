@@ -5,6 +5,7 @@ import {
   Users,
   Settings,
   Clock,
+  FileText,
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
@@ -32,6 +33,11 @@ export default async function Layout({
         key: "staff",
         url: "staff",
         Icon: <Users className="size-6" />,
+      },
+      {
+        key: "requestManagement",
+        url: "requestmanagement",
+        Icon: <FileText className="size-6" />,
       },
     ],
     [
