@@ -306,6 +306,12 @@ model appointment {
   @@map("appointment")
 }
 
+model otp {
+  id          String @id @default(uuid())
+  phoneNumber String
+  code        Int
+}
+
 model tourismArea {
   id          String   @id @default(cuid())
   name        String
