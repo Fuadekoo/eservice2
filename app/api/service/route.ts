@@ -6,27 +6,8 @@ import { randomUUID } from "crypto";
 // GET - Fetch all services with office information (with pagination and search)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
+    // Authenticate user (optional for public access)
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Get the authenticated user's office ID from staff relation
-    const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
-      select: { officeId: true },
-    });
-
-    if (!userStaff) {
-      return NextResponse.json(
-        { success: false, error: "User office not found" },
-        { status: 403 }
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const requestedOfficeId = searchParams.get("officeId");
@@ -35,8 +16,51 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
     const skip = (page - 1) * pageSize;
 
-    // Always use the authenticated user's office ID (ignore requested officeId for security)
-    const officeId = userStaff.officeId;
+    let officeId: string | null = null;
+
+    // If user is authenticated, check their role
+    if (session?.user) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: { role: true },
+      });
+
+      const roleName = dbUser?.role?.name?.toLowerCase() || "";
+      const isAdmin = roleName === "admin" || roleName === "administrator";
+      const isManager = roleName === "manager" || roleName === "office_manager";
+
+      // If user is admin or manager, get their office ID
+      if (isAdmin || isManager) {
+        const userStaff = await prisma.staff.findFirst({
+          where: { userId: session.user.id },
+          select: { officeId: true },
+        });
+
+        if (userStaff) {
+          officeId = userStaff.officeId;
+        }
+      }
+    }
+
+    // If officeId is provided in query and user is not manager/admin, use it
+    // This allows customers to view services for a specific office
+    if (requestedOfficeId && !officeId) {
+      // Verify office exists and is active
+      const office = await prisma.office.findUnique({
+        where: { id: requestedOfficeId },
+      });
+
+      if (office && office.status) {
+        officeId = requestedOfficeId;
+      }
+    }
+
+    if (!officeId) {
+      return NextResponse.json(
+        { success: false, error: "Office ID is required" },
+        { status: 400 }
+      );
+    }
 
     console.log("📋 Fetching services:", {
       officeId,
@@ -44,10 +68,10 @@ export async function GET(request: NextRequest) {
       search,
       page,
       pageSize,
-      userId: session.user.id,
+      userId: session?.user?.id || "anonymous",
     });
 
-    // Build where clause - always filter by authenticated user's office
+    // Build where clause - filter by office
     const where: any = {
       officeId: officeId,
       office: {
@@ -98,6 +122,8 @@ export async function GET(request: NextRequest) {
             status: true,
           },
         },
+        requirements: true,
+        serviceFors: true,
         staffAssignments: {
           include: {
             staff: {

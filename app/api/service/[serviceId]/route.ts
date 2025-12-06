@@ -11,27 +11,8 @@ export async function GET(
   { params }: { params: Promise<{ serviceId: string }> | { serviceId: string } }
 ) {
   try {
-    // Authenticate user
+    // Authenticate user (optional for public access)
     const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Get the authenticated user's office ID
-    const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
-      select: { officeId: true },
-    });
-
-    if (!userStaff) {
-      return NextResponse.json(
-        { success: false, error: "User office not found" },
-        { status: 403 }
-      );
-    }
 
     // Handle params as Promise or object
     const resolvedParams = await Promise.resolve(params);
@@ -98,10 +79,36 @@ export async function GET(
       );
     }
 
-    // Verify service belongs to user's office
-    if (service.officeId !== userStaff.officeId) {
+    // If user is authenticated and is manager/admin, verify they belong to the same office
+    if (session?.user) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: { role: true },
+      });
+
+      const roleName = dbUser?.role?.name?.toLowerCase() || "";
+      const isAdmin = roleName === "admin" || roleName === "administrator";
+      const isManager = roleName === "manager" || roleName === "office_manager";
+
+      if (isAdmin || isManager) {
+        const userStaff = await prisma.staff.findFirst({
+          where: { userId: session.user.id },
+          select: { officeId: true },
+        });
+
+        if (userStaff && service.officeId !== userStaff.officeId) {
+          return NextResponse.json(
+            { success: false, error: "Access denied" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
+    // Only allow access to active offices
+    if (!service.office.status) {
       return NextResponse.json(
-        { success: false, error: "Access denied" },
+        { success: false, error: "Service office is not active" },
         { status: 403 }
       );
     }
