@@ -75,11 +75,10 @@ export async function getApproversForService(serviceId: string) {
             user: {
               select: {
                 id: true,
-                name: true,
-                email: true,
+                username: true,
                 phoneNumber: true,
               },
-            },
+            },  
           },
         },
       },
@@ -88,8 +87,7 @@ export async function getApproversForService(serviceId: string) {
     return assignments.map((assignment) => ({
       staffId: assignment.staff.id,
       userId: assignment.staff.userId,
-      name: assignment.staff.user.name,
-      email: assignment.staff.user.email,
+      username: assignment.staff.user.username,
       phoneNumber: assignment.staff.user.phoneNumber,
     }));
   } catch (error) {
