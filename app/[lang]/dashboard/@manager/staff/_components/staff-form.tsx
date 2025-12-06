@@ -255,8 +255,8 @@ export function StaffForm({
               )}
               <FieldDescription className="mt-1">
                 {staff
-                  ? "Leave empty to keep current password. If provided, password must be at least 8 characters with uppercase, lowercase, and number."
-                  : "Password must be at least 8 characters with uppercase, lowercase, and number."}
+                  ? "Leave empty to keep current password. If provided, password must be at least 8 characters."
+                  : "Password must be at least 8 characters."}
               </FieldDescription>
             </>
           )}

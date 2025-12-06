@@ -238,20 +238,25 @@ export async function PATCH(
 
     // Prepare update data
     const updateData: any = {};
-    
+
     if (data.phoneNumber) {
       updateData.phoneNumber = normalizePhoneNumber(data.phoneNumber);
     }
-    
+
     if (data.username !== undefined) {
       updateData.username =
         data.username && data.username.trim() !== ""
           ? data.username.trim()
           : existingUser.username;
     }
-    
+
     if (data.roleId !== undefined) {
       updateData.roleId = data.roleId || null;
+    }
+
+    // Update isActive if provided
+    if (data.isActive !== undefined) {
+      updateData.isActive = data.isActive;
     }
 
     // Update password if provided
@@ -411,12 +416,27 @@ export async function DELETE(
 
     console.log("🗑️ Deleting user:", id);
 
-    // Check if user exists
-    const user = await prisma.user.findUnique({ where: { id } });
+    // Check if user exists and get their role
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: { role: true },
+    });
     if (!user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
         { status: 404 }
+      );
+    }
+
+    // Prevent deletion of admin users
+    const userRoleName = user.role?.name?.toLowerCase() || "";
+    if (userRoleName === "admin" || userRoleName === "administrator") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cannot delete admin users. Admin accounts are protected.",
+        },
+        { status: 403 }
       );
     }
 

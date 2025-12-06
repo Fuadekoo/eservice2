@@ -27,19 +27,11 @@ const emailField = z
 
 const passwordField = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-    "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-  );
+  .min(8, "Password must be at least 8 characters");
 
 const passwordOptionalField = z
   .string()
   .min(8, "Password must be at least 8 characters")
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-    "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-  )
   .optional()
   .or(z.literal(""));
 
@@ -54,7 +46,7 @@ export const userSchema = z
     email: emailField,
     password: passwordField,
     roleId: z.string().min(1, "Role is required"),
-    officeId: z.string().optional(),
+    officeId: z.string().min(1, "Office is required"),
     username: z
       .string()
       .min(3, "Username must be at least 3 characters")
@@ -78,6 +70,16 @@ export const userSchema = z
       message: "Please enter a valid email address",
       path: ["email"],
     }
+  )
+  .refine(
+    (data) => {
+      // Office is required for new users
+      return data.officeId && data.officeId.trim() !== "";
+    },
+    {
+      message: "Office is required",
+      path: ["officeId"],
+    }
   );
 
 export type UserFormValues = z.infer<typeof userSchema>;
@@ -95,6 +97,7 @@ export const userUpdateSchema = z
     password: passwordOptionalField,
     roleId: z.string().min(1, "Role is required").optional(),
     officeId: z.string().optional(),
+    isActive: z.boolean().optional(),
     username: z
       .string()
       .min(3, "Username must be at least 3 characters")

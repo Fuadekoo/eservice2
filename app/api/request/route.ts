@@ -65,6 +65,13 @@ export async function POST(request: NextRequest) {
           : undefined,
       },
       include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            phoneNumber: true,
+          },
+        },
         service: {
           include: {
             office: {
@@ -78,7 +85,30 @@ export async function POST(request: NextRequest) {
             },
           },
         },
+        approveStaff: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+          },
+        },
+        approveManager: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+          },
+        },
         fileData: true,
+        appointments: true,
       },
     });
 
@@ -95,6 +125,12 @@ export async function POST(request: NextRequest) {
           ...file,
           createdAt: file.createdAt.toISOString(),
           updatedAt: file.updatedAt.toISOString(),
+        })),
+        appointments: newRequest.appointments.map((apt) => ({
+          ...apt,
+          date: apt.date.toISOString(),
+          createdAt: apt.createdAt.toISOString(),
+          updatedAt: apt.updatedAt.toISOString(),
         })),
       },
     });
@@ -158,7 +194,30 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        approveStaff: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+          },
+        },
+        approveManager: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+          },
+        },
         fileData: true,
+        appointments: true,
       },
       orderBy: { createdAt: "desc" },
     });

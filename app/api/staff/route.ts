@@ -320,6 +320,7 @@ export async function POST(request: NextRequest) {
           phoneNumber: normalizedPhone,
           password: hashedPassword,
           roleId: finalRoleId, // Always staff role
+          isActive: true, // Default to active when account is created
         },
       });
 

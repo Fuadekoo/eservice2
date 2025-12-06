@@ -41,10 +41,13 @@ interface UserStore {
   createUser: (data: UserFormValues) => Promise<boolean>;
   updateUser: (id: string, data: Partial<UserFormValues>) => Promise<boolean>;
   deleteUser: (id: string) => Promise<boolean>;
+  toggleUserStatus: (id: string, isActive: boolean) => Promise<boolean>;
 
   // Actions - UI State
+  isStatusDialogOpen: boolean;
   setFormOpen: (open: boolean) => void;
   setDeleteDialogOpen: (open: boolean) => void;
+  setStatusDialogOpen: (open: boolean) => void;
   setSelectedUser: (user: User | null) => void;
   setSelectedOfficeId: (officeId: string | null) => void;
 
@@ -61,6 +64,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
   isSubmitting: false,
   isFormOpen: false,
   isDeleteDialogOpen: false,
+  isStatusDialogOpen: false,
   selectedUser: null,
   selectedOfficeId: null,
   page: 1,
@@ -417,9 +421,61 @@ export const useUserStore = create<UserStore>((set, get) => ({
     }
   },
 
+  // Toggle user status (activate/deactivate)
+  toggleUserStatus: async (id: string, isActive: boolean) => {
+    try {
+      set({ isSubmitting: true });
+      console.log(`🔄 Toggling user ${id} status to ${isActive}`);
+
+      const response = await fetch(`/api/allUser/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isActive }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("📦 Toggle status result:", result);
+
+      if (result.success) {
+        toast.success(
+          `User ${isActive ? "activated" : "deactivated"} successfully`
+        );
+        const state = get();
+        await get().fetchUsers({
+          page: state.page,
+          pageSize: state.pageSize,
+          search: state.search,
+        });
+        set({ isStatusDialogOpen: false, selectedUser: null });
+        return true;
+      } else {
+        toast.error(result.error || "Failed to update user status");
+        return false;
+      }
+    } catch (error: any) {
+      console.error("❌ Error toggling user status:", error);
+      toast.error(
+        error.message || "Failed to update user status. Please try again."
+      );
+      return false;
+    } finally {
+      set({ isSubmitting: false });
+    }
+  },
+
   // UI State Actions
   setFormOpen: (open: boolean) => set({ isFormOpen: open }),
   setDeleteDialogOpen: (open: boolean) => set({ isDeleteDialogOpen: open }),
+  setStatusDialogOpen: (open: boolean) => set({ isStatusDialogOpen: open }),
   setSelectedUser: (user: User | null) => set({ selectedUser: user }),
   setSelectedOfficeId: (officeId: string | null) => {
     set({ selectedOfficeId: officeId });

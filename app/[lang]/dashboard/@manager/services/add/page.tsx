@@ -15,18 +15,26 @@ export default function AddServicePage() {
   const lang = params.lang || "en";
   const { createService, isLoading } = useServiceStore();
   const [managerOfficeId, setManagerOfficeId] = useState<string | null>(null);
+  const [isLoadingOffice, setIsLoadingOffice] = useState(true);
 
-  // Get manager's office ID from services
+  // Get manager's office ID from authenticated user's staff relation
   useEffect(() => {
     const fetchOfficeId = async () => {
       try {
-        const response = await fetch("/api/service?page=1&pageSize=1");
+        setIsLoadingOffice(true);
+        const response = await fetch("/api/manager/office");
         const result = await response.json();
-        if (result.success && result.data.length > 0) {
-          setManagerOfficeId(result.data[0].officeId);
+        if (result.success && result.data) {
+          setManagerOfficeId(result.data.id);
+        } else {
+          console.error("Failed to fetch office:", result.error);
+          toast.error("Failed to load office information");
         }
       } catch (error) {
         console.error("Error fetching office ID:", error);
+        toast.error("Failed to load office information");
+      } finally {
+        setIsLoadingOffice(false);
       }
     };
     fetchOfficeId();
@@ -48,7 +56,7 @@ export default function AddServicePage() {
     router.push(`/${lang}/dashboard/services`);
   };
 
-  if (!managerOfficeId) {
+  if (isLoadingOffice || !managerOfficeId) {
     return (
       <div className="w-full h-full py-6">
         <div className="flex items-center justify-center py-20">

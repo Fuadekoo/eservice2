@@ -266,6 +266,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get the selected role to check if it's a manager role
+    const selectedRole = await prisma.role.findUnique({
+      where: { id: data.roleId.trim() },
+    });
+
+    if (!selectedRole) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Selected role not found",
+        },
+        { status: 400 }
+      );
+    }
+
+    const isManagerOrStaffRole =
+      selectedRole.name.toLowerCase() === "manager" ||
+      selectedRole.name.toLowerCase() === "office_manager" ||
+      selectedRole.name.toLowerCase() === "staff";
+
+    // If creating a manager or staff, ensure officeId is provided
+    if (isManagerOrStaffRole && (!data.officeId || data.officeId.trim() === "")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Office is required when creating a manager or staff",
+        },
+        { status: 400 }
+      );
+    }
+
+    // If creating a manager or staff, ensure role exists for the office
+    let finalRoleId = data.roleId.trim();
+    if (isManagerOrStaffRole && data.officeId && data.officeId.trim() !== "") {
+      // Check if the selected role already exists for this office
+      const existingRole = await prisma.role.findFirst({
+        where: {
+          id: data.roleId.trim(),
+          officeId: data.officeId.trim(),
+        },
+      });
+
+      if (existingRole) {
+        // Role already exists for this office, use it
+        finalRoleId = existingRole.id;
+      } else {
+        // Check if it's a manager role - if so, find or create manager role for this office
+        const isManagerRole =
+          selectedRole.name.toLowerCase() === "manager" ||
+          selectedRole.name.toLowerCase() === "office_manager";
+
+        if (isManagerRole) {
+          let managerRole = await prisma.role.findFirst({
+            where: {
+              officeId: data.officeId.trim(),
+              OR: [
+                { name: "manager" },
+                { name: "office_manager" },
+                { name: "Manager" },
+                { name: "Office_Manager" },
+              ],
+            },
+          });
+
+          if (!managerRole) {
+            managerRole = await prisma.role.create({
+              data: {
+                name: "manager",
+                officeId: data.officeId.trim(),
+              },
+            });
+            console.log("✅ Created manager role for office:", data.officeId);
+          }
+
+          finalRoleId = managerRole.id;
+        } else {
+          // For staff role, use the selected role ID (it should exist)
+          finalRoleId = data.roleId.trim();
+        }
+      }
+    }
+
     // Create user (adapt to actual schema - no name, email, image fields)
     const user = await prisma.user.create({
       data: {
@@ -273,20 +355,31 @@ export async function POST(request: NextRequest) {
         username: username,
         phoneNumber: normalizedPhone,
         password: hashedPassword,
-        roleId: data.roleId.trim(), // Use trimmed roleId, don't convert to null
+        roleId: finalRoleId,
         isActive: true,
         phoneVerified: false,
       },
     });
 
-    // Create staff relation if officeId is provided
+    // Create staff relation if officeId is provided (required for managers)
     if (data.officeId && data.officeId.trim() !== "") {
-      await prisma.staff.create({
-        data: {
+      // Check if staff relation already exists
+      const existingStaff = await prisma.staff.findFirst({
+        where: {
           userId: user.id,
-          officeId: data.officeId,
+          officeId: data.officeId.trim(),
         },
       });
+
+      if (!existingStaff) {
+        await prisma.staff.create({
+          data: {
+            userId: user.id,
+            officeId: data.officeId.trim(),
+          },
+        });
+        console.log("✅ Created staff relation for user:", user.id);
+      }
     }
 
     // Fetch created user with relations

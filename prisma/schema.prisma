@@ -36,16 +36,17 @@ model User {
 }
 
 model staff {
-  id                 String                   @id @default(cuid())
-  userId             String
-  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  officeId           String
-  office             Office                   @relation(fields: [officeId], references: [id], onDelete: Cascade)
-  createdAt          DateTime                 @default(now())
-  updatedAt          DateTime                 @default(now()) @updatedAt
-  appointments       appointment[]
-  requests           request[]
-  serviceAssignments serviceStaffAssignment[]
+  id                      String                   @id @default(cuid())
+  userId                  String
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  officeId                String
+  office                  Office                   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @default(now()) @updatedAt
+  appointments            appointment[]
+  approvedStaffRequests   request[]                @relation("ApproveStaff")
+  approvedManagerRequests request[]                @relation("ApproveManager")
+  serviceAssignments      serviceStaffAssignment[]
 
   @@map("staff")
 }
@@ -238,7 +239,9 @@ model request {
   status               requestStatus
   // add the the approve requst staff id and note write by the approve staff
   approveStaffId       String?
-  approveStaff         staff?                @relation(fields: [approveStaffId], references: [id])
+  approveStaff         staff?                @relation("ApproveStaff", fields: [approveStaffId], references: [id])
+  approveManagerId     String?
+  approveManager       staff?                @relation("ApproveManager", fields: [approveManagerId], references: [id])
   approveNote          String?
   customerSatisfaction customerSatisfaction?
   createdAt            DateTime              @default(now())

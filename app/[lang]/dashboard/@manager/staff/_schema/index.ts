@@ -21,19 +21,11 @@ const phoneNumberField = z
 
 const passwordField = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-    "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-  );
+  .min(8, "Password must be at least 8 characters");
 
 const passwordOptionalField = z
   .string()
   .min(8, "Password must be at least 8 characters")
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-    "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-  )
   .optional()
   .or(z.literal(""));
 

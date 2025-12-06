@@ -47,6 +47,9 @@ export interface Request {
   status: RequestStatus;
   createdAt: Date;
   updatedAt: Date;
+  approveStaffId?: string | null;
+  approveManagerId?: string | null;
+  approveNote?: string | null;
   user: {
     id: string;
     name: string;
@@ -64,6 +67,22 @@ export interface Request {
       address: string;
     };
   };
+  approveStaff?: {
+    id: string;
+    user: {
+      id: string;
+      username: string;
+      phoneNumber: string;
+    };
+  } | null;
+  approveManager?: {
+    id: string;
+    user: {
+      id: string;
+      username: string;
+      phoneNumber: string;
+    };
+  } | null;
   appointments: Appointment[];
   fileData: FileData[];
 }
@@ -85,4 +104,3 @@ export interface Service {
     address: string;
   };
 }
-

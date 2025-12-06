@@ -12,6 +12,7 @@ export interface User {
   role?: Role;
   officeId?: string | null; // From staff relation
   office?: Office | null;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

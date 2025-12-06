@@ -1,16 +1,19 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `id` VARCHAR(191) NOT NULL,
+    `username` VARCHAR(191) NOT NULL,
+    `phoneNumber` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `roleId` VARCHAR(191) NULL,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `phoneVerified` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
-  - You are about to drop the column `role` on the `user` table. All the data in the column will be lost.
-  - A unique constraint covering the columns `[phoneNumber]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `phoneNumber` to the `User` table without a default value. This is not possible if the table is not empty.
-
-*/
--- AlterTable
-ALTER TABLE `user` DROP COLUMN `role`,
-    ADD COLUMN `phoneNumber` VARCHAR(191) NOT NULL,
-    ADD COLUMN `phoneVerified` BOOLEAN NOT NULL DEFAULT false,
-    ADD COLUMN `roleId` VARCHAR(191) NULL;
+    UNIQUE INDEX `User_username_key`(`username`),
+    UNIQUE INDEX `User_phoneNumber_key`(`phoneNumber`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `staff` (
@@ -174,6 +177,7 @@ CREATE TABLE `request` (
     `date` DATETIME(3) NOT NULL,
     `status` ENUM('pending', 'approved', 'rejected') NOT NULL,
     `approveStaffId` VARCHAR(191) NULL,
+    `approveManagerId` VARCHAR(191) NULL,
     `approveNote` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -289,9 +293,6 @@ CREATE TABLE `about` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateIndex
-CREATE UNIQUE INDEX `User_phoneNumber_key` ON `User`(`phoneNumber`);
-
 -- AddForeignKey
 ALTER TABLE `User` ADD CONSTRAINT `User_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `role`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -336,6 +337,9 @@ ALTER TABLE `request` ADD CONSTRAINT `request_serviceId_fkey` FOREIGN KEY (`serv
 
 -- AddForeignKey
 ALTER TABLE `request` ADD CONSTRAINT `request_approveStaffId_fkey` FOREIGN KEY (`approveStaffId`) REFERENCES `staff`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `request` ADD CONSTRAINT `request_approveManagerId_fkey` FOREIGN KEY (`approveManagerId`) REFERENCES `staff`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `request_for_other` ADD CONSTRAINT `request_for_other_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

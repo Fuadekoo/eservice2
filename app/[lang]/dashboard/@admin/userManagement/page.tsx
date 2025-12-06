@@ -59,6 +59,8 @@ import {
   Building2,
   Phone,
   Mail,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useUserStore } from "./_store";
 import {
@@ -71,6 +73,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 export default function UserManagementPage() {
   // Get state and actions from Zustand store
@@ -80,6 +83,7 @@ export default function UserManagementPage() {
     isSubmitting,
     isFormOpen,
     isDeleteDialogOpen,
+    isStatusDialogOpen,
     selectedUser,
     page,
     pageSize,
@@ -91,8 +95,10 @@ export default function UserManagementPage() {
     createUser,
     updateUser,
     deleteUser,
+    toggleUserStatus,
     setFormOpen,
     setDeleteDialogOpen,
+    setStatusDialogOpen,
     setSelectedUser,
     setPage,
     setPageSize,
@@ -163,10 +169,38 @@ export default function UserManagementPage() {
     setFormOpen(true);
   };
 
+  // Check if user is admin
+  const isAdmin = (user: User) => {
+    const roleName = user.role?.name?.toLowerCase() || "";
+    return roleName === "admin" || roleName === "administrator";
+  };
+
   // Handle delete click
   const handleDeleteClick = (user: User) => {
+    // Prevent deletion of admin users
+    if (isAdmin(user)) {
+      toast.error("Cannot delete admin users. Admin accounts are protected.");
+      return;
+    }
     setSelectedUser(user);
     setDeleteDialogOpen(true);
+  };
+
+  // Handle toggle status click
+  const handleToggleStatusClick = (user: User) => {
+    setSelectedUser(user);
+    setStatusDialogOpen(true);
+  };
+
+  // Handle toggle status confirmation
+  const handleToggleStatusConfirm = async () => {
+    if (!selectedUser?.id) {
+      setStatusDialogOpen(false);
+      return;
+    }
+
+    const newStatus = !selectedUser.isActive;
+    await toggleUserStatus(selectedUser.id, newStatus);
   };
 
   // Get initials from name
@@ -352,7 +386,9 @@ export default function UserManagementPage() {
               </TableHeader>
               <TableBody>
                 {users.map((user) => {
-                  const initials = getInitials(user.name || user.username || "U");
+                  const initials = getInitials(
+                    user.name || user.username || "U"
+                  );
                   return (
                     <TableRow key={user.id}>
                       <TableCell>
@@ -399,31 +435,48 @@ export default function UserManagementPage() {
                       </TableCell>
                       <TableCell>
                         {user.role ? (
-                          <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                          <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1 w-fit"
+                          >
                             <Shield className="h-3 w-3" />
                             {user.role.name}
                           </Badge>
                         ) : (
-                          <span className="text-muted-foreground text-sm">No role</span>
+                          <span className="text-muted-foreground text-sm">
+                            No role
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
                         {user.office ? (
-                          <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1 w-fit"
+                          >
                             <Building2 className="h-3 w-3" />
                             {user.office.name}
                           </Badge>
                         ) : (
-                          <span className="text-muted-foreground text-sm">No office</span>
+                          <span className="text-muted-foreground text-sm">
+                            No office
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <Badge
-                            variant={user.phoneNumberVerified ? "default" : "secondary"}
-                            className="w-fit text-xs"
+                            variant={
+                              user.isActive === true ? "default" : "secondary"
+                            }
+                            className="w-fit text-xs flex items-center gap-1"
                           >
-                            {user.phoneNumberVerified ? "Active" : "Inactive"}
+                            {user.isActive === true ? (
+                              <CheckCircle className="h-3 w-3" />
+                            ) : (
+                              <XCircle className="h-3 w-3" />
+                            )}
+                            {user.isActive === true ? "Active" : "Inactive"}
                           </Badge>
                           {user.emailVerified && (
                             <Badge variant="outline" className="w-fit text-xs">
@@ -435,7 +488,11 @@ export default function UserManagementPage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -445,12 +502,38 @@ export default function UserManagementPage() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleDeleteClick(user)}
-                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleToggleStatusClick(user)}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              {user.isActive ? (
+                                <>
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Activate
+                                </>
+                              )}
                             </DropdownMenuItem>
+                            {!isAdmin(user) && (
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(user)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+                            {isAdmin(user) && (
+                              <DropdownMenuItem
+                                disabled
+                                className="text-muted-foreground cursor-not-allowed"
+                              >
+                                <Shield className="mr-2 h-4 w-4" />
+                                Cannot delete admin
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -523,8 +606,9 @@ export default function UserManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the user "{selectedUser?.name || selectedUser?.username}". This
-              action cannot be undone.
+              This will permanently delete the user "
+              {selectedUser?.name || selectedUser?.username}". This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -537,6 +621,46 @@ export default function UserManagementPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isSubmitting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Status Toggle Confirmation Dialog */}
+      <AlertDialog open={isStatusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change User Status?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedUser && (
+                <>
+                  This will {selectedUser.isActive ? "deactivate" : "activate"}{" "}
+                  the user "{selectedUser.name || selectedUser.username}".
+                  {selectedUser.isActive
+                    ? " The user will not be able to access the system."
+                    : " The user will be able to access the system."}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isSubmitting}
+              onClick={() => setSelectedUser(null)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleToggleStatusConfirm}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? selectedUser?.isActive
+                  ? "Deactivating..."
+                  : "Activating..."
+                : selectedUser?.isActive
+                ? "Deactivate"
+                : "Activate"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

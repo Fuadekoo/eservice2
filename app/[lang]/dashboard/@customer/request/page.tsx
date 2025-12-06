@@ -53,21 +53,22 @@ export default function CustomerRequestPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Get current user ID (mock - replace with actual auth)
+  // Get current user ID from session
   useEffect(() => {
-    // TODO: Replace with actual authentication
-    // For now, get from localStorage or session
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
+    const fetchCurrentUser = async () => {
       try {
-        const user = JSON.parse(userStr);
-        if (user?.id) {
-          setCurrentUserId(user.id);
+        const response = await fetch("/api/user/me", { cache: "no-store" });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data?.id) {
+            setCurrentUserId(result.data.id);
+          }
         }
       } catch (error) {
-        console.error("Error parsing user:", error);
+        console.error("Error fetching current user:", error);
       }
-    }
+    };
+    fetchCurrentUser();
   }, [setCurrentUserId]);
 
   // Fetch services on mount

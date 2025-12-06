@@ -5,7 +5,8 @@ import { promisify } from "util";
 const readFileAsync = promisify(fs.readFile);
 const statAsync = promisify(fs.stat);
 
-const FILE_STORAGE_PATH = path.resolve(process.cwd(), "filedata");
+// Files are stored in public/filedata, but we serve them via API for better control
+const FILE_STORAGE_PATH = path.resolve(process.cwd(), "public", "filedata");
 
 function getMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
