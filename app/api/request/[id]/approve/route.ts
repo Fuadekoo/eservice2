@@ -51,7 +51,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { note } = body;
+    const { note, action = "approve" } = body; // action: "approve" or "reject", defaults to "approve"
 
     // Get the request and verify it belongs to manager's office
     const requestData = await prisma.request.findUnique({
@@ -80,21 +80,59 @@ export async function POST(
       );
     }
 
-    // Check if already approved by manager
+    // Check if already processed by manager
     if (requestData.approveManagerId) {
       return NextResponse.json(
-        { success: false, error: "Request already approved by manager" },
+        { success: false, error: "Request already processed by manager" },
         { status: 400 }
       );
     }
 
-    // Update the request with manager approval
+    // Determine new status based on both staff and manager actions
+    let newStatus: "pending" | "approved" | "rejected" = requestData.status;
+    const hasStaffApproved = !!requestData.approveStaffId;
+    const hasStaffRejected = requestData.status === "rejected" && !hasStaffApproved;
+    
+    if (action === "approve") {
+      // Manager approves: set approveManagerId
+      // If staff has also approved, set status to "approved"
+      if (hasStaffApproved) {
+        newStatus = "approved";
+      } else if (hasStaffRejected) {
+        // Staff has rejected but manager approves - conflict, set to "pending"
+        newStatus = "pending";
+      } else {
+        // Staff hasn't approved yet, keep status as "pending"
+        newStatus = "pending";
+      }
+    } else if (action === "reject") {
+      // Manager rejects: don't set approveManagerId (it stays null)
+      if (hasStaffApproved) {
+        // Staff has approved but manager rejects - conflict, set to "pending"
+        newStatus = "pending";
+      } else if (hasStaffRejected) {
+        // Staff has also rejected, both rejected → "rejected"
+        newStatus = "rejected";
+      } else {
+        // Staff hasn't acted yet, set status to "rejected" (will be updated when staff acts)
+        newStatus = "rejected";
+      }
+    }
+
+    // Update the request with manager approval/rejection
+    const updateData: any = {
+      approveNote: note || null,
+      status: newStatus,
+    };
+
+    // Only set approveManagerId if approving
+    if (action === "approve") {
+      updateData.approveManagerId = managerStaff.id;
+    }
+
     const updatedRequest = await prisma.request.update({
       where: { id: requestId },
-      data: {
-        approveManagerId: managerStaff.id,
-        approveNote: note || null,
-      },
+      data: updateData,
       include: {
         user: {
           select: {
