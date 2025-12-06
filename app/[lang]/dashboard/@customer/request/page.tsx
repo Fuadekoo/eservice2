@@ -5,6 +5,7 @@ import { Request, RequestStatus } from "./_types";
 import { RequestCard } from "./_components/request-card";
 import { RequestDetail } from "./_components/request-detail";
 import { RequestForm } from "./_components/request-form";
+import { MultiStepRequestForm } from "./_components/multi-step-request-form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Loader2, RefreshCw, Plus } from "lucide-react";
+import { FileText, Loader2, RefreshCw } from "lucide-react";
 import { useCustomerRequestStore } from "./_store";
 import { CustomerRequestFormValues } from "./_schema";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export default function CustomerRequestPage() {
   const {
     requests,
     services,
+    offices,
     isLoading,
     isSubmitting,
     isDeleteDialogOpen,
@@ -41,10 +43,12 @@ export default function CustomerRequestPage() {
     selectedRequest,
     currentUserId,
     fetchServices,
+    fetchOffices,
     fetchMyRequests,
     createRequest,
     updateRequest,
     deleteRequest,
+    uploadFile,
     setCurrentUserId,
     setDeleteDialogOpen,
     setDetailOpen,
@@ -53,6 +57,8 @@ export default function CustomerRequestPage() {
   } = useCustomerRequestStore();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedOffice, setSelectedOffice] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
 
   // Get current user ID from session
   useEffect(() => {
@@ -72,10 +78,10 @@ export default function CustomerRequestPage() {
     fetchCurrentUser();
   }, [setCurrentUserId]);
 
-  // Fetch services on mount
+  // Fetch offices on mount
   useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
+    fetchOffices();
+  }, [fetchOffices]);
 
   // Fetch requests when userId is available
   useEffect(() => {
@@ -142,17 +148,41 @@ export default function CustomerRequestPage() {
     setDeleteDialogOpen(true);
   };
 
-  // Handle create new
-  const handleCreateNew = () => {
+  // Handle multi-step form submit (for new requests)
+  const handleMultiStepSubmit = async (data: CustomerRequestFormValues & { files: File[] }) => {
     if (!currentUserId) {
       toast.error("Please log in to create a request");
       return;
     }
-    setSelectedRequest(null);
-    setFormOpen(true);
+
+    try {
+      // Create the request first
+      const requestId = await createRequest(currentUserId, {
+        serviceId: data.serviceId,
+        currentAddress: data.currentAddress,
+        date: data.date,
+      });
+
+      // Upload files if any
+      if (data.files && data.files.length > 0) {
+        for (const file of data.files) {
+          await uploadFile(requestId, file);
+        }
+      }
+
+      toast.success("Request created successfully");
+      setFormOpen(false);
+      setSelectedOffice(null);
+      setSelectedService(null);
+      if (currentUserId) {
+        await fetchMyRequests(currentUserId);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save request");
+    }
   };
 
-  // Handle form submit
+  // Handle form submit (for editing)
   const handleFormSubmit = async (data: CustomerRequestFormValues) => {
     if (!currentUserId) {
       toast.error("Please log in to create a request");
@@ -172,10 +202,6 @@ export default function CustomerRequestPage() {
         }
         await updateRequest(selectedRequest.id, data);
         toast.success("Request updated successfully");
-      } else {
-        // Create new request
-        await createRequest(currentUserId, data);
-        toast.success("Request created successfully");
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to save request");
@@ -225,10 +251,6 @@ export default function CustomerRequestPage() {
             />
             Refresh
           </Button>
-          <Button onClick={handleCreateNew} disabled={!currentUserId}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Request
-          </Button>
         </div>
       </div>
 
@@ -250,10 +272,6 @@ export default function CustomerRequestPage() {
               ? `No ${statusFilter} requests available.`
               : "You haven't created any requests yet."}
           </p>
-          <Button onClick={handleCreateNew} disabled={!currentUserId}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Your First Request
-          </Button>
         </div>
       )}
 
@@ -272,20 +290,45 @@ export default function CustomerRequestPage() {
         </div>
       )}
 
-      {/* Request Form Dialog */}
-      <RequestForm
-        open={isFormOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open);
-          if (!open) {
-            setSelectedRequest(null);
-          }
-        }}
-        onSubmit={handleFormSubmit}
-        services={services}
-        selectedRequest={selectedRequest}
-        isSubmitting={isSubmitting}
-      />
+      {/* Multi-Step Request Form (for new requests) */}
+      {!selectedRequest && (
+        <MultiStepRequestForm
+          open={isFormOpen}
+          onOpenChange={(open) => {
+            setFormOpen(open);
+            if (!open) {
+              setSelectedOffice(null);
+              setSelectedService(null);
+            }
+          }}
+          onSubmit={handleMultiStepSubmit}
+          offices={offices}
+          services={services}
+          selectedOffice={selectedOffice}
+          selectedService={selectedService}
+          onOfficeChange={setSelectedOffice}
+          onServiceChange={setSelectedService}
+          fetchServices={fetchServices}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {/* Request Form Dialog (for editing) */}
+      {selectedRequest && (
+        <RequestForm
+          open={isFormOpen}
+          onOpenChange={(open) => {
+            setFormOpen(open);
+            if (!open) {
+              setSelectedRequest(null);
+            }
+          }}
+          onSubmit={handleFormSubmit}
+          services={services}
+          selectedRequest={selectedRequest}
+          isSubmitting={isSubmitting}
+        />
+      )}
 
       {/* Request Detail Dialog */}
       <RequestDetail

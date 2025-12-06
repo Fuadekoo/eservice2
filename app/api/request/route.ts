@@ -443,6 +443,15 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        customerSatisfaction: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,

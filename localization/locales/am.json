@@ -72,7 +72,11 @@
     "trackOrder": "ትዕዛዝ መመለስ",
     "citizen": "ዜግነት",
     "printralReport": "የማተሚያ ሪፖርት",
-    "home": "መነሻ"
+    "home": "መነሻ",
+    "appointment": "ቀጠሮ",
+    "request": "ጥያቄ",
+    "applyService": "አገልግሎት ማመልከት",
+    "feedback": "ግብረ መልስ"
   },
   "roles": {
     "superAdmin": "ሱፐር አስተዳዳሪ",
@@ -267,7 +271,8 @@
     "changing": "በመለወጥ ላይ...",
     "enterCurrentPassword": "አሁን ያለው ሚስጥር ቁልፍ ያስገቡ",
     "enterNewPassword": "አዲስ ሚስጥር ቁልፍ ያስገቡ",
-    "confirmNewPassword": "አዲስ ሚስጥር ቁልፍ ያረጋግጡ"
+    "confirmNewPassword": "አዲስ ሚስጥር ቁልፍ ያረጋግጡ",
+    "phoneNumberReadOnly": "የስልክ ቁጥር ሊቀየር አይችልም"
   },
   "report": {
     "title": "ሪፖርቶች",

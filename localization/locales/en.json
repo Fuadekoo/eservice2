@@ -72,7 +72,11 @@
     "trackOrder": "Track Order",
     "citizen": "Citizen",
     "printralReport": "Printral Report",
-    "home": "Home"
+    "home": "Home",
+    "appointment": "Appointment",
+    "request": "Request",
+    "applyService": "Apply Service",
+    "feedback": "Feedback"
   },
   "roles": {
     "superAdmin": "Super Admin",
@@ -267,7 +271,8 @@
     "changing": "Changing...",
     "enterCurrentPassword": "Enter current password",
     "enterNewPassword": "Enter new password",
-    "confirmNewPassword": "Confirm new password"
+    "confirmNewPassword": "Confirm new password",
+    "phoneNumberReadOnly": "Phone number cannot be changed"
   },
   "report": {
     "title": "Reports",

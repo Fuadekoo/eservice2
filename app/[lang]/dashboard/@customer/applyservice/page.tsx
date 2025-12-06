@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +23,12 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, X, FileText, Calendar, MapPin } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import { Loader2, Upload, X, FileText, Calendar, MapPin, CheckCircle2, Building2, List, FileCheck } from "lucide-react";
 import Image from "next/image";
 import { applyServiceSchema, ApplyServiceFormValues } from "./_schema";
 import { useApplyServiceStore } from "./_store/apply-service-store";
@@ -67,6 +72,29 @@ export default function ApplyServicePage() {
 
   const watchedOfficeId = form.watch("officeId");
   const watchedServiceId = form.watch("serviceId");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Calculate current step for progress
+  const getCurrentStep = () => {
+    if (!watchedOfficeId) return 1;
+    if (!watchedServiceId) return 2;
+    if (!selectedService) return 3;
+    if (!form.watch("currentAddress") || !form.watch("date")) return 4;
+    return 5;
+  };
+
+  const currentStep = getCurrentStep();
+  const totalSteps = 5;
+  const progress = (currentStep / totalSteps) * 100;
+
+  // Steps definition
+  const STEPS = [
+    { id: 1, title: "Select Office", icon: Building2, completed: !!watchedOfficeId },
+    { id: 2, title: "Select Service", icon: FileText, completed: !!watchedServiceId },
+    { id: 3, title: "View Information", icon: List, completed: !!selectedService },
+    { id: 4, title: "Application Details", icon: FileCheck, completed: !!(form.watch("currentAddress") && form.watch("date")) },
+    { id: 5, title: "Upload Files", icon: Upload, completed: files.length > 0 },
+  ];
 
   // Fetch offices on mount
   useEffect(() => {
@@ -112,7 +140,12 @@ export default function ApplyServicePage() {
     };
     const success = await submitApplication(formData);
     if (success) {
-      router.push(`/${lang}/dashboard`);
+      setShowSuccess(true);
+      // Auto-hide after 3 seconds and redirect
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.push(`/${lang}/dashboard/request`);
+      }, 3000);
     }
   };
 
@@ -128,6 +161,7 @@ export default function ApplyServicePage() {
 
   return (
     <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Apply for Service</h1>
         <p className="text-muted-foreground mt-1">
@@ -135,14 +169,78 @@ export default function ApplyServicePage() {
         </p>
       </div>
 
+      {/* Progress Indicator */}
+      <Card className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Progress</span>
+                <span className="text-muted-foreground">{currentStep} of {totalSteps} steps</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+
+            {/* Steps Indicator */}
+            <div className="flex items-center justify-between">
+              {STEPS.map((step, index) => {
+                const StepIcon = step.icon;
+                const isActive = currentStep === step.id;
+                const isCompleted = step.completed || currentStep > step.id;
+
+                return (
+                  <div key={step.id} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                          isActive
+                            ? "bg-primary text-primary-foreground scale-110 shadow-lg"
+                            : isCompleted
+                            ? "bg-primary/20 text-primary"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-5 h-5" />
+                        ) : (
+                          <StepIcon className="w-5 h-5" />
+                        )}
+                      </div>
+                      <p
+                        className={`text-xs mt-2 text-center max-w-[80px] ${
+                          isActive ? "font-medium text-foreground" : "text-muted-foreground"
+                        }`}
+                      >
+                        {step.title}
+                      </p>
+                    </div>
+                    {index < STEPS.length - 1 && (
+                      <div
+                        className={`h-1 flex-1 mx-2 transition-colors ${
+                          isCompleted ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-6 pb-6"
       >
         {/* Step 1: Select Office */}
-        <Card>
+        <Card className="transition-all">
           <CardHeader>
-            <CardTitle>Step 1: Select Office</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className={`w-5 h-5 ${watchedOfficeId ? 'text-primary' : ''}`} />
+              Step 1: Select Office
+            </CardTitle>
             <CardDescription>
               Choose the office you want to apply to
             </CardDescription>
@@ -201,9 +299,12 @@ export default function ApplyServicePage() {
 
         {/* Step 2: Select Service */}
         {watchedOfficeId && (
-          <Card>
+          <Card className="transition-all">
             <CardHeader>
-              <CardTitle>Step 2: Select Service</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className={`w-5 h-5 ${watchedServiceId ? 'text-primary' : ''}`} />
+                Step 2: Select Service
+              </CardTitle>
               <CardDescription>
                 Choose the service you want to apply for
               </CardDescription>
@@ -298,9 +399,12 @@ export default function ApplyServicePage() {
 
         {/* Step 3: Requirements and Service For */}
         {selectedService && (
-          <Card>
+          <Card className="transition-all">
             <CardHeader>
-              <CardTitle>Step 3: Requirements & Service Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <List className="w-5 h-5 text-primary" />
+                Step 3: Requirements & Service Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedService.requirements &&
@@ -348,9 +452,12 @@ export default function ApplyServicePage() {
 
         {/* Step 4: Application Details */}
         {selectedService && (
-          <Card>
+          <Card className="transition-all">
             <CardHeader>
-              <CardTitle>Step 4: Application Details</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileCheck className="w-5 h-5 text-primary" />
+                Step 4: Application Details
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Controller
@@ -442,9 +549,12 @@ export default function ApplyServicePage() {
 
         {/* Step 5: File Upload */}
         {selectedService && (
-          <Card>
+          <Card className="transition-all">
             <CardHeader>
-              <CardTitle>Step 5: Attach Files</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-primary" />
+                Step 5: Attach Files
+              </CardTitle>
               <CardDescription>
                 Upload PDF files or images (Max 10MB per file)
               </CardDescription>
@@ -552,6 +662,21 @@ export default function ApplyServicePage() {
           </div>
         )}
       </form>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccess} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Request Submitted Successfully!</h2>
+            <p className="text-muted-foreground">
+              Your request has been submitted to the office. You will be redirected to your applications page.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

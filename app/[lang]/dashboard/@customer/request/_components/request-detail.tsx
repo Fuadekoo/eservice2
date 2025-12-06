@@ -31,6 +31,7 @@ import { format } from "date-fns";
 import { useCustomerRequestStore } from "../_store";
 import Image from "next/image";
 import { calculateOverallStatus } from "@/lib/request-status";
+import { FeedbackForm } from "./feedback-form";
 
 interface RequestDetailProps {
   request: Request | null;
@@ -152,7 +153,7 @@ export function RequestDetail({
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="appointments">
                 Appointments ({request.appointments.length})
@@ -160,6 +161,7 @@ export function RequestDetail({
               <TabsTrigger value="files">
                 Files ({request.fileData.length})
               </TabsTrigger>
+              <TabsTrigger value="feedback">Feedback</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-4 mt-4">
@@ -437,6 +439,21 @@ export function RequestDetail({
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Feedback Tab */}
+            <TabsContent value="feedback" className="space-y-4 mt-4">
+              <FeedbackForm
+                requestId={request.id}
+                requestDate={request.date}
+                existingFeedback={request.customerSatisfaction || null}
+                onFeedbackSubmitted={() => {
+                  // Refresh request data after feedback submission
+                  if (request) {
+                    fetchRequestById(request.id);
+                  }
+                }}
+              />
             </TabsContent>
           </Tabs>
         </DialogContent>

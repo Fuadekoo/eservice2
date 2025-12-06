@@ -1,10 +1,11 @@
 import { create } from "zustand";
-import { Request, RequestStatus, Service } from "../_types";
+import { Request, RequestStatus, Service, Office } from "../_types";
 
 interface CustomerRequestStore {
   // State
   requests: Request[];
   services: Service[];
+  offices: Office[];
   selectedRequest: Request | null;
   isLoading: boolean;
   isSubmitting: boolean;
@@ -14,7 +15,8 @@ interface CustomerRequestStore {
   currentUserId: string | null;
 
   // Actions
-  fetchServices: () => Promise<void>;
+  fetchOffices: () => Promise<void>;
+  fetchServices: (officeId?: string) => Promise<void>;
   fetchMyRequests: (userId: string) => Promise<void>;
   refreshRequests: (userId: string) => Promise<void>;
   fetchRequestById: (id: string) => Promise<void>;
@@ -25,7 +27,7 @@ interface CustomerRequestStore {
       currentAddress: string;
       date: Date;
     }
-  ) => Promise<void>;
+  ) => Promise<string>; // Returns the created request ID
   updateRequest: (
     id: string,
     data: {
@@ -52,6 +54,7 @@ export const useCustomerRequestStore = create<CustomerRequestStore>(
     // Initial state
     requests: [],
     services: [],
+    offices: [],
     selectedRequest: null,
     isLoading: false,
     isSubmitting: false,
@@ -60,10 +63,34 @@ export const useCustomerRequestStore = create<CustomerRequestStore>(
     isDeleteDialogOpen: false,
     currentUserId: null,
 
-    // Fetch services
-    fetchServices: async () => {
+    // Fetch offices
+    fetchOffices: async () => {
       try {
-        const response = await fetch("/api/service", { cache: "no-store" });
+        const response = await fetch("/api/office?limit=100", { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch offices");
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || "Failed to fetch offices");
+        }
+
+        set({ offices: result.data.offices || result.data || [] });
+      } catch (error: any) {
+        console.error("Error fetching offices:", error);
+        throw error;
+      }
+    },
+
+    // Fetch services (optionally filtered by officeId)
+    fetchServices: async (officeId?: string) => {
+      try {
+        const url = officeId 
+          ? `/api/service?officeId=${officeId}` 
+          : "/api/service";
+        const response = await fetch(url, { cache: "no-store" });
 
         if (!response.ok) {
           throw new Error("Failed to fetch services");
@@ -74,7 +101,7 @@ export const useCustomerRequestStore = create<CustomerRequestStore>(
           throw new Error(result.error || "Failed to fetch services");
         }
 
-        set({ services: result.data });
+        set({ services: result.data.services || result.data || [] });
       } catch (error: any) {
         console.error("Error fetching services:", error);
         throw error;
@@ -262,6 +289,9 @@ export const useCustomerRequestStore = create<CustomerRequestStore>(
 
         // Refresh requests
         await get().refreshRequests(userId);
+
+        // Return the created request ID
+        return newRequest.id;
       } catch (error: any) {
         console.error("Error creating request:", error);
         set({ isSubmitting: false });

@@ -72,7 +72,11 @@
     "trackOrder": "ajajni hordofsi",
     "citizen": "haawwasi",
     "printralReport": "raagaba ba'uunsa",
-    "home": "mana"
+    "home": "mana",
+    "appointment": "beellama",
+    "request": "gaaffii",
+    "applyService": "tajaajila gaafachuu",
+    "feedback": "yaada kennaa"
   },
   "roles": {
     "superAdmin": "haalawaa guddaa",
@@ -267,7 +271,8 @@
     "changing": "jijjiiruu jira...",
     "enterCurrentPassword": "jecha iccitii ammaa jiru galchi",
     "enterNewPassword": "jecha iccitii haaraa galchi",
-    "confirmNewPassword": "jecha iccitii haaraa mirkaneessi"
+    "confirmNewPassword": "jecha iccitii haaraa mirkaneessi",
+    "phoneNumberReadOnly": "lakkoofsi bilbila jijjiiruu hin danda'u"
   },
   "report": {
     "title": "raagabaa",

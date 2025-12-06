@@ -86,12 +86,31 @@ export interface Request {
   } | null;
   appointments: Appointment[];
   fileData: FileData[];
+  customerSatisfaction?: {
+    id: string;
+    rating: number;
+    comment?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
 }
 
 export interface RequestFormData {
   serviceId: string;
   currentAddress: string;
   date: Date;
+}
+
+export interface Office {
+  id: string;
+  name: string;
+  phoneNumber?: string | null;
+  roomNumber: string;
+  address: string;
+  subdomain: string;
+  logo?: string | null;
+  slogan?: string | null;
+  status: boolean;
 }
 
 export interface Service {
@@ -104,4 +123,17 @@ export interface Service {
     roomNumber: string;
     address: string;
   };
+}
+
+export interface OfficeAvailability {
+  config: {
+    defaultSchedule: Record<string, any>;
+    slotDuration: number;
+    unavailableDateRanges: any[];
+    unavailableDates: string[];
+    dateOverrides: Record<string, any>;
+  };
+  date?: string;
+  availableSlots?: string[];
+  bookedSlots?: string[];
 }

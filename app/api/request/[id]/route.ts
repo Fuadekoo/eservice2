@@ -88,6 +88,15 @@ export async function GET(
             },
           },
         },
+        customerSatisfaction: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
 

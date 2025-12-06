@@ -50,20 +50,24 @@ export default function SideBar({
               <React.Fragment key={i + ""}>
                 {i !== 0 && <hr className="border-primary" />}
                 <div key={i + ""} className="py-3 flex flex-col gap-2">
-                  {item.map(({ key, url, Icon }, i) => (
-                    <Button
-                      key={i + ""}
-                      size="lg"
-                      variant={selected == url ? "default" : "ghost"}
-                      className="shrink-0 justify-start capitalize text-sm lg:text-base"
-                      asChild
-                    >
-                      <Link href={`/${lang}/dashboard/${url}`}>
-                        {Icon}
-                        {t(`navigation.${key}`)}
-                      </Link>
-                    </Button>
-                  ))}
+                  {item.map(({ key, url, Icon }, i) => {
+                    const href = url ? `/${lang}/dashboard/${url}` : `/${lang}/dashboard`;
+                    const isSelected = url === "" ? selected === "" : selected === url;
+                    return (
+                      <Button
+                        key={i + ""}
+                        size="lg"
+                        variant={isSelected ? "default" : "ghost"}
+                        className="shrink-0 justify-start capitalize text-sm lg:text-base"
+                        asChild
+                      >
+                        <Link href={href}>
+                          {Icon}
+                          {t(`navigation.${key}`)}
+                        </Link>
+                      </Button>
+                    );
+                  })}
                 </div>
               </React.Fragment>
             ))}

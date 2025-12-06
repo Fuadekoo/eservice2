@@ -95,7 +95,7 @@ export async function updateUserProfile(data: {
       where: { id: userId },
       data: {
         ...(data.username && { username: data.username }),
-        ...(data.phone && { phone: data.phone }),
+        ...(data.phone && { phoneNumber: data.phone }),
       },
     });
 
