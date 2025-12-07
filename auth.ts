@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcryptjs from "bcryptjs";
 import prisma from "./lib/db";
 import { loginSchema } from "./lib/zodSchema";
+import { normalizePhoneNumber } from "./lib/utils/phone-number";
 // import { role as Role } from "@prisma/client";
 
 declare module "next-auth" {
@@ -96,11 +97,14 @@ const authConfig = {
   providers: [
     Credentials({
       async authorize(credentials) {
-        const { username, password } = await loginSchema.parseAsync(
+        const { phoneNumber, password } = await loginSchema.parseAsync(
           credentials
         );
+        // Normalize phone number to match database format
+        const normalizedPhone = normalizePhoneNumber(phoneNumber);
+
         const user = await prisma.user.findFirst({
-          where: { username },
+          where: { phoneNumber: normalizedPhone },
           select: {
             id: true,
             role: {
@@ -112,7 +116,7 @@ const authConfig = {
             isActive: true,
           },
         });
-        if (!user) throw new CustomError("Invalid Username");
+        if (!user) throw new CustomError("Invalid Phone Number");
         if (!user.password) throw new CustomError("Password Not Set");
         if (!user.isActive)
           throw new CustomError(

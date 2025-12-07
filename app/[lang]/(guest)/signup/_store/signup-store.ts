@@ -206,7 +206,7 @@ export const useSignUpStore = create<SignUpStore>((set, get) => ({
         // Automatically log in the user after successful registration
         try {
           const loginResult = await authenticate({
-            username: result.data.username,
+            phoneNumber: normalizePhoneNumber(data.phoneNumber),
             password: data.password,
           });
 

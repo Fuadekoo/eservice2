@@ -15,7 +15,7 @@ import {
 import { useRegistration } from "@/hooks/useRegistration";
 import useTranslation from "@/hooks/useTranslation";
 import { loginSchema } from "@/lib/zodSchema";
-import { Eye, EyeOff, KeyRound, User } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -60,9 +60,9 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    const [username, password] = credentials ?? ["", ""];
-    if (username && password) {
-      setValue("username", username);
+    const [phoneNumber, password] = credentials ?? ["", ""];
+    if (phoneNumber && password) {
+      setValue("phoneNumber", phoneNumber);
       setValue("password", password);
       onSubmit();
     }
@@ -114,23 +114,24 @@ export default function Page() {
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
-                  {t("auth.username")}
+                  Phone Number
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={t("auth.username")}
+                    placeholder="0912345678 or +251912345678"
                     className="pl-10 w-full"
-                    {...register("username")}
+                    type="tel"
+                    {...register("phoneNumber")}
                     onChange={(e) => {
-                      register("username").onChange(e);
+                      register("phoneNumber").onChange(e);
                       setAuthError(null);
                     }}
                   />
                 </div>
-                {validationErrors.username && (
+                {validationErrors.phoneNumber && (
                   <p className="text-xs text-red-500">
-                    {validationErrors.username}
+                    {validationErrors.phoneNumber}
                   </p>
                 )}
               </div>
