@@ -68,19 +68,16 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Generate email (optional, can be updated later)
-    const email = `${name.toLowerCase().replace(/\s+/g, "")}@gmail.com`;
-
-    // Create user
+    // Create user (following database structure)
     const newUser = await prisma.user.create({
       data: {
         id: randomUUID(),
         username,
         phoneNumber: normalizedPhone,
-        email,
         password: hashedPassword,
         roleId: customerRole.id,
         isActive: true,
+        phoneVerified: true, // Set to true after OTP verification
       },
       include: {
         role: {

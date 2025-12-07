@@ -5,27 +5,33 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormOTPInput } from "@/components/form-otp";
-import { SignUpSchema, signUpSchema } from "./schema";
+import { SignUpSchema, signUpSchema } from "./_schema";
 import { Loader2, User, Phone, KeyRound, Lock } from "lucide-react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { normalizePhoneNumber } from "@/lib/utils/phone-number";
-import { useState, useEffect, useRef } from "react";
+import { useSignUpStore } from "./_store/signup-store";
 
 export default function SignUpPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
-  const [step, setStep] = useState<"details" | "otp" | "password">("details");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [isSendingOTP, setIsSendingOTP] = useState(false);
-  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+
+  const {
+    step,
+    phoneNumber,
+    otpVerified,
+    countdown,
+    isSendingOTP,
+    isVerifyingOTP,
+    isRegistering,
+    setStep,
+    sendOTP,
+    verifyOTP,
+    register,
+  } = useSignUpStore();
 
   const form = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema),
@@ -37,16 +43,6 @@ export default function SignUpPage() {
       otpCode: "",
     },
   });
-
-  // Countdown timer effect
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [countdown]);
 
   // Format countdown as SS (seconds only) or MM:SS if over 60 seconds
   const formatCountdown = (seconds: number) => {
@@ -64,140 +60,28 @@ export default function SignUpPage() {
     // Validate form before sending OTP
     const isValid = await form.trigger(["name", "phoneNumber"]);
     if (!isValid) {
-      toast.error("Error", {
-        description: "Please fill in all required fields correctly",
-      });
       return;
     }
 
     const phone = form.getValues("phoneNumber");
-    const normalizedPhone = normalizePhoneNumber(phone);
-
-    setIsSendingOTP(true);
-    try {
-      const response = await fetch("/api/otp/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phoneNumber: normalizedPhone }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setPhoneNumber(normalizedPhone);
-        setStep("otp");
-        setCountdown(60); // 60 seconds
-        toast.success("Success", {
-          description: "OTP sent to your phone number",
-        });
-      } else {
-        toast.error("Error", {
-          description: result.error || "Failed to send OTP",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error sending OTP:", error);
-      toast.error("Error", {
-        description: "Failed to send OTP",
-      });
-    } finally {
-      setIsSendingOTP(false);
-    }
+    await sendOTP(phone);
   };
 
   const handleVerifyOTP = async () => {
     const otpCode = form.getValues("otpCode");
     if (!otpCode) {
-      toast.error("Error", {
-        description: "Please enter the OTP code",
-      });
       return;
     }
 
-    const normalizedPhone =
-      phoneNumber || normalizePhoneNumber(form.getValues("phoneNumber"));
-
-    setIsVerifyingOTP(true);
-    try {
-      const response = await fetch("/api/otp/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber: normalizedPhone,
-          code: otpCode,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setOtpVerified(true);
-        setStep("password");
-        toast.success("Success", {
-          description: "OTP verified successfully",
-        });
-      } else {
-        toast.error("Error", {
-          description: result.error || "Invalid OTP code",
-        });
-      }
-    } catch (error: any) {
-      console.error("OTP verification error:", error);
-      toast.error("Error", {
-        description: "Failed to verify OTP",
-      });
-    } finally {
-      setIsVerifyingOTP(false);
-    }
+    const normalizedPhone = phoneNumber || form.getValues("phoneNumber");
+    await verifyOTP(normalizedPhone, otpCode);
   };
 
   const handleRegister = form.handleSubmit(async (data) => {
-    if (!otpVerified) {
-      toast.error("Error", {
-        description: "Please verify OTP first",
-      });
-      return;
-    }
-
-    setIsVerifyingOTP(true);
-    try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.name,
-          phoneNumber: normalizePhoneNumber(data.phoneNumber),
-          password: data.password,
-          otpCode: data.otpCode,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success("Success", {
-          description: "Account created successfully",
-        });
-        // Redirect to login page
-        router.push(`/${lang}/login`);
-      } else {
-        toast.error("Error", {
-          description: result.error || "Registration failed",
-        });
-      }
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      toast.error("Error", {
-        description: "Registration failed",
-      });
-    } finally {
-      setIsVerifyingOTP(false);
+    const result = await register(data);
+    if (result.success) {
+      // Redirect to login page
+      router.push(`/${lang}/login`);
     }
   });
 
@@ -408,13 +292,13 @@ export default function SignUpPage() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={form.formState.isSubmitting || isVerifyingOTP}
+                      disabled={form.formState.isSubmitting || isRegistering}
                       className="flex-1"
                     >
-                      {(form.formState.isSubmitting || isVerifyingOTP) && (
+                      {(form.formState.isSubmitting || isRegistering) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isVerifyingOTP ? "Creating Account..." : "Register"}
+                      {isRegistering ? "Creating Account..." : "Register"}
                     </Button>
                   </div>
                 </>
