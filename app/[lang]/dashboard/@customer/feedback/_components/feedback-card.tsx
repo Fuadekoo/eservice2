@@ -177,7 +177,7 @@ export function FeedbackCard({
           </form>
         ) : (
           <div className="space-y-4">
-            {hasFeedback && (
+            {hasFeedback && request.customerSatisfaction && (
               <>
                 <div className="flex items-center gap-3 pb-3 border-b">
                   <div className="flex items-center gap-2">

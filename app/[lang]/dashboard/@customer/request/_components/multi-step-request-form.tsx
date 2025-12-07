@@ -22,17 +22,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2, Building2, FileText, CheckCircle2, Clock, Upload, X, Calendar as CalendarIcon } from "lucide-react";
+import {
+  Loader2,
+  Building2,
+  FileText,
+  CheckCircle2,
+  Clock,
+  Upload,
+  X,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface MultiStepRequestFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: CustomerRequestFormValues & { files: File[] }) => Promise<void>;
+  onSubmit: (
+    data: CustomerRequestFormValues & { files: File[] }
+  ) => Promise<void>;
   offices: Office[];
   services: Service[];
   selectedOffice: string | null;
@@ -67,12 +84,16 @@ export function MultiStepRequestForm({
   isSubmitting,
 }: MultiStepRequestFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [availability, setAvailability] = useState<OfficeAvailability | null>(null);
+  const [availability, setAvailability] = useState<OfficeAvailability | null>(
+    null
+  );
   const [availabilityConfig, setAvailabilityConfig] = useState<any>(null);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [files, setFiles] = useState<File[]>([]);
-  const [fileDescriptions, setFileDescriptions] = useState<Record<string, string>>({});
+  const [fileDescriptions, setFileDescriptions] = useState<
+    Record<string, string>
+  >({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
 
@@ -119,7 +140,12 @@ export function MultiStepRequestForm({
 
   // Auto-select today or next working day and fetch availability
   useEffect(() => {
-    if (currentStep === 4 && selectedOffice && availabilityConfig && !selectedDate) {
+    if (
+      currentStep === 4 &&
+      selectedOffice &&
+      availabilityConfig &&
+      !selectedDate
+    ) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const nextWorkingDay = getNextWorkingDay(today, availabilityConfig);
@@ -131,7 +157,12 @@ export function MultiStepRequestForm({
 
   // Fetch availability when date changes
   useEffect(() => {
-    if (currentStep === 4 && selectedOffice && selectedDate && availabilityConfig) {
+    if (
+      currentStep === 4 &&
+      selectedOffice &&
+      selectedDate &&
+      availabilityConfig
+    ) {
       fetchAvailability(selectedOffice, selectedDate);
     }
   }, [selectedDate]);
@@ -140,7 +171,9 @@ export function MultiStepRequestForm({
     if (!selectedOffice) return;
     setLoadingAvailability(true);
     try {
-      const response = await fetch(`/api/office/${selectedOffice}/availability`);
+      const response = await fetch(
+        `/api/office/${selectedOffice}/availability`
+      );
       const data = await response.json();
       setAvailabilityConfig(data.config || data);
     } catch (error) {
@@ -155,7 +188,9 @@ export function MultiStepRequestForm({
     setLoadingAvailability(true);
     try {
       const dateStr = format(date, "yyyy-MM-dd");
-      const response = await fetch(`/api/office/${officeId}/availability?date=${dateStr}`);
+      const response = await fetch(
+        `/api/office/${officeId}/availability?date=${dateStr}`
+      );
       const data = await response.json();
       setAvailability(data);
     } catch (error) {
@@ -176,7 +211,7 @@ export function MultiStepRequestForm({
     while (attempts < maxAttempts) {
       const dayOfWeek = checkDate.getDay().toString();
       const daySchedule = defaultSchedule[dayOfWeek];
-      
+
       // Check if this day is available
       if (daySchedule && daySchedule.available) {
         return checkDate;
@@ -330,7 +365,8 @@ export function MultiStepRequestForm({
         return (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Select a service from {selectedOfficeData?.name || "the selected office"}
+              Select a service from{" "}
+              {selectedOfficeData?.name || "the selected office"}
             </p>
             <Select
               value={selectedService || ""}
@@ -338,18 +374,20 @@ export function MultiStepRequestForm({
               disabled={!selectedOffice || services.length === 0}
             >
               <SelectTrigger>
-                <SelectValue placeholder={
-                  !selectedOffice 
-                    ? "Please select an office first"
-                    : services.length === 0
-                    ? "No services available"
-                    : "Select a service"
-                } />
+                <SelectValue
+                  placeholder={
+                    !selectedOffice
+                      ? "Please select an office first"
+                      : services.length === 0
+                      ? "No services available"
+                      : "Select a service"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {services.length === 0 ? (
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    {!selectedOffice 
+                    {!selectedOffice
                       ? "Please select an office first"
                       : "No services available for this office"}
                   </div>
@@ -379,7 +417,9 @@ export function MultiStepRequestForm({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{selectedServiceData?.name}</h3>
+                  <h3 className="font-semibold text-lg">
+                    {selectedServiceData?.name}
+                  </h3>
                   <p className="text-sm text-muted-foreground mt-2">
                     {selectedServiceData?.description}
                   </p>
@@ -388,20 +428,24 @@ export function MultiStepRequestForm({
                   <h4 className="font-medium mb-2">Office Details</h4>
                   <div className="space-y-1 text-sm">
                     <p>
-                      <span className="font-medium">Office:</span> {selectedServiceData?.office.name}
+                      <span className="font-medium">Office:</span>{" "}
+                      {selectedServiceData?.office.name}
                     </p>
                     <p>
-                      <span className="font-medium">Address:</span> {selectedServiceData?.office.address}
+                      <span className="font-medium">Address:</span>{" "}
+                      {selectedServiceData?.office.address}
                     </p>
                     <p>
-                      <span className="font-medium">Room:</span> {selectedServiceData?.office.roomNumber}
+                      <span className="font-medium">Room:</span>{" "}
+                      {selectedServiceData?.office.roomNumber}
                     </p>
                   </div>
                 </div>
                 <div className="border-t pt-4">
                   <h4 className="font-medium mb-2">Requirements</h4>
                   <p className="text-sm text-muted-foreground">
-                    Please ensure you have all necessary documents and information ready before proceeding.
+                    Please ensure you have all necessary documents and
+                    information ready before proceeding.
                   </p>
                 </div>
               </CardContent>
@@ -445,17 +489,25 @@ export function MultiStepRequestForm({
                 {selectedDate ? (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Availability for {format(selectedDate, "PPP")}</CardTitle>
+                      <CardTitle>
+                        Availability for {format(selectedDate, "PPP")}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {loadingAvailability ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="w-6 h-6 animate-spin" />
                         </div>
-                      ) : availability?.availableSlots && availability.availableSlots.length > 0 ? (
+                      ) : availability?.availableSlots &&
+                        availability.availableSlots.length > 0 ? (
                         <div className="grid grid-cols-3 gap-2">
                           {availability.availableSlots.map((slot, idx) => {
-                            const slotTime = typeof slot === 'string' ? slot : slot.start || slot;
+                            // availableSlots is typed as string[], so slot is always a string
+                            const slotTime: string =
+                              typeof slot === "string"
+                                ? slot
+                                : (slot as unknown as { start?: string })
+                                    ?.start || String(slot);
                             return (
                               <Badge
                                 key={idx}
@@ -522,7 +574,11 @@ export function MultiStepRequestForm({
                   <Input
                     type="date"
                     value={
-                      field.value
+                      field.value &&
+                      field.value instanceof Date &&
+                      !isNaN(field.value.getTime())
+                        ? format(field.value, "yyyy-MM-dd")
+                        : field.value && typeof field.value === "string"
                         ? format(new Date(field.value), "yyyy-MM-dd")
                         : ""
                     }
@@ -575,7 +631,9 @@ export function MultiStepRequestForm({
 
             {files.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Uploaded Files ({files.length})</h4>
+                <h4 className="text-sm font-medium">
+                  Uploaded Files ({files.length})
+                </h4>
                 <div className="space-y-2">
                   {files.map((file, index) => (
                     <div
@@ -585,7 +643,9 @@ export function MultiStepRequestForm({
                       <div className="flex items-center gap-3 flex-1">
                         <FileText className="w-5 h-5 text-muted-foreground" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-sm font-medium truncate">
+                            {file.name}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {(file.size / 1024).toFixed(2)} KB
                           </p>
@@ -635,13 +695,28 @@ export function MultiStepRequestForm({
                 <div className="border-t pt-4">
                   <h4 className="font-medium mb-2">Request Details</h4>
                   <p className="text-sm">
-                    <span className="font-medium">Address:</span> {form.watch("currentAddress")}
+                    <span className="font-medium">Address:</span>{" "}
+                    {form.watch("currentAddress")}
                   </p>
                   <p className="text-sm">
                     <span className="font-medium">Date:</span>{" "}
-                    {form.watch("date")
-                      ? format(new Date(form.watch("date")), "PPP")
-                      : "Not selected"}
+                    {(() => {
+                      const dateValue = form.watch("date");
+                      if (!dateValue) return "Not selected";
+                      if (
+                        dateValue instanceof Date &&
+                        !isNaN(dateValue.getTime())
+                      ) {
+                        return format(dateValue, "PPP");
+                      }
+                      if (
+                        typeof dateValue === "string" ||
+                        typeof dateValue === "number"
+                      ) {
+                        return format(new Date(dateValue), "PPP");
+                      }
+                      return "Not selected";
+                    })()}
                   </p>
                 </div>
                 {files.length > 0 && (
@@ -745,7 +820,9 @@ export function MultiStepRequestForm({
               </Button>
             ) : (
               <Button type="submit" disabled={!canProceed() || isSubmitting}>
-                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
                 Submit Request
               </Button>
             )}
@@ -755,4 +832,3 @@ export function MultiStepRequestForm({
     </Dialog>
   );
 }
-

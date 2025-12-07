@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +68,7 @@ export default function ProfilePage() {
     const validation = profileUpdateSchema.safeParse({ username });
 
     if (!validation.success) {
-      const firstError = validation.error.errors[0];
+      const firstError = validation.error.issues[0];
       setUsernameError(firstError.message);
       return;
     }
@@ -87,7 +93,7 @@ export default function ProfilePage() {
 
     if (!validation.success) {
       const errors: typeof passwordErrors = {};
-      validation.error.errors.forEach((err) => {
+      validation.error.issues.forEach((err) => {
         if (err.path[0]) {
           errors[err.path[0] as keyof typeof errors] = err.message;
         }
@@ -115,7 +121,9 @@ export default function ProfilePage() {
     <div className="container mx-auto py-6 max-w-4xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">{t("profile.title")}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("profile.title")}
+        </h1>
         <p className="text-muted-foreground mt-1">{t("profile.manageInfo")}</p>
       </div>
 
@@ -124,11 +132,7 @@ export default function ProfilePage() {
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
         </div>
       ) : (
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
             <TabsTrigger value="profile" className="gap-2">
               <User className="w-4 h-4" />
@@ -162,15 +166,22 @@ export default function ProfilePage() {
                       }}
                       placeholder={t("profile.enterUsername")}
                       disabled={isUpdating}
-                      className={`max-w-md ${usernameError ? "border-destructive" : ""}`}
+                      className={`max-w-md ${
+                        usernameError ? "border-destructive" : ""
+                      }`}
                     />
                     {usernameError && (
-                      <p className="text-sm text-destructive">{usernameError}</p>
+                      <p className="text-sm text-destructive">
+                        {usernameError}
+                      </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phoneNumber" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="phoneNumber"
+                      className="flex items-center gap-2"
+                    >
                       <Phone className="w-4 h-4" />
                       {t("profile.phoneNumber")}
                     </Label>
@@ -187,7 +198,11 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-                  <Button type="submit" disabled={isUpdating} className="max-w-md">
+                  <Button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="max-w-md"
+                  >
                     {isUpdating ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -230,7 +245,11 @@ export default function ProfilePage() {
                       }}
                       placeholder={t("profile.enterCurrentPassword")}
                       disabled={isChangingPassword}
-                      className={`max-w-md ${passwordErrors.currentPassword ? "border-destructive" : ""}`}
+                      className={`max-w-md ${
+                        passwordErrors.currentPassword
+                          ? "border-destructive"
+                          : ""
+                      }`}
                     />
                     {passwordErrors.currentPassword && (
                       <p className="text-sm text-destructive">
@@ -257,7 +276,9 @@ export default function ProfilePage() {
                       }}
                       placeholder={t("profile.enterNewPassword")}
                       disabled={isChangingPassword}
-                      className={`max-w-md ${passwordErrors.newPassword ? "border-destructive" : ""}`}
+                      className={`max-w-md ${
+                        passwordErrors.newPassword ? "border-destructive" : ""
+                      }`}
                     />
                     {passwordErrors.newPassword ? (
                       <p className="text-sm text-destructive">
@@ -287,7 +308,11 @@ export default function ProfilePage() {
                       }}
                       placeholder={t("profile.confirmNewPassword")}
                       disabled={isChangingPassword}
-                      className={`max-w-md ${passwordErrors.confirmPassword ? "border-destructive" : ""}`}
+                      className={`max-w-md ${
+                        passwordErrors.confirmPassword
+                          ? "border-destructive"
+                          : ""
+                      }`}
                     />
                     {passwordErrors.confirmPassword && (
                       <p className="text-sm text-destructive">
@@ -319,4 +344,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

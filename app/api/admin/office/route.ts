@@ -10,16 +10,18 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const userId = session.user.id;
+
     // Check if user is admin
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -40,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Get the admin's office from staff relation (first one if multiple)
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       include: {
         office: true,
       },
@@ -86,16 +88,18 @@ export async function POST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const userId = session.user.id;
+
     // Check if user is admin
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -139,7 +143,7 @@ export async function POST(request: NextRequest) {
     // Check if admin already has a staff record for this office
     const existingStaff = await prisma.staff.findFirst({
       where: {
-        userId: session.user.id,
+        userId: userId,
         officeId: officeId,
       },
     });
@@ -163,7 +167,7 @@ export async function POST(request: NextRequest) {
     // Create staff relationship for admin with this office
     await prisma.staff.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         officeId: officeId,
       },
     });
@@ -211,16 +215,18 @@ export async function DELETE(request: NextRequest) {
   try {
     // Authenticate user
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    const userId = session.user.id;
+
     // Check if user is admin
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -242,7 +248,7 @@ export async function DELETE(request: NextRequest) {
     // Remove all staff relationships for this admin
     await prisma.staff.deleteMany({
       where: {
-        userId: session.user.id,
+        userId: userId,
       },
     });
 

@@ -52,66 +52,131 @@ export async function GET(request: NextRequest) {
     });
 
     // Build where clause
-    const where: any = {};
+    // Note: MySQL doesn't support mode: "insensitive" in Prisma
+    // We'll fetch all users and filter case-insensitively in the application layer
+    let where: any = {};
 
-    // Add search if provided
+    // Fetch all users first if search is provided (for case-insensitive filtering)
+    let allUsersForSearch: any[] = [];
     if (search && search.trim()) {
-      const searchTerm = search.trim();
-      where.OR = [
-        { username: { contains: searchTerm, mode: "insensitive" } },
-        { phoneNumber: { contains: searchTerm, mode: "insensitive" } },
-        {
+      const searchTerm = search.trim().toLowerCase();
+
+      // Fetch all users with relations for case-insensitive filtering
+      allUsersForSearch = await prisma.user.findMany({
+        include: {
           role: {
-            name: { contains: searchTerm, mode: "insensitive" },
-          },
-        },
-        {
-          staffs: {
-            some: {
+            include: {
               office: {
-                name: { contains: searchTerm, mode: "insensitive" },
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
+          staffs: {
+            include: {
+              office: {
+                select: {
+                  id: true,
+                  name: true,
+                  address: true,
+                  phoneNumber: true,
+                },
+              },
+            },
+            take: 1,
+          },
         },
-      ];
+      });
+
+      // Filter case-insensitively in application layer
+      const filteredUserIds = allUsersForSearch
+        .filter((user) => {
+          const usernameMatch = user.username
+            ?.toLowerCase()
+            .includes(searchTerm);
+          const phoneMatch = user.phoneNumber
+            ?.toLowerCase()
+            .includes(searchTerm);
+          const roleMatch = user.role?.name?.toLowerCase().includes(searchTerm);
+          const officeMatch = user.staffs?.some((staff: any) =>
+            staff.office?.name?.toLowerCase().includes(searchTerm)
+          );
+          return usernameMatch || phoneMatch || roleMatch || officeMatch;
+        })
+        .map((user) => user.id);
+
+      if (filteredUserIds.length > 0) {
+        where.id = { in: filteredUserIds };
+      } else {
+        // No matches, return empty result
+        where.id = { in: [] };
+      }
     }
 
     // Get total count for pagination
-    const total = await prisma.user.count({ where });
+    let total: number;
+    if (search && search.trim() && where.id?.in) {
+      // Use the count of filtered IDs
+      total = where.id.in.length;
+    } else {
+      // No search or empty search - count all users
+      total = await prisma.user.count();
+    }
 
     // Fetch users with pagination
-    const users = await prisma.user.findMany({
-      where,
-      include: {
-        role: {
-          include: {
-            office: {
-              select: {
-                id: true,
-                name: true,
+    let users;
+    if (search && search.trim() && allUsersForSearch.length > 0) {
+      // Use pre-filtered results and apply pagination
+      const filteredUsers = allUsersForSearch
+        .filter((user) => {
+          if (where.id?.in) {
+            return where.id.in.includes(user.id);
+          }
+          return true;
+        })
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        .slice(skip, skip + pageSize);
+
+      users = filteredUsers;
+    } else {
+      // Normal fetch without search
+      users = await prisma.user.findMany({
+        where,
+        include: {
+          role: {
+            include: {
+              office: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
-        },
-        staffs: {
-          include: {
-            office: {
-              select: {
-                id: true,
-                name: true,
-                address: true,
-                phoneNumber: true,
+          staffs: {
+            include: {
+              office: {
+                select: {
+                  id: true,
+                  name: true,
+                  address: true,
+                  phoneNumber: true,
+                },
               },
             },
+            take: 1, // Get the first staff assignment if any
           },
-          take: 1, // Get the first staff assignment if any
         },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: pageSize,
-    });
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: pageSize,
+      });
+    }
 
     console.log(
       `✅ Successfully fetched ${
@@ -287,7 +352,10 @@ export async function POST(request: NextRequest) {
       selectedRole.name.toLowerCase() === "staff";
 
     // If creating a manager or staff, ensure officeId is provided
-    if (isManagerOrStaffRole && (!data.officeId || data.officeId.trim() === "")) {
+    if (
+      isManagerOrStaffRole &&
+      (!data.officeId || data.officeId.trim() === "")
+    ) {
       return NextResponse.json(
         {
           success: false,
