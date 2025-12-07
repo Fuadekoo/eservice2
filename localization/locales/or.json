@@ -78,7 +78,8 @@
     "appointment": "beellama",
     "request": "gaaffii",
     "applyService": "tajaajila gaafachuu",
-    "feedback": "yaada kennaa"
+    "feedback": "yaada kennaa",
+    "requestManagement": "bulchiinsa gaaffii"
   },
   "roles": {
     "superAdmin": "haalawaa guddaa",

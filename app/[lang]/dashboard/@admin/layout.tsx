@@ -8,7 +8,6 @@ import {
   Images,
   Info,
   FileText,
-  Newspaper,
   Briefcase,
 } from "lucide-react";
 import React from "react";
@@ -62,11 +61,6 @@ export default async function Layout({
       },
     ],
     [
-      {
-        key: "news",
-        url: "news",
-        Icon: <Newspaper className="size-6" />,
-      },
       {
         key: "report",
         url: "report",

@@ -78,7 +78,8 @@
     "appointment": "Appointment",
     "request": "Request",
     "applyService": "Apply Service",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "requestManagement": "Request Management"
   },
   "roles": {
     "superAdmin": "Super Admin",

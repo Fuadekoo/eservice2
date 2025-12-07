@@ -78,7 +78,8 @@
     "appointment": "ቀጠሮ",
     "request": "ጥያቄ",
     "applyService": "አገልግሎት ማመልከት",
-    "feedback": "ግብረ መልስ"
+    "feedback": "ግብረ መልስ",
+    "requestManagement": "የጥያቄ አስተዳደር"
   },
   "roles": {
     "superAdmin": "ሱፐር አስተዳዳሪ",
