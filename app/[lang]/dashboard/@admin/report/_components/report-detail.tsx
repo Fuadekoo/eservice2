@@ -384,8 +384,9 @@ export function ReportDetail({
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {report.fileData?.map((file) => {
                       const fileUrl = getFileUrl(file.filepath);
-                      const isImage = isImageFile(file.filepath);
-                      const isPdf = isPdfFile(file.filepath);
+                      const filepath = file.filepath;
+                      const isImage = isImageFile(filepath);
+                      const isPdf = isPdfFile(filepath);
 
                       return (
                         <Card
@@ -420,18 +421,43 @@ export function ReportDetail({
                                   </p>
                                 )}
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(fileUrl, "_blank");
-                                }}
-                              >
-                                <Download className="w-4 h-4 mr-2" />
-                                Download
-                              </Button>
+                              <div className="flex gap-2 w-full">
+                                {isPdf && (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Extract filename from filepath
+                                      let filename = file.filepath;
+                                      if (filename.includes("/")) {
+                                        filename =
+                                          filename.split("/").pop() || filename;
+                                      }
+                                      window.open(
+                                        `/api/filedata/${filename}`,
+                                        "_blank"
+                                      );
+                                    }}
+                                  >
+                                    <FileText className="w-4 h-4 mr-2" />
+                                    Open PDF
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className={isPdf ? "flex-1" : "w-full"}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(fileUrl, "_blank");
+                                  }}
+                                >
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download
+                                </Button>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -477,15 +503,33 @@ export function ReportDetail({
                   </div>
                 </div>
               ) : isPdfFile(selectedFile.filepath) ? (
-                <div className="flex-1 overflow-hidden bg-muted">
-                  <iframe
-                    src={`${getFileUrl(
-                      selectedFile.filepath
-                    )}#toolbar=1&navpanes=1&scrollbar=1`}
-                    className="w-full h-full border-0"
-                    title={selectedFile.name}
-                    style={{ minHeight: "100%" }}
-                  />
+                <div className="flex-1 overflow-hidden bg-muted flex flex-col">
+                  {/* Open PDF Link */}
+                  <div className="px-6 py-3 border-b bg-background flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      PDF Document
+                    </p>
+                    <a
+                      href={getFileUrl(selectedFile.filepath)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Open PDF
+                    </a>
+                  </div>
+                  {/* PDF Preview */}
+                  <div className="flex-1 overflow-hidden">
+                    <iframe
+                      src={`${getFileUrl(
+                        selectedFile.filepath
+                      )}#toolbar=1&navpanes=1&scrollbar=1`}
+                      className="w-full h-full border-0"
+                      title={selectedFile.name}
+                      style={{ minHeight: "100%" }}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full bg-muted">

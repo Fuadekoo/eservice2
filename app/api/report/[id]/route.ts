@@ -67,14 +67,9 @@ export async function GET(
           },
         },
         reportSentByUser: {
-          select: {
-            id: true,
-            username: true,
-            phoneNumber: true,
-          },
           include: {
             staffs: {
-              select: {
+              include: {
                 office: {
                   select: {
                     id: true,
@@ -108,7 +103,9 @@ export async function GET(
       })),
       reportSentByUser: report.reportSentByUser
         ? {
-            ...report.reportSentByUser,
+            id: report.reportSentByUser.id,
+            username: report.reportSentByUser.username,
+            phoneNumber: report.reportSentByUser.phoneNumber,
             office: report.reportSentByUser.staffs?.[0]?.office || null,
           }
         : null,

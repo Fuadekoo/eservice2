@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
@@ -34,43 +35,49 @@ export async function GET(
   { params }: { params: Promise<{ file: string }> }
 ) {
   const filename = (await params).file;
-  // console.log(filename);
-  // return Response.json({ ak: "ak" });
 
   if (!filename) {
-    return new Response(JSON.stringify({ error: "Filename is required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json(
+      { error: "Filename is required" },
+      { status: 400 }
+    );
   }
 
   if (filename.includes("..") || filename.includes("/")) {
-    return new Response(JSON.stringify({ error: "Invalid filename" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
   }
 
   const filePath = path.join(FILE_STORAGE_PATH, filename);
 
   try {
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return NextResponse.json({ error: "FILE NOT FOUND" }, { status: 404 });
+    }
+
     const stats = await statAsync(filePath);
     if (!stats.isFile()) {
-      return new Response(JSON.stringify({ error: "Not a file" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+      return NextResponse.json({ error: "Not a file" }, { status: 404 });
     }
 
     const fileBuffer = await readFileAsync(filePath);
     const mimeType = getMimeType(filePath);
+    const isPdf = mimeType === "application/pdf";
 
-    return new Response(fileBuffer, {
+    // Prepare headers
+    const headers: Record<string, string> = {
+      "Content-Type": mimeType,
+      "Content-Length": stats.size.toString(),
+    };
+
+    // For PDFs, set Content-Disposition to inline so they open in browser
+    if (isPdf) {
+      headers["Content-Disposition"] = `inline; filename="${filename}"`;
+    }
+
+    return new NextResponse(fileBuffer, {
       status: 200,
-      headers: {
-        "Content-Type": mimeType,
-        "Content-Length": stats.size.toString(),
-      },
+      headers,
     });
   } catch (error) {
     if (
@@ -79,15 +86,12 @@ export async function GET(
       Object.prototype.hasOwnProperty.call(error, "code") &&
       (error as { code?: string }).code === "ENOENT"
     ) {
-      return new Response(JSON.stringify({ error: "File not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+      return NextResponse.json({ error: "FILE NOT FOUND" }, { status: 404 });
     }
     console.error("Error serving file:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
