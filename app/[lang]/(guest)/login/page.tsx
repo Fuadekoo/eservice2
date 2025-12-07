@@ -191,7 +191,7 @@ export default function Page() {
             </form>
           </div>
         </div>
-        <div className="max-md:hidden size-full flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
+        <div className="max-md:hidden size-full flex flex-col items-center justify-center gap-6 bg-linear-to-br from-primary/10 to-secondary/10 p-8">
           <Link href={"/"}>
             <Image
               alt="logo image"
