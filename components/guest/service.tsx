@@ -144,8 +144,16 @@ export default function Service() {
   };
 
   const handleApplyNow = (serviceId: string) => {
-    // Redirect to login page when Apply Now is clicked
-    router.push("/signin");
+    // Redirect to login page with callback to apply for service
+    const callbackUrl = encodeURIComponent(
+      `/${locale}/dashboard/request?serviceId=${serviceId}`
+    );
+    router.push(`/${locale}/login?callbackUrl=${callbackUrl}`);
+  };
+
+  const handleServiceClick = (serviceId: string) => {
+    // Redirect to service detail page
+    router.push(`/${locale}/service/${serviceId}`);
   };
 
   if (isLoading) {
@@ -290,17 +298,41 @@ export default function Service() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
           {/* Header with dark blue background */}
-          <DialogHeader className="bg-primary text-primary-foreground p-6 flex flex-row items-center justify-between">
-            <DialogTitle className="text-xl font-bold text-white">
-              {selectedOffice?.officeName}
-            </DialogTitle>
-            <button
-              onClick={handleCloseDialog}
-              className="text-white hover:text-white/80 transition-colors"
-              aria-label="Close"
-            >
-              <X size={24} />
-            </button>
+          <DialogHeader className="bg-primary text-primary-foreground p-6">
+            <div className="flex flex-row items-center justify-between mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {selectedOffice?.officeLogo ? (
+                  <div className="relative w-12 h-12 shrink-0">
+                    <Image
+                      src={`/api/filedata/${selectedOffice.officeLogo}`}
+                      alt={selectedOffice.officeName}
+                      fill
+                      className="object-contain rounded bg-white/10"
+                      sizes="48px"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-white/10 rounded">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                )}
+                <DialogTitle className="text-xl font-bold text-white truncate">
+                  {selectedOffice?.officeName}
+                </DialogTitle>
+              </div>
+              <button
+                onClick={handleCloseDialog}
+                className="text-white hover:text-white/80 transition-colors shrink-0 ml-2"
+                aria-label="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            {selectedOffice?.officeSlogan && (
+              <p className="text-sm text-white/90 mt-2 line-clamp-2">
+                {selectedOffice.officeSlogan}
+              </p>
+            )}
           </DialogHeader>
 
           {/* Services List */}
@@ -308,7 +340,8 @@ export default function Service() {
             {selectedOffice?.services.map((service) => (
               <Card
                 key={service.id}
-                className="p-4 hover:shadow-md transition-shadow border rounded-lg"
+                className="p-4 hover:shadow-md transition-shadow border rounded-lg cursor-pointer"
+                onClick={() => handleServiceClick(service.id)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -323,7 +356,10 @@ export default function Service() {
                   </div>
                   <div className="flex items-center gap-3 ml-4">
                     <Button
-                      onClick={() => handleApplyNow(service.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleApplyNow(service.id);
+                      }}
                       className="bg-primary hover:bg-primary/90 text-white"
                     >
                       {locale === "or"

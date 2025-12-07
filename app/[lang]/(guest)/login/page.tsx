@@ -29,17 +29,35 @@ export default function Page() {
   const router = useRouter();
   const { t } = useTranslation();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
+  
   const { onSubmit, validationErrors, register, setValue, isLoading } =
     useRegistration(authenticate, loginSchema, (state) => {
       if (state.status) {
         setAuthError(null);
-        router.push(`/${lang}/dashboard`);
+        // Use stored callback URL or default to dashboard
+        if (callbackUrl) {
+          router.push(decodeURIComponent(callbackUrl));
+        } else {
+          router.push(`/${lang}/dashboard`);
+        }
       } else {
         // Set authentication error message
         setAuthError(state.message || "Authentication failed");
       }
     });
   const [hidden, setHidden] = useState(true);
+
+  useEffect(() => {
+    // Get callback URL from query params
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const url = searchParams.get("callbackUrl");
+      if (url) {
+        setCallbackUrl(url);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const [username, password] = credentials ?? ["", ""];

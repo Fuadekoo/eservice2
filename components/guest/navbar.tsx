@@ -121,7 +121,7 @@ export function Navbar() {
             </button>
 
             {/* Sign In Button */}
-            <Link href="/signin">
+            <Link href={`/${currentLocale}/login`}>
               <Button variant="secondary" size="sm">
                 Sign In
               </Button>
@@ -190,7 +190,7 @@ export function Navbar() {
               Services
             </Link>
             <Link
-              href="/signin"
+              href={`/${currentLocale}/login`}
               className="w-full"
               onClick={() => setMobileMenuOpen(false)}
             >

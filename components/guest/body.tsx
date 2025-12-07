@@ -22,7 +22,8 @@ export function Body() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleApplyClick = (serviceId: number) => {
-    router.push("/signin");
+    const callbackUrl = encodeURIComponent(`/${locale}/dashboard/request?serviceId=${serviceId}`);
+    router.push(`/${locale}/login?callbackUrl=${callbackUrl}`);
   };
 
   const selectedWindowData = selectedWindow
@@ -82,7 +83,7 @@ export function Body() {
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-4 justify-center">
-              <Link href="/signin">
+              <Link href={`/${locale}/login`}>
                 <Button
                   size="lg"
                   className="bg-white text-blue-700 hover:bg-white/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
@@ -94,7 +95,7 @@ export function Body() {
                     : "Customer Login"}
                 </Button>
               </Link>
-              <Link href="/signin">
+              <Link href={`/${locale}/login`}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -107,7 +108,7 @@ export function Body() {
                     : "Admin Login"}
                 </Button>
               </Link>
-              <Link href="/signin">
+              <Link href={`/${locale}/login`}>
                 <Button
                   size="lg"
                   variant="outline"
