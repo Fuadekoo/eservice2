@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, Loader2, Building2 } from "lucide-react";
+import { FileText, Plus, Loader2, Building2, Users } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ServiceAssignmentDialog } from "./service-assignment-dialog";
 
 export function ServicesSection() {
   const {
@@ -28,6 +29,8 @@ export function ServicesSection() {
     createService,
   } = useMyOfficeStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<any>(null);
 
   useEffect(() => {
     if (office) {
@@ -126,18 +129,44 @@ export function ServicesSection() {
                 <div className="flex items-center justify-between">
                   <Badge variant="outline">{service.timeToTake}</Badge>
                   <div className="flex gap-2">
-                    {service.requirements && service.requirements.length > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {service.requirements.length} requirements
-                      </span>
-                    )}
+                    {service.requirements &&
+                      service.requirements.length > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {service.requirements.length} requirements
+                        </span>
+                      )}
                   </div>
+                </div>
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedService(service);
+                      setIsAssignmentDialogOpen(true);
+                    }}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Assign Staff
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Service Assignment Dialog */}
+      <ServiceAssignmentDialog
+        service={selectedService}
+        officeId={office?.id || null}
+        open={isAssignmentDialogOpen}
+        onOpenChange={setIsAssignmentDialogOpen}
+        onSuccess={() => {
+          // Optionally refresh services or show success message
+        }}
+      />
 
       {/* Create Service Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
