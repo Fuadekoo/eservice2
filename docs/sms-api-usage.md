@@ -117,13 +117,15 @@ const result = await response.json();
 
 ## Error Codes
 
+- `401`: Unauthorized - User is not logged in
 - `400`: Bad Request - Invalid input (missing fields, invalid format, etc.)
 - `500`: Internal Server Error - SMS service error
 - `503`: Service Unavailable - SMS service not configured
 
 ## Notes
 
+- **Authentication required**: Users must be logged in (any role) to use this endpoint
 - Phone numbers should be in international format (e.g., +251912345678)
 - Message length is limited to 1600 characters
-- The endpoint does not require authentication
 - For server-side code, prefer using the utility function `sendSMS` from `@/lib/utils/sms` directly
+- If you get a 401 error, make sure the user is logged in before calling this endpoint
