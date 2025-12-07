@@ -33,6 +33,8 @@ model User {
   requests         request[]
   requestForOthers requestForOther[]
   appointments     appointment[]
+  reportsSent      report[]          @relation("ReportSender")
+  reportsReceived  report[]          @relation("ReportReceiver")
 }
 
 model staff {
@@ -234,6 +236,14 @@ enum requestStatusAdmin {
   rejected
 }
 
+enum reportStatus {
+  pending
+  sent
+  received
+  read
+  archived
+}
+
 model request {
   id                   String                @id @default(cuid())
   userId               String
@@ -292,6 +302,8 @@ model fileData {
   requestForOtherId String?
   request           request?         @relation(fields: [requestId], references: [id])
   requestId         String?
+  report            report?          @relation(fields: [reportId], references: [id])
+  reportId          String?
 
   @@map("file_data")
 }
@@ -371,4 +383,20 @@ model about {
   updatedAt   DateTime @updatedAt
 
   @@map("about")
+}
+
+model report {
+  id               String       @id @default(cuid())
+  name             String
+  description      String       @db.Text
+  fileData         fileData[]
+  reportSentTo     String
+  reportSentToUser User         @relation("ReportReceiver", fields: [reportSentTo], references: [id])
+  receiverStatus   reportStatus @default(pending)
+  reportSentBy     String
+  reportSentByUser User         @relation("ReportSender", fields: [reportSentBy], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@map("report")
 }
