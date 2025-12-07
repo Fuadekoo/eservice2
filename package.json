@@ -8,9 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset --force && npm run db:seed",
-    "setup-pdf-worker": "node scripts/setup-pdf-worker.js",
-    "postinstall": "npm run setup-pdf-worker"
+    "db:reset": "prisma migrate reset --force && npm run db:seed"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
