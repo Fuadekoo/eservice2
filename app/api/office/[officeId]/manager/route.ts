@@ -3,58 +3,15 @@ import prisma from "@/lib/db";
 import { auth } from "@/auth";
 import bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
-
-// Simple phone number normalization helper
-function normalizePhoneNumber(phone: string): string {
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, "");
-  // If starts with country code 251, keep it; otherwise assume it's local
-  if (cleaned.startsWith("251")) {
-    return `+${cleaned}`;
-  }
-  // If starts with 0, remove it and add country code
-  if (cleaned.startsWith("0")) {
-    cleaned = cleaned.substring(1);
-  }
-  return `+251${cleaned}`;
-}
+import { normalizePhoneNumber } from "@/lib/utils/phone-number";
+import { sendSMS as sendSMSUtil } from "@/lib/utils/sms";
 
 /**
- * Send SMS to user
+ * Send SMS to user (wrapper that returns success/error object)
  */
 async function sendSMS(to: string, message: string) {
-  const smsApi = process.env.SMS_API;
-  const smsToken = process.env.SMS_TOKEN;
-
-  if (!smsApi || !smsToken) {
-    console.warn("⚠️ SMS API not configured");
-    return { success: false, error: "SMS API not configured" };
-  }
-
   try {
-    const response = await fetch(smsApi, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${smsToken}`,
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.IDENTIFIER_ID,
-        sender: process.env.SENDER_NAME || "E-Service",
-        to,
-        message,
-        callback: process.env.CALLBACK,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ SMS API Error:", response.status, errorText);
-      return { success: false, error: `SMS API returned ${response.status}` };
-    }
-
-    const result = await response.json();
-    console.log("✅ SMS sent successfully");
+    const result = await sendSMSUtil(to, message);
     return { success: true, data: result };
   } catch (error: any) {
     console.error("❌ Failed to send SMS:", error);
