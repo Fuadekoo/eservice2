@@ -9,6 +9,7 @@ import {
   Info,
   FileText,
   Newspaper,
+  Briefcase,
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
@@ -31,6 +32,11 @@ export default async function Layout({
         key: "office",
         url: "office",
         Icon: <Building2 className="size-6" />,
+      },
+      {
+        key: "myoffice",
+        url: "myoffice",
+        Icon: <Briefcase className="size-6" />,
       },
       {
         key: "userManagement",

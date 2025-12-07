@@ -54,6 +54,7 @@
     "dashboard": "Dashboard",
     "overview": "Overview",
     "office": "Office",
+    "myoffice": "My Office",
     "userManagement": "User Management",
     "roles": "Roles",
     "setPermission": "Set Permissions",
