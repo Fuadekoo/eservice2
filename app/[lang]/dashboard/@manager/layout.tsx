@@ -6,6 +6,7 @@ import {
   Settings,
   Clock,
   FileText,
+  ClipboardCheck,
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
@@ -38,6 +39,11 @@ export default async function Layout({
         key: "requestManagement",
         url: "requestmanagement",
         Icon: <FileText className="size-6" />,
+      },
+      {
+        key: "report",
+        url: "report",
+        Icon: <ClipboardCheck className="size-6" />,
       },
     ],
     [

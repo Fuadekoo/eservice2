@@ -50,16 +50,16 @@ export async function GET(request: NextRequest) {
     // Add search filter
     if (search && search.trim()) {
       where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
+        { name: { contains: search } },
+        { description: { contains: search } },
         {
           reportSentToUser: {
-            username: { contains: search, mode: "insensitive" },
+            username: { contains: search },
           },
         },
         {
           reportSentToUser: {
-            phoneNumber: { contains: search, mode: "insensitive" },
+            phoneNumber: { contains: search },
           },
         },
       ];

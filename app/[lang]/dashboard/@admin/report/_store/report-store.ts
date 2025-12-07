@@ -113,11 +113,8 @@ export const useReportStore = create<ReportManagementState>((set, get) => ({
 
   setSearch: (search: string) => {
     set({ search, page: 1 });
-    // Debounce search
-    const timer = setTimeout(() => {
-      get().fetchReports();
-    }, 300);
-    return () => clearTimeout(timer);
+    // Note: Debouncing should be handled in the component
+    get().fetchReports();
   },
 
   setStatus: (status: string) => {
