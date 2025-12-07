@@ -150,13 +150,14 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">About Page Management</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage administrators and about page content
-        </p>
-      </div>
+    <div className="h-full overflow-y-auto">
+      <div className="container mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">About Page Management</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage administrators and about page content
+          </p>
+        </div>
 
       <Tabs
         value={activeTab}
@@ -351,6 +352,7 @@ export default function AboutPage() {
           </AlertDialog>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

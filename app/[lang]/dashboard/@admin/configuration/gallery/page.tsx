@@ -83,19 +83,20 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gallery Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your gallery collections and images
-          </p>
+    <div className="h-full overflow-y-auto">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Gallery Management</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your gallery collections and images
+            </p>
+          </div>
+          <Button onClick={handleCreate}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Gallery
+          </Button>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Gallery
-        </Button>
-      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -167,6 +168,7 @@ export default function GalleryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 }
