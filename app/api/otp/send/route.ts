@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     try {
       await sendSMS(
         normalizedPhone,
-        `Your one-time OTP code is: ${otp.code}\n\nDo not share your OTP with anyone\n\nThank you for choosing E-Service!`
+        `Your one-time OTP code is: ${otp.code}\n\nDo not share your OTP with anyone\n\nThank you for choosing Darulkubra!`
       );
       console.log("✅ OTP SMS sent successfully to:", normalizedPhone);
       console.log("🔑 OTP Code:", otp.code);
@@ -79,5 +79,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

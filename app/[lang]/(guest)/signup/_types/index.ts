@@ -14,6 +14,7 @@ export interface SignUpResponse {
   success: boolean;
   message?: string;
   error?: string;
+  autoLoggedIn?: boolean;
   data?: {
     id: string;
     username: string;

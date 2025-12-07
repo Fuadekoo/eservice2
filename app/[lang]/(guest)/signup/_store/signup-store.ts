@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
+import { authenticate } from "@/actions/common/authentication";
 import {
   SignUpFormData,
   SignUpResponse,
@@ -201,19 +202,54 @@ export const useSignUpStore = create<SignUpStore>((set, get) => ({
 
       const result: SignUpResponse = await response.json();
 
-      if (result.success) {
-        set({ isRegistering: false });
-        toast.success("Success", {
-          description: "Account created successfully",
-        });
+      if (result.success && result.data) {
+        // Automatically log in the user after successful registration
+        try {
+          const loginResult = await authenticate({
+            username: result.data.username,
+            password: data.password,
+          });
+
+          if (loginResult.status) {
+            set({ isRegistering: false });
+            toast.success("Success", {
+              description: "Account created and logged in successfully",
+            });
+            // Return success with login flag
+            return {
+              ...result,
+              autoLoggedIn: true,
+            };
+          } else {
+            // Registration succeeded but login failed
+            set({ isRegistering: false });
+            toast.success("Account created", {
+              description: "Please login with your credentials",
+            });
+            return {
+              ...result,
+              autoLoggedIn: false,
+            };
+          }
+        } catch (loginError: any) {
+          console.error("Auto-login error:", loginError);
+          // Registration succeeded but login failed
+          set({ isRegistering: false });
+          toast.success("Account created", {
+            description: "Please login with your credentials",
+          });
+          return {
+            ...result,
+            autoLoggedIn: false,
+          };
+        }
       } else {
         set({ isRegistering: false });
         toast.error("Error", {
           description: result.error || "Registration failed",
         });
+        return result;
       }
-
-      return result;
     } catch (error: any) {
       console.error("Registration error:", error);
       set({ isRegistering: false });

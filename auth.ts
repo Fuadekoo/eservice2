@@ -36,19 +36,50 @@ const authConfig = {
   callbacks: {
     authorized: async ({ auth, request: { nextUrl } }) => {
       const { pathname } = nextUrl;
-      // If logged-in user hits /en/login, send to dashboard
-      if (auth && pathname.startsWith("/en/login")) {
-        return Response.redirect(new URL("/en/dashboard", nextUrl));
+
+      // Supported languages
+      const languages = ["en", "am", "or"];
+
+      // Extract language from pathname
+      const langMatch = pathname.match(/^\/(en|am|or)/);
+      const lang = langMatch ? langMatch[1] : "en";
+
+      // If logged-in user hits login or signup, send to dashboard
+      if (
+        auth &&
+        (pathname.includes("/login") || pathname.includes("/signup"))
+      ) {
+        return Response.redirect(new URL(`/${lang}/dashboard`, nextUrl));
       }
 
-      // Public pages accessible without login
-      const publicPaths = ["/en/about", "/en/login"];
-      if (publicPaths.some((p) => pathname.startsWith(p))) {
+      // Public pages accessible without login (for all languages)
+      const publicPaths = [
+        "/about",
+        "/login",
+        "/signup",
+        "/forgetPassword",
+        "/service", // Guest service pages
+      ];
+
+      // Check if pathname matches any public path for any language
+      const isPublicPath =
+        languages.some((l) => {
+          return publicPaths.some((p) => {
+            // Check for exact match or path starts with public path
+            return (
+              pathname === `/${l}${p}` || pathname.startsWith(`/${l}${p}/`)
+            );
+          });
+        }) ||
+        pathname === "/" ||
+        pathname.startsWith("/api/");
+
+      if (isPublicPath) {
         return true;
       }
 
-      // Protect all other /en/* routes
-      if (!auth && pathname.startsWith("/en")) {
+      // Protect all other routes that require authentication
+      if (!auth && languages.some((l) => pathname.startsWith(`/${l}/`))) {
         return false; // NextAuth will redirect to pages.signIn
       }
 

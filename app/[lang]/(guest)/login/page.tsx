@@ -30,7 +30,7 @@ export default function Page() {
   const { t } = useTranslation();
   const [authError, setAuthError] = useState<string | null>(null);
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
-  
+
   const { onSubmit, validationErrors, register, setValue, isLoading } =
     useRegistration(authenticate, loginSchema, (state) => {
       if (state.status) {
@@ -86,7 +86,7 @@ export default function Page() {
               <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
                 <div className="flex items-start gap-3">
                   <svg
-                    className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"
+                    className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -169,19 +169,46 @@ export default function Page() {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? t("common.loading") : t("auth.login")}
               </Button>
+
+              <div className="text-center text-sm">
+                <Link
+                  href={`/${lang}/forgetPassword`}
+                  className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              <div className="text-center text-sm text-muted-foreground pt-2">
+                Don't have an account?{" "}
+                <Link
+                  href={`/${lang}/signup`}
+                  className="underline-offset-2 hover:underline text-foreground font-medium"
+                >
+                  Create an account
+                </Link>
+              </div>
             </form>
           </div>
         </div>
-        <div className="max-md:hidden size-full grid place-content-center bg-gradient-to-br from-primary/10 to-secondary/10">
+        <div className="max-md:hidden size-full flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-primary/10 to-secondary/10 p-8">
           <Link href={"/"}>
             <Image
               alt="logo image"
               src={"/logo.png"}
               width={2000}
-              height={2000}
-              className="size-80"
+              height={1000}
+              className="size-64"
             />
           </Link>
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">
+              Welcome to East Shoa E-Service
+            </h2>
+            <p className="text-muted-foreground">
+              Sign in to access your account and manage your services with ease
+            </p>
+          </div>
         </div>
       </Card>
     </div>

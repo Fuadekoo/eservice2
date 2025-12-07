@@ -8,13 +8,13 @@ import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormOTPInput } from "@/components/form-otp";
-import { SignUpSchema, signUpSchema } from "./_schema";
-import { Loader2, User, Phone, KeyRound, Lock } from "lucide-react";
+import { ForgotPasswordSchema, forgotPasswordSchema } from "./_schema";
+import { Loader2, Phone, KeyRound, Lock } from "lucide-react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useSignUpStore } from "./_store/signup-store";
+import { useForgotPasswordStore } from "./_store/forgot-password-store";
 
-export default function SignUpPage() {
+export default function ForgotPasswordPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
@@ -26,20 +26,19 @@ export default function SignUpPage() {
     countdown,
     isSendingOTP,
     isVerifyingOTP,
-    isRegistering,
+    isResetting,
     setStep,
     sendOTP,
     verifyOTP,
-    register,
-  } = useSignUpStore();
+    resetPassword,
+  } = useForgotPasswordStore();
 
-  const form = useForm<SignUpSchema>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<ForgotPasswordSchema>({
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       phoneNumber: "",
-      password: "",
+      newPassword: "",
       confirmPassword: "",
-      name: "",
       otpCode: "",
     },
   });
@@ -58,7 +57,7 @@ export default function SignUpPage() {
 
   const handleSendOTP = async () => {
     // Validate form before sending OTP
-    const isValid = await form.trigger(["name", "phoneNumber"]);
+    const isValid = await form.trigger(["phoneNumber"]);
     if (!isValid) {
       return;
     }
@@ -77,17 +76,11 @@ export default function SignUpPage() {
     await verifyOTP(normalizedPhone, otpCode);
   };
 
-  const handleRegister = form.handleSubmit(async (data) => {
-    const result = await register(data);
+  const handleResetPassword = form.handleSubmit(async (data) => {
+    const result = await resetPassword(data);
     if (result.success) {
-      if (result.autoLoggedIn) {
-        // User is automatically logged in, refresh and redirect to dashboard
-        router.refresh();
-        router.push(`/${lang}/dashboard`);
-      } else {
-        // Registration succeeded but auto-login failed, redirect to login
-        router.push(`/${lang}/login`);
-      }
+      // Redirect to login page after successful password reset
+      router.push(`/${lang}/login`);
     }
   });
 
@@ -103,7 +96,7 @@ export default function SignUpPage() {
           <div className="flex-1 flex flex-col gap-5 justify-center min-h-0">
             <form
               onSubmit={
-                step === "details"
+                step === "phone"
                   ? (e) => {
                       e.preventDefault();
                       handleSendOTP();
@@ -113,38 +106,19 @@ export default function SignUpPage() {
                       e.preventDefault();
                       handleVerifyOTP();
                     }
-                  : handleRegister
+                  : handleResetPassword
               }
               className="space-y-4"
             >
               <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold mb-2">Create an account</h1>
+                <h1 className="text-2xl font-bold mb-2">Reset Password</h1>
                 <p className="text-muted-foreground text-sm">
-                  Sign up for your East Shoa E-Service account
+                  Enter your phone number to receive an OTP code
                 </p>
               </div>
 
-              {step === "details" ? (
+              {step === "phone" ? (
                 <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="John Doe"
-                        className="pl-10 w-full"
-                        {...form.register("name")}
-                      />
-                    </div>
-                    {form.formState.errors.name && (
-                      <p className="text-xs text-red-500">
-                        {form.formState.errors.name.message}
-                      </p>
-                    )}
-                  </div>
-
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
                       Phone Number
@@ -173,7 +147,7 @@ export default function SignUpPage() {
                     {(form.formState.isSubmitting || isSendingOTP) && (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     )}
-                    {isSendingOTP ? "Sending OTP..." : "Get OTP"}
+                    {isSendingOTP ? "Sending OTP..." : "Send OTP"}
                   </Button>
                 </>
               ) : step === "otp" ? (
@@ -219,7 +193,7 @@ export default function SignUpPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setStep("details")}
+                      onClick={() => setStep("phone")}
                       className="flex-1"
                     >
                       Back
@@ -240,26 +214,27 @@ export default function SignUpPage() {
                 <>
                   <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg mb-4">
                     <p className="text-sm text-green-800 dark:text-green-300 text-center">
-                      ✓ OTP verified successfully. Please set your password.
+                      ✓ OTP verified successfully. Please enter your new
+                      password.
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Password
+                      New Password
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Enter your password"
+                        placeholder="Enter your new password"
                         className="pl-10 w-full"
                         type="password"
-                        {...form.register("password")}
+                        {...form.register("newPassword")}
                       />
                     </div>
-                    {form.formState.errors.password && (
+                    {form.formState.errors.newPassword && (
                       <p className="text-xs text-red-500">
-                        {form.formState.errors.password.message}
+                        {form.formState.errors.newPassword.message}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">
@@ -269,12 +244,12 @@ export default function SignUpPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Confirm Password
+                      Confirm New Password
                     </label>
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Confirm your password"
+                        placeholder="Confirm your new password"
                         className="pl-10 w-full"
                         type="password"
                         {...form.register("confirmPassword")}
@@ -298,20 +273,20 @@ export default function SignUpPage() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={form.formState.isSubmitting || isRegistering}
+                      disabled={form.formState.isSubmitting || isResetting}
                       className="flex-1"
                     >
-                      {(form.formState.isSubmitting || isRegistering) && (
+                      {(form.formState.isSubmitting || isResetting) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isRegistering ? "Creating Account..." : "Register"}
+                      {isResetting ? "Resetting..." : "Reset Password"}
                     </Button>
                   </div>
                 </>
               )}
 
               <div className="text-center text-sm text-muted-foreground pt-2">
-                Already have an account?{" "}
+                Remember your password?{" "}
                 <Link
                   href={`/${lang}/login`}
                   className="underline-offset-2 hover:underline text-foreground font-medium"
@@ -334,11 +309,9 @@ export default function SignUpPage() {
             />
           </Link>
           <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">
-              Welcome to East Shoa E-Service
-            </h2>
+            <h2 className="text-xl font-semibold mb-2">Reset Your Password</h2>
             <p className="text-muted-foreground">
-              Join us and manage your services with ease
+              Enter your phone number to receive a verification code
             </p>
           </div>
         </div>

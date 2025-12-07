@@ -47,16 +47,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get customer role
-    const customerRole = await prisma.role.findFirst({
-      where: { name: { equals: "customer", mode: "insensitive" } },
+    // Get or create customer role
+    // Note: Customer role should not have an officeId (it's a global role)
+    let customerRole = await prisma.role.findFirst({
+      where: {
+        name: "customer",
+        officeId: null, // Customer role is not office-specific
+      },
     });
 
+    // Create customer role if it doesn't exist
     if (!customerRole) {
-      return NextResponse.json(
-        { success: false, error: "Customer role not found" },
-        { status: 500 }
-      );
+      console.log("📝 Customer role not found, creating it...");
+      customerRole = await prisma.role.create({
+        data: {
+          name: "customer",
+          officeId: null, // Customer role is global, not office-specific
+        },
+      });
+      console.log("✅ Customer role created:", customerRole.id);
     }
 
     // Generate username from name
