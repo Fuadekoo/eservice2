@@ -79,7 +79,12 @@
     "request": "gaaffii",
     "applyService": "tajaajila gaafachuu",
     "feedback": "yaada kennaa",
-    "requestManagement": "bulchiinsa gaaffii"
+    "requestManagement": "bulchiinsa gaaffii",
+    "serviceManagement": "bulchiinsa tajaajilaa",
+    "services": "tajaajiloota",
+    "staff": "hojjettoonni",
+    "availability": "argamuu",
+    "configuration": "sagantaa"
   },
   "roles": {
     "superAdmin": "haalawaa guddaa",

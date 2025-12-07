@@ -79,7 +79,12 @@
     "request": "ጥያቄ",
     "applyService": "አገልግሎት ማመልከት",
     "feedback": "ግብረ መልስ",
-    "requestManagement": "የጥያቄ አስተዳደር"
+    "requestManagement": "የጥያቄ አስተዳደር",
+    "serviceManagement": "የአገልግሎት አስተዳደር",
+    "services": "አገልግሎቶች",
+    "staff": "ሰራተኞች",
+    "availability": "መገኘት",
+    "configuration": "ማዋቀር"
   },
   "roles": {
     "superAdmin": "ሱፐር አስተዳዳሪ",

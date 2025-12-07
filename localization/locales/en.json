@@ -79,7 +79,12 @@
     "request": "Request",
     "applyService": "Apply Service",
     "feedback": "Feedback",
-    "requestManagement": "Request Management"
+    "requestManagement": "Request Management",
+    "serviceManagement": "Service Management",
+    "services": "Services",
+    "staff": "Staff",
+    "availability": "Availability",
+    "configuration": "Configuration"
   },
   "roles": {
     "superAdmin": "Super Admin",

@@ -20,7 +20,7 @@ export default async function Layout({
     [
       {
         key: "overview",
-        url: "overview",
+        url: "",
         Icon: <LayoutDashboard className="size-6" />,
       },
     ],

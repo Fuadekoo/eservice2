@@ -1,29 +1,46 @@
 "use client";
 
 import UserLayout from "@/components/layout/userLayout";
-import { LayoutDashboard, ClipboardList } from "lucide-react";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  User,
+  Calendar,
+  Briefcase,
+} from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
 
-export default function Layout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   const menu = [
     [
       {
         key: "overview",
-        url: "overview",
+        url: "",
         Icon: <LayoutDashboard className="size-6" />,
       },
     ],
     [
       {
         key: "requestManagement",
-        url: "requestmanagement",
+        url: "requestManagement",
         Icon: <ClipboardList className="size-6" />,
       },
+      {
+        key: "appointment",
+        url: "appointment",
+        Icon: <Calendar className="size-6" />,
+      },
+      {
+        key: "serviceManagement",
+        url: "serviceManagement",
+        Icon: <Briefcase className="size-6" />,
+      },
+      // {
+      //   key: "profile",
+      //   url: "profile",
+      //   Icon: <User className="size-6" />,
+      // },
     ],
   ];
 
