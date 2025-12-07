@@ -55,12 +55,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (!officeId) {
-      return NextResponse.json(
-        { success: false, error: "Office ID is required" },
-        { status: 400 }
-      );
-    }
+    // For public/guest access (no authentication or no officeId), fetch all services from active offices
+    // This allows the guest service page to display all available services
+    const isPublicAccess = !session?.user || (!officeId && !requestedOfficeId);
 
     console.log("📋 Fetching services:", {
       officeId,
@@ -71,39 +68,70 @@ export async function GET(request: NextRequest) {
       userId: session?.user?.id || "anonymous",
     });
 
-    // Build where clause - filter by office
-    const where: any = {
-      officeId: officeId,
-      office: {
-        status: true, // Only active offices
-      },
-    };
-
-    // Add fuzzy search if provided
-    if (search && search.trim()) {
-      const searchTerm = search.trim();
-      where.AND = [
-        {
+    // Build where clause - filter by office (or all active offices for public access)
+    const where: any = isPublicAccess
+      ? {
+          office: {
+            status: true, // Only active offices
+          },
+        }
+      : {
           officeId: officeId,
           office: {
-            status: true,
+            status: true, // Only active offices
           },
-        },
-        {
-          OR: [
-            { name: { contains: searchTerm, mode: "insensitive" } },
-            { description: { contains: searchTerm, mode: "insensitive" } },
-            {
-              office: {
-                name: { contains: searchTerm, mode: "insensitive" },
-              },
+        };
+
+    // Add fuzzy search if provided
+    // Note: MySQL doesn't support mode: "insensitive" in Prisma
+    // We'll handle case-insensitive search in application layer if needed
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      if (isPublicAccess) {
+        // For public access, search across all active offices
+        where.AND = [
+          {
+            office: {
+              status: true,
             },
-          ],
-        },
-      ];
-      // Remove top-level filters since they're now in AND
-      delete where.officeId;
-      delete where.office;
+          },
+          {
+            OR: [
+              { name: { contains: searchTerm } },
+              { description: { contains: searchTerm } },
+              {
+                office: {
+                  name: { contains: searchTerm },
+                },
+              },
+            ],
+          },
+        ];
+        delete where.office;
+      } else {
+        // For authenticated users with office, filter by office
+        where.AND = [
+          {
+            officeId: officeId,
+            office: {
+              status: true,
+            },
+          },
+          {
+            OR: [
+              { name: { contains: searchTerm } },
+              { description: { contains: searchTerm } },
+              {
+                office: {
+                  name: { contains: searchTerm },
+                },
+              },
+            ],
+          },
+        ];
+        delete where.officeId;
+        delete where.office;
+      }
     }
 
     // Get total count for pagination
@@ -120,6 +148,8 @@ export async function GET(request: NextRequest) {
             roomNumber: true,
             address: true,
             status: true,
+            logo: true,
+            slogan: true,
           },
         },
         requirements: true,
@@ -313,6 +343,8 @@ export async function POST(request: NextRequest) {
             roomNumber: true,
             address: true,
             status: true,
+            logo: true,
+            slogan: true,
           },
         },
         requirements: true,

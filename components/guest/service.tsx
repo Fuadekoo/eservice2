@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, X, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useLocale } from "@/lib/use-locale";
+import Image from "next/image";
 
 interface Service {
   id: string;
@@ -24,12 +25,16 @@ interface Service {
     roomNumber: string;
     address: string;
     status: boolean;
+    logo?: string | null;
+    slogan?: string | null;
   };
 }
 
 interface OfficeWithServices {
   officeId: string;
   officeName: string;
+  officeLogo?: string | null;
+  officeSlogan?: string | null;
   services: Service[];
 }
 
@@ -62,11 +67,23 @@ export default function Service() {
         cache: "no-store",
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch services");
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(
+          `Server returned non-JSON response: ${response.status} ${response.statusText}`
+        );
       }
 
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            `Failed to fetch services: ${response.status} ${response.statusText}`
+        );
+      }
 
       if (result.success && Array.isArray(result.data)) {
         // Group services by office
@@ -79,11 +96,15 @@ export default function Service() {
 
               const officeId = service.officeId;
               const officeName = service.office.name;
+              const officeLogo = service.office.logo;
+              const officeSlogan = service.office.slogan;
 
               if (!acc[officeId]) {
                 acc[officeId] = {
                   officeId,
                   officeName,
+                  officeLogo,
+                  officeSlogan,
                   services: [],
                 };
               }
@@ -189,7 +210,7 @@ export default function Service() {
           ? `Foddaa Mootummaa (${officesWithServices.length})`
           : locale === "am"
           ? `የመንግስት ቢሮዎች (${officesWithServices.length})`
-          : `Government Windows (${officesWithServices.length})`}
+          : `Government Office(${officesWithServices.length})`}
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {officesWithServices.map((officeGroup) => (
@@ -200,9 +221,34 @@ export default function Service() {
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="font-semibold mb-2 text-primary text-lg">
-                  {officeGroup.officeName}
-                </h4>
+                {/* Logo or Icon */}
+                <div className="flex items-center gap-3 mb-3">
+                  {officeGroup.officeLogo ? (
+                    <div className="relative w-12 h-12 shrink-0">
+                      <Image
+                        src={`/api/filedata/${officeGroup.officeLogo}`}
+                        alt={officeGroup.officeName}
+                        fill
+                        className="object-contain rounded"
+                        sizes="48px"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-primary/10 rounded">
+                      <Building2 className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-primary text-lg truncate">
+                      {officeGroup.officeName}
+                    </h4>
+                    {officeGroup.officeSlogan && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {officeGroup.officeSlogan}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {officeGroup.services.length}{" "}
                   {locale === "or"

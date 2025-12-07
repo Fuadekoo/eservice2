@@ -65,22 +65,14 @@ export function ServiceAssignmentDialog({
 
     setIsLoading(true);
     try {
-      // Fetch all staff for the office (pass officeId for admin)
-      const response = await fetch(
-        `/api/staff?page=1&pageSize=100&officeId=${officeId}`
-      );
+      // Use the dedicated admin staff API endpoint
+      const response = await fetch(`/api/admin/staff?page=1&pageSize=100`);
       const result = await response.json();
 
       if (result.success && result.data) {
-        // Filter to only show staff with "staff" role (exclude manager/admin)
-        // Also filter by officeId to ensure we only get staff from this office
-        const staffWithStaffRole = result.data.filter((s: any) => {
-          const roleName = s.role?.name?.toLowerCase() || "";
-          return roleName === "staff" && s.officeId === officeId;
-        });
-
+        // The API already filters for "staff" role and the correct office
         // Format staff data
-        const formattedStaff: Staff[] = staffWithStaffRole.map((s: any) => ({
+        const formattedStaff: Staff[] = result.data.map((s: any) => ({
           id: s.id,
           userId: s.userId,
           username: s.username,
@@ -181,8 +173,11 @@ export function ServiceAssignmentDialog({
         ) : staffList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Users className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-2">
               No staff found in this office
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please add staff members to your office first before assigning them to services.
             </p>
           </div>
         ) : (

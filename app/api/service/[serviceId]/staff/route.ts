@@ -212,29 +212,9 @@ export async function POST(
       );
     }
 
-    // Verify all staff have "staff" role (not manager or admin)
-    const nonStaffRole = staffRecords.filter((staff) => {
-      const roleName = staff.user.role?.name?.toLowerCase() || "";
-      return (
-        roleName !== "staff" &&
-        (roleName === "manager" ||
-          roleName === "office_manager" ||
-          roleName === "admin" ||
-          roleName === "administrator")
-      );
-    });
-
-    if (nonStaffRole.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Only staff members with 'staff' role can be assigned to services. Managers and admins cannot be assigned.",
-          invalidStaffIds: nonStaffRole.map((s) => s.id),
-        },
-        { status: 400 }
-      );
-    }
+    // Allow staff, managers, and admins to be assigned to services
+    // (Admin can assign anyone from their office to services)
+    // No role restrictions needed
 
     // Remove existing assignments for this service
     await prisma.serviceStaffAssignment.deleteMany({

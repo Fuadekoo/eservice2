@@ -115,6 +115,15 @@ export const useAboutStore = create<AboutStore>((set, get) => ({
         body: JSON.stringify(data),
       });
 
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(
+          `Server returned non-JSON response: ${text.substring(0, 100)}`
+        );
+      }
+
       const result = await response.json();
 
       if (!response.ok || !result.success) {
@@ -159,6 +168,15 @@ export const useAboutStore = create<AboutStore>((set, get) => ({
         body: JSON.stringify(data),
       });
 
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(
+          `Server returned non-JSON response: ${text.substring(0, 100)}`
+        );
+      }
+
       const result = await response.json();
 
       if (!response.ok || !result.success) {
@@ -197,6 +215,15 @@ export const useAboutStore = create<AboutStore>((set, get) => ({
           "Content-Type": "application/json",
         },
       });
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(
+          `Server returned non-JSON response: ${text.substring(0, 100)}`
+        );
+      }
 
       const result = await response.json();
 
