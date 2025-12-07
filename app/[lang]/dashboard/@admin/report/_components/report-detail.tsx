@@ -23,10 +23,14 @@ import {
   User,
   X,
   File,
+  Check,
+  Building2,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useReportStore } from "../_store/report-store";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface ReportDetailProps {
   report: Report | null;
@@ -81,7 +85,9 @@ export function ReportDetail({
   const [activeTab, setActiveTab] = useState("details");
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
-  const { fetchReportById } = useReportStore();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { fetchReportById, updateReportStatus, fetchReports } =
+    useReportStore();
 
   useEffect(() => {
     if (open && report) {
@@ -91,7 +97,8 @@ export function ReportDetail({
 
   if (!report) return null;
 
-  const statusInfo = statusConfig[report.receiverStatus] || statusConfig.pending;
+  const statusInfo =
+    statusConfig[report.receiverStatus] || statusConfig.pending;
   const StatusIcon = statusInfo.icon;
 
   const handleViewFile = (file: FileData) => {
@@ -125,6 +132,30 @@ export function ReportDetail({
     return `/api/filedata/${filename}`;
   };
 
+  const handleApproveReject = async (action: "approve" | "reject") => {
+    if (!report) return;
+    try {
+      setIsProcessing(true);
+      await updateReportStatus(report.id, action);
+      toast.success(
+        `Report ${action === "approve" ? "approved" : "rejected"} successfully`
+      );
+      // Refresh the report data
+      await fetchReportById(report.id);
+      // Refresh the reports list if fetchReports is available
+      if (fetchReports) {
+        await fetchReports();
+      }
+    } catch (error: any) {
+      toast.error(error.message || `Failed to ${action} report`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const canApproveReject =
+    report.receiverStatus !== "read" && report.receiverStatus !== "archived";
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,7 +170,11 @@ export function ReportDetail({
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex-1 overflow-hidden flex flex-col"
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="files">
@@ -154,7 +189,9 @@ export function ReportDetail({
               {/* Report Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Report Information</CardTitle>
+                  <CardTitle className="text-base">
+                    Report Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -191,7 +228,9 @@ export function ReportDetail({
               {/* Sender Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Sender Information</CardTitle>
+                  <CardTitle className="text-base">
+                    Sender Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {report.reportSentByUser ? (
@@ -199,18 +238,31 @@ export function ReportDetail({
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Username:</strong> {report.reportSentByUser.username}
+                          <strong>Username:</strong>{" "}
+                          {report.reportSentByUser.username}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Phone:</strong> {report.reportSentByUser.phoneNumber}
+                          <strong>Phone:</strong>{" "}
+                          {report.reportSentByUser.phoneNumber}
                         </span>
                       </div>
+                      {report.reportSentByUser.office && (
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <strong>Office:</strong>{" "}
+                            {report.reportSentByUser.office.name}
+                          </span>
+                        </div>
+                      )}
                     </>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No sender information</p>
+                    <p className="text-sm text-muted-foreground">
+                      No sender information
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -218,7 +270,9 @@ export function ReportDetail({
               {/* Receiver Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Receiver Information</CardTitle>
+                  <CardTitle className="text-base">
+                    Receiver Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {report.reportSentToUser ? (
@@ -226,18 +280,22 @@ export function ReportDetail({
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Username:</strong> {report.reportSentToUser.username}
+                          <strong>Username:</strong>{" "}
+                          {report.reportSentToUser.username}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm">
-                          <strong>Phone:</strong> {report.reportSentToUser.phoneNumber}
+                          <strong>Phone:</strong>{" "}
+                          {report.reportSentToUser.phoneNumber}
                         </span>
                       </div>
                     </>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No receiver information</p>
+                    <p className="text-sm text-muted-foreground">
+                      No receiver information
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -252,18 +310,62 @@ export function ReportDetail({
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm">
                       <strong>Created:</strong>{" "}
-                      {format(new Date(report.createdAt), "MMM dd, yyyy 'at' hh:mm a")}
+                      {format(
+                        new Date(report.createdAt),
+                        "MMM dd, yyyy 'at' hh:mm a"
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm">
                       <strong>Last Updated:</strong>{" "}
-                      {format(new Date(report.updatedAt), "MMM dd, yyyy 'at' hh:mm a")}
+                      {format(
+                        new Date(report.updatedAt),
+                        "MMM dd, yyyy 'at' hh:mm a"
+                      )}
                     </span>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Approve/Reject Actions */}
+              {canApproveReject && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => handleApproveReject("approve")}
+                        disabled={isProcessing}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4 mr-2" />
+                        )}
+                        Approve Report
+                      </Button>
+                      <Button
+                        onClick={() => handleApproveReject("reject")}
+                        disabled={isProcessing}
+                        variant="destructive"
+                        className="flex-1"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <X className="w-4 h-4 mr-2" />
+                        )}
+                        Reject Report
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent

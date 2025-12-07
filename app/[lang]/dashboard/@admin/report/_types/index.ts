@@ -1,4 +1,9 @@
-export type ReportStatus = "pending" | "sent" | "received" | "read" | "archived";
+export type ReportStatus =
+  | "pending"
+  | "sent"
+  | "received"
+  | "read"
+  | "archived";
 
 export interface FileData {
   id: string;
@@ -28,6 +33,10 @@ export interface Report {
     id: string;
     username: string;
     phoneNumber: string;
+    office?: {
+      id: string;
+      name: string;
+    } | null;
   } | null;
 }
 

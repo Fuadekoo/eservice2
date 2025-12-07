@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
 
-// GET - Fetch a single report by ID (admin only, must be sent to them)
-export async function GET(
+// PATCH - Approve or reject a report (admin only)
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
@@ -41,11 +41,42 @@ export async function GET(
       );
     }
 
+    const body = await request.json();
+    const { action } = body; // "approve" or "reject"
+
+    if (!action || !["approve", "reject"].includes(action)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid action. Must be 'approve' or 'reject'",
+        },
+        { status: 400 }
+      );
+    }
+
     // Fetch report - only if sent TO this admin
     const report = await prisma.report.findFirst({
       where: {
         id: reportId,
         reportSentTo: session.user.id,
+      },
+    });
+
+    if (!report) {
+      return NextResponse.json(
+        { success: false, error: "Report not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // Update report status
+    // Using "read" for approved and "archived" for rejected
+    const newStatus = action === "approve" ? "read" : "archived";
+
+    const updatedReport = await prisma.report.update({
+      where: { id: reportId },
+      data: {
+        receiverStatus: newStatus,
       },
       include: {
         fileData: {
@@ -89,27 +120,20 @@ export async function GET(
       },
     });
 
-    if (!report) {
-      return NextResponse.json(
-        { success: false, error: "Report not found or access denied" },
-        { status: 404 }
-      );
-    }
-
-    // Serialize dates and include office information
+    // Serialize dates
     const serializedReport = {
-      ...report,
-      createdAt: report.createdAt.toISOString(),
-      updatedAt: report.updatedAt.toISOString(),
-      fileData: report.fileData.map((file) => ({
+      ...updatedReport,
+      createdAt: updatedReport.createdAt.toISOString(),
+      updatedAt: updatedReport.updatedAt.toISOString(),
+      fileData: updatedReport.fileData.map((file) => ({
         ...file,
         createdAt: file.createdAt.toISOString(),
         updatedAt: file.updatedAt.toISOString(),
       })),
-      reportSentByUser: report.reportSentByUser
+      reportSentByUser: updatedReport.reportSentByUser
         ? {
-            ...report.reportSentByUser,
-            office: report.reportSentByUser.staffs?.[0]?.office || null,
+            ...updatedReport.reportSentByUser,
+            office: updatedReport.reportSentByUser.staffs?.[0]?.office || null,
           }
         : null,
     };
@@ -117,13 +141,16 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: serializedReport,
+      message: `Report ${
+        action === "approve" ? "approved" : "rejected"
+      } successfully`,
     });
   } catch (error: any) {
-    console.error("❌ Error fetching report:", error);
+    console.error("❌ Error updating report status:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to fetch report",
+        error: error.message || "Failed to update report status",
       },
       { status: 500 }
     );

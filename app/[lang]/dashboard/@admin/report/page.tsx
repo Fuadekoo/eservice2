@@ -31,6 +31,9 @@ import {
   Archive,
   Send,
   User,
+  Building2,
+  Check,
+  X,
 } from "lucide-react";
 import {
   Pagination,
@@ -58,16 +61,51 @@ export default function ReportManagementPage() {
     totalPages,
     search,
     status,
+    officeId,
     fetchReports,
     fetchReportById,
+    updateReportStatus,
     setPage,
     setPageSize,
     setSearch,
     setStatus,
+    setOfficeId,
     setDetailOpen,
   } = useReportStore();
 
   const [localSearch, setLocalSearch] = useState("");
+  const [offices, setOffices] = useState<{ id: string; name: string }[]>([]);
+  const [isLoadingOffices, setIsLoadingOffices] = useState(false);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+
+  // Fetch offices on mount
+  useEffect(() => {
+    const fetchOffices = async () => {
+      setIsLoadingOffices(true);
+      try {
+        const response = await fetch("/api/office?limit=100", {
+          cache: "no-store",
+        });
+        const result = await response.json();
+        if (result.success) {
+          const officesData = Array.isArray(result.data)
+            ? result.data
+            : result.data?.offices || [];
+          setOffices(
+            officesData.map((office: any) => ({
+              id: office.id,
+              name: office.name,
+            }))
+          );
+        }
+      } catch (error: any) {
+        console.error("Error fetching offices:", error);
+      } finally {
+        setIsLoadingOffices(false);
+      }
+    };
+    fetchOffices();
+  }, []);
 
   useEffect(() => {
     fetchReports();
@@ -86,6 +124,25 @@ export default function ReportManagementPage() {
       setDetailOpen(true);
     } catch (error: any) {
       toast.error(error.message || "Failed to load report details");
+    }
+  };
+
+  const handleApproveReject = async (
+    reportId: string,
+    action: "approve" | "reject"
+  ) => {
+    try {
+      setIsProcessing(reportId);
+      await updateReportStatus(reportId, action);
+      toast.success(
+        `Report ${action === "approve" ? "approved" : "rejected"} successfully`
+      );
+      // Refresh the list
+      await fetchReports();
+    } catch (error: any) {
+      toast.error(error.message || `Failed to ${action} report`);
+    } finally {
+      setIsProcessing(null);
     }
   };
 
@@ -148,7 +205,7 @@ export default function ReportManagementPage() {
               Report Management
             </h1>
             <p className="text-muted-foreground mt-1">
-              View and manage reports you have sent
+              View and manage reports you have received
             </p>
           </div>
           <Button
@@ -171,12 +228,31 @@ export default function ReportManagementPage() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by report name, description, or recipient..."
+                    placeholder="Search by report name, description, or sender..."
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
                     className="pl-9"
                   />
                 </div>
+                <Select
+                  value={officeId || "all"}
+                  onValueChange={(value) =>
+                    setOfficeId(value === "all" ? "" : value)
+                  }
+                  disabled={isLoadingOffices}
+                >
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="All Offices" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Offices</SelectItem>
+                    {offices.map((office) => (
+                      <SelectItem key={office.id} value={office.id}>
+                        {office.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Select
                   value={status || "all"}
                   onValueChange={(value) =>
@@ -191,8 +267,10 @@ export default function ReportManagementPage() {
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="sent">Sent</SelectItem>
                     <SelectItem value="received">Received</SelectItem>
-                    <SelectItem value="read">Read</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
+                    <SelectItem value="read">Read (Approved)</SelectItem>
+                    <SelectItem value="archived">
+                      Archived (Rejected)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -234,7 +312,7 @@ export default function ReportManagementPage() {
                 <p className="text-sm text-muted-foreground mt-1">
                   {search || status
                     ? "Try adjusting your filters"
-                    : "No reports have been sent yet"}
+                    : "No reports have been received yet"}
                 </p>
               </div>
             ) : (
@@ -244,10 +322,11 @@ export default function ReportManagementPage() {
                     <TableRow>
                       <TableHead>Report Name</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Sent To</TableHead>
+                      <TableHead>Sent By</TableHead>
+                      <TableHead>Office</TableHead>
                       <TableHead>Files</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Sent Date</TableHead>
+                      <TableHead>Received Date</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -263,17 +342,31 @@ export default function ReportManagementPage() {
                           </p>
                         </TableCell>
                         <TableCell>
-                          {report.reportSentToUser ? (
+                          {report.reportSentByUser ? (
                             <div className="flex items-center gap-2">
                               <User className="w-4 h-4 text-muted-foreground" />
                               <div>
                                 <p className="text-sm font-medium">
-                                  {report.reportSentToUser.username}
+                                  {report.reportSentByUser.username}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {report.reportSentToUser.phoneNumber}
+                                  {report.reportSentByUser.phoneNumber}
                                 </p>
                               </div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              N/A
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {report.reportSentByUser?.office ? (
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {report.reportSentByUser.office.name}
+                              </span>
                             </div>
                           ) : (
                             <span className="text-sm text-muted-foreground">
@@ -303,13 +396,50 @@ export default function ReportManagementPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewDetails(report)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {report.receiverStatus !== "read" &&
+                              report.receiverStatus !== "archived" && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleApproveReject(report.id, "approve")
+                                    }
+                                    disabled={isProcessing === report.id}
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  >
+                                    {isProcessing === report.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Check className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleApproveReject(report.id, "reject")
+                                    }
+                                    disabled={isProcessing === report.id}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    {isProcessing === report.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <X className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </>
+                              )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetails(report)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

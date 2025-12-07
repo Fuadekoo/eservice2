@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
 
-// GET - Fetch reports sent by the authenticated admin
+// GET - Fetch reports sent TO the authenticated admin
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user
@@ -40,35 +40,92 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const officeId = searchParams.get("officeId") || "";
     const skip = (page - 1) * pageSize;
 
-    // Build where clause - only reports sent by this admin
-    const where: any = {
-      reportSentBy: session.user.id,
-    };
+    // Build where clause - only reports sent TO this admin (received reports)
+    const whereConditions: any[] = [
+      {
+        reportSentTo: session.user.id,
+      },
+    ];
+
+    // Add office filter - filter by sender's office
+    if (officeId && officeId !== "all") {
+      // Get all staff members in this office with their user and role information
+      const staffInOffice = await prisma.staff.findMany({
+        where: {
+          officeId: officeId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              role: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Filter for managers only (case-insensitive check)
+      const managerUserIds = staffInOffice
+        .filter((staff) => {
+          const roleName = staff.user?.role?.name?.toLowerCase();
+          return roleName === "manager";
+        })
+        .map((staff) => staff.userId);
+
+      if (managerUserIds.length > 0) {
+        whereConditions.push({
+          reportSentBy: {
+            in: managerUserIds,
+          },
+        });
+      } else {
+        // No managers in this office, return empty result by using a condition that will never match
+        whereConditions.push({
+          reportSentBy: {
+            in: [],
+          },
+        });
+      }
+    }
 
     // Add search filter
     if (search && search.trim()) {
-      where.OR = [
+      const searchConditions = [
         { name: { contains: search } },
         { description: { contains: search } },
         {
-          reportSentToUser: {
+          reportSentByUser: {
             username: { contains: search },
           },
         },
         {
-          reportSentToUser: {
+          reportSentByUser: {
             phoneNumber: { contains: search },
           },
         },
       ];
+      whereConditions.push({ OR: searchConditions });
     }
 
     // Add status filter
     if (status && status !== "all") {
-      where.receiverStatus = status;
+      whereConditions.push({
+        receiverStatus: status,
+      });
     }
+
+    // Combine all conditions with AND
+    const where: any =
+      whereConditions.length > 1
+        ? { AND: whereConditions }
+        : whereConditions[0];
 
     // Get total count
     const total = await prisma.report.count({ where });
@@ -96,10 +153,18 @@ export async function GET(request: NextRequest) {
           },
         },
         reportSentByUser: {
-          select: {
-            id: true,
-            username: true,
-            phoneNumber: true,
+          include: {
+            staffs: {
+              include: {
+                office: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+              take: 1,
+            },
           },
         },
       },
@@ -108,7 +173,7 @@ export async function GET(request: NextRequest) {
       take: pageSize,
     });
 
-    // Serialize dates
+    // Serialize dates and include office information
     const serializedReports = reports.map((report) => ({
       ...report,
       createdAt: report.createdAt.toISOString(),
@@ -118,6 +183,14 @@ export async function GET(request: NextRequest) {
         createdAt: file.createdAt.toISOString(),
         updatedAt: file.updatedAt.toISOString(),
       })),
+      reportSentByUser: report.reportSentByUser
+        ? {
+            id: report.reportSentByUser.id,
+            username: report.reportSentByUser.username,
+            phoneNumber: report.reportSentByUser.phoneNumber,
+            office: report.reportSentByUser.staffs?.[0]?.office || null,
+          }
+        : null,
     }));
 
     const totalPages = Math.ceil(total / pageSize);

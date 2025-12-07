@@ -14,15 +14,21 @@ interface ReportManagementState {
   totalPages: number;
   search: string;
   status: string;
+  officeId: string;
   pagination: PaginationInfo | null;
 
   // Actions
   fetchReports: () => Promise<void>;
   fetchReportById: (id: string) => Promise<void>;
+  updateReportStatus: (
+    id: string,
+    action: "approve" | "reject"
+  ) => Promise<void>;
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
   setSearch: (search: string) => void;
   setStatus: (status: string) => void;
+  setOfficeId: (officeId: string) => void;
   setDetailOpen: (open: boolean) => void;
   setSelectedReport: (report: Report | null) => void;
   reset: () => void;
@@ -39,6 +45,7 @@ const initialState = {
   totalPages: 0,
   search: "",
   status: "",
+  officeId: "",
   pagination: null,
 };
 
@@ -48,7 +55,7 @@ export const useReportStore = create<ReportManagementState>((set, get) => ({
   fetchReports: async () => {
     set({ isLoading: true });
     try {
-      const { page, pageSize, search, status } = get();
+      const { page, pageSize, search, status, officeId } = get();
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: pageSize.toString(),
@@ -56,6 +63,7 @@ export const useReportStore = create<ReportManagementState>((set, get) => ({
 
       if (search) params.append("search", search);
       if (status) params.append("status", status);
+      if (officeId && officeId !== "all") params.append("officeId", officeId);
 
       const response = await fetch(`/api/report?${params.toString()}`, {
         cache: "no-store",
@@ -120,6 +128,42 @@ export const useReportStore = create<ReportManagementState>((set, get) => ({
   setStatus: (status: string) => {
     set({ status, page: 1 });
     get().fetchReports();
+  },
+
+  setOfficeId: (officeId: string) => {
+    set({ officeId, page: 1 });
+    get().fetchReports();
+  },
+
+  updateReportStatus: async (id: string, action: "approve" | "reject") => {
+    try {
+      const response = await fetch(`/api/report/${id}/approve`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+        cache: "no-store",
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh the reports list
+        await get().fetchReports();
+        // Update selected report if it's the one being updated
+        const currentSelected = get().selectedReport;
+        if (currentSelected?.id === id) {
+          await get().fetchReportById(id);
+        }
+        return result.data;
+      } else {
+        throw new Error(result.error || "Failed to update report status");
+      }
+    } catch (error: any) {
+      console.error("Error updating report status:", error);
+      throw error;
+    }
   },
 
   setDetailOpen: (open: boolean) => {
