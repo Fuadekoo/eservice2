@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import useTranslation from "@/hooks/useTranslation";
 
 interface Appointment {
   id: string;
@@ -93,6 +94,7 @@ interface Appointment {
 }
 
 export default function StaffAppointmentPage() {
+  const { t } = useTranslation();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -133,11 +135,11 @@ export default function StaffAppointmentPage() {
         setTotal(result.pagination.total);
         setTotalPages(result.pagination.totalPages);
       } else {
-        toast.error(result.error || "Failed to fetch appointments");
+        toast.error(result.error || t("dashboard.failedToFetchAppointments"));
       }
     } catch (error: any) {
       console.error("Error fetching appointments:", error);
-      toast.error("Failed to fetch appointments");
+      toast.error(t("dashboard.failedToFetchAppointments"));
     } finally {
       setIsLoading(false);
     }
@@ -171,17 +173,19 @@ export default function StaffAppointmentPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(result.message || "Appointment updated successfully");
+        toast.success(
+          result.message || t("dashboard.appointmentUpdatedSuccessfully")
+        );
         setIsDetailOpen(false);
         setSelectedAppointment(null);
         setNotes("");
         fetchAppointments();
       } else {
-        toast.error(result.error || "Failed to update appointment");
+        toast.error(result.error || t("dashboard.failedToUpdateAppointment"));
       }
     } catch (error: any) {
       console.error("Error updating appointment:", error);
-      toast.error("Failed to update appointment");
+      toast.error(t("dashboard.failedToUpdateAppointment"));
     } finally {
       setIsApproving(false);
     }
@@ -200,6 +204,14 @@ export default function StaffAppointmentPage() {
         "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
     };
 
+    const statusTranslations: Record<string, string> = {
+      pending: t("dashboard.pending"),
+      approved: t("dashboard.approved"),
+      rejected: t("dashboard.rejected"),
+      completed: t("dashboard.completed"),
+      cancelled: t("dashboard.cancelled"),
+    };
+
     return (
       <Badge
         className={
@@ -207,7 +219,8 @@ export default function StaffAppointmentPage() {
           "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
         }
       >
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {statusTranslations[status] ||
+          status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
@@ -231,10 +244,10 @@ export default function StaffAppointmentPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Appointment Management
+            {t("navigation.appointment")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            View and manage appointments for your assigned services
+            {t("dashboard.viewAndManageAppointmentsForAssignedServices")}
           </p>
         </div>
 
@@ -246,7 +259,9 @@ export default function StaffAppointmentPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Search by service, customer name, or phone..."
+                    placeholder={t(
+                      "dashboard.searchByServiceCustomerNamePhone"
+                    )}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-10"
@@ -257,15 +272,27 @@ export default function StaffAppointmentPage() {
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
                     <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Filter by status" />
+                    <SelectValue placeholder={t("dashboard.filterByStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="all">
+                      {t("dashboard.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="pending">
+                      {t("dashboard.pending")}
+                    </SelectItem>
+                    <SelectItem value="approved">
+                      {t("dashboard.approved")}
+                    </SelectItem>
+                    <SelectItem value="rejected">
+                      {t("dashboard.rejected")}
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      {t("dashboard.completed")}
+                    </SelectItem>
+                    <SelectItem value="cancelled">
+                      {t("dashboard.cancelled")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -276,7 +303,7 @@ export default function StaffAppointmentPage() {
         {/* Appointments Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Appointments</CardTitle>
+            <CardTitle>{t("dashboard.appointments")}</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -286,7 +313,7 @@ export default function StaffAppointmentPage() {
             ) : filteredAppointments.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No appointments found</p>
+                <p>{t("dashboard.noAppointmentsFound")}</p>
               </div>
             ) : (
               <>
@@ -294,12 +321,14 @@ export default function StaffAppointmentPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t("dashboard.service")}</TableHead>
+                        <TableHead>{t("dashboard.customer")}</TableHead>
+                        <TableHead>{t("dashboard.date")}</TableHead>
+                        <TableHead>{t("dashboard.time")}</TableHead>
+                        <TableHead>{t("common.status")}</TableHead>
+                        <TableHead className="text-right">
+                          {t("common.actions")}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -342,7 +371,7 @@ export default function StaffAppointmentPage() {
                               </div>
                             ) : (
                               <span className="text-muted-foreground">
-                                Not specified
+                                {t("dashboard.notSpecified")}
                               </span>
                             )}
                           </TableCell>
@@ -368,8 +397,10 @@ export default function StaffAppointmentPage() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
-                      Showing {Math.min((page - 1) * pageSize + 1, total)} to{" "}
-                      {Math.min(page * pageSize, total)} of {total} appointments
+                      {t("dashboard.showing")}{" "}
+                      {Math.min((page - 1) * pageSize + 1, total)}{" "}
+                      {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
+                      {t("dashboard.of")} {total} {t("dashboard.appointments")}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -378,7 +409,7 @@ export default function StaffAppointmentPage() {
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                       >
-                        Previous
+                        {t("dashboard.previous")}
                       </Button>
                       <Button
                         variant="outline"
@@ -388,7 +419,7 @@ export default function StaffAppointmentPage() {
                         }
                         disabled={page === totalPages}
                       >
-                        Next
+                        {t("dashboard.next")}
                       </Button>
                     </div>
                   </div>
@@ -402,9 +433,9 @@ export default function StaffAppointmentPage() {
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Appointment Details</DialogTitle>
+              <DialogTitle>{t("dashboard.appointmentDetails")}</DialogTitle>
               <DialogDescription>
-                View and manage appointment information
+                {t("dashboard.viewAndManageAppointmentInformation")}
               </DialogDescription>
             </DialogHeader>
 
@@ -412,7 +443,9 @@ export default function StaffAppointmentPage() {
               <div className="space-y-4">
                 {/* Service Information */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Service</Label>
+                  <Label className="text-sm font-semibold">
+                    {t("dashboard.service")}
+                  </Label>
                   <div className="p-3 bg-muted rounded-md">
                     <p className="font-medium">
                       {selectedAppointment.request.service.name}
@@ -422,15 +455,21 @@ export default function StaffAppointmentPage() {
                     </p>
                     <div className="mt-2 text-sm">
                       <p>
-                        <span className="font-medium">Office:</span>{" "}
+                        <span className="font-medium">
+                          {t("dashboard.office")}:
+                        </span>{" "}
                         {selectedAppointment.request.service.office.name}
                       </p>
                       <p>
-                        <span className="font-medium">Room:</span>{" "}
+                        <span className="font-medium">
+                          {t("dashboard.room")}:
+                        </span>{" "}
                         {selectedAppointment.request.service.office.roomNumber}
                       </p>
                       <p>
-                        <span className="font-medium">Address:</span>{" "}
+                        <span className="font-medium">
+                          {t("dashboard.address")}:
+                        </span>{" "}
                         {selectedAppointment.request.service.office.address}
                       </p>
                     </div>
@@ -439,7 +478,9 @@ export default function StaffAppointmentPage() {
 
                 {/* Customer Information */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Customer</Label>
+                  <Label className="text-sm font-semibold">
+                    {t("dashboard.customer")}
+                  </Label>
                   <div className="p-3 bg-muted rounded-md">
                     <p className="font-medium">
                       {selectedAppointment.request.user.username}
@@ -453,7 +494,9 @@ export default function StaffAppointmentPage() {
                 {/* Appointment Date & Time */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Date</Label>
+                    <Label className="text-sm font-semibold">
+                      {t("dashboard.date")}
+                    </Label>
                     <div className="p-3 bg-muted rounded-md flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
                       {format(
@@ -463,30 +506,34 @@ export default function StaffAppointmentPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Time</Label>
+                    <Label className="text-sm font-semibold">
+                      {t("dashboard.time")}
+                    </Label>
                     <div className="p-3 bg-muted rounded-md flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
-                      {selectedAppointment.time || "Not specified"}
+                      {selectedAppointment.time || t("dashboard.notSpecified")}
                     </div>
                   </div>
                 </div>
 
                 {/* Status */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Status</Label>
+                  <Label className="text-sm font-semibold">
+                    {t("common.status")}
+                  </Label>
                   <div>{getStatusBadge(selectedAppointment.status)}</div>
                 </div>
 
                 {/* Notes */}
                 <div className="space-y-2">
                   <Label htmlFor="notes" className="text-sm font-semibold">
-                    Notes
+                    {t("dashboard.notes")}
                   </Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add notes about this appointment..."
+                    placeholder={t("dashboard.addNotesAboutAppointment")}
                     rows={4}
                     disabled={isApproving}
                   />
@@ -506,12 +553,12 @@ export default function StaffAppointmentPage() {
                       {isApproving && actionType === "approve" ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Approving...
+                          {t("dashboard.approving")}
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Approve
+                          {t("dashboard.approve")}
                         </>
                       )}
                     </Button>
@@ -527,12 +574,12 @@ export default function StaffAppointmentPage() {
                       {isApproving && actionType === "reject" ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Rejecting...
+                          {t("dashboard.rejecting")}
                         </>
                       ) : (
                         <>
                           <XCircle className="w-4 h-4 mr-2" />
-                          Reject
+                          {t("dashboard.reject")}
                         </>
                       )}
                     </Button>
@@ -550,7 +597,7 @@ export default function StaffAppointmentPage() {
                   setNotes("");
                 }}
               >
-                Close
+                {t("common.close")}
               </Button>
             </DialogFooter>
           </DialogContent>

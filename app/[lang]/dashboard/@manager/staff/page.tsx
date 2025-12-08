@@ -62,8 +62,10 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { useRouter, useParams } from "next/navigation";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function StaffPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
@@ -188,9 +190,11 @@ export default function StaffPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Staff</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("navigation.staff")}
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Manage staff members in your office
+            {t("dashboard.manageStaffInOffice")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -199,7 +203,7 @@ export default function StaffPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search by username, phone..."
+              placeholder={t("dashboard.searchByUsernamePhone")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9 pr-9"
@@ -224,11 +228,11 @@ export default function StaffPage() {
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
+            {t("common.refresh")}
           </Button>
           <Button onClick={handleCreateNew}>
             <Plus className="w-4 h-4 mr-2" />
-            Add Staff
+            {t("dashboard.addStaff")}
           </Button>
         </div>
       </div>
@@ -236,7 +240,9 @@ export default function StaffPage() {
       {/* Search and Filters */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show:</span>
+          <span className="text-sm text-muted-foreground">
+            {t("dashboard.show")}:
+          </span>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => {
@@ -261,21 +267,23 @@ export default function StaffPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading staff...</p>
+          <p className="text-muted-foreground">{t("dashboard.loadingStaff")}</p>
         </div>
       ) : staff.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/30 rounded-lg border border-dashed">
           <User className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">No staff found</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            {t("dashboard.noStaffFound")}
+          </h3>
           <p className="text-muted-foreground mb-6 max-w-md">
             {searchTerm
-              ? "No staff match your search criteria. Try a different search term."
-              : "Get started by adding staff members to your office. Staff members can be assigned to handle service requests."}
+              ? t("dashboard.noStaffMatchSearch")
+              : t("dashboard.getStartedAddStaff")}
           </p>
           {!searchTerm && (
             <Button onClick={handleCreateNew} size="lg">
               <Plus className="w-5 h-5 mr-2" />
-              Add Your First Staff
+              {t("dashboard.addYourFirstStaff")}
             </Button>
           )}
         </div>
@@ -285,12 +293,14 @@ export default function StaffPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Staff</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Office</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("dashboard.staff")}</TableHead>
+                  <TableHead>{t("dashboard.contact")}</TableHead>
+                  <TableHead>{t("dashboard.role")}</TableHead>
+                  <TableHead>{t("dashboard.office")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead className="text-right">
+                    {t("common.actions")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -329,7 +339,7 @@ export default function StaffPage() {
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            No role
+                            {t("dashboard.noRole")}
                           </span>
                         )}
                       </TableCell>
@@ -344,7 +354,7 @@ export default function StaffPage() {
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            No office
+                            {t("dashboard.noOffice")}
                           </span>
                         )}
                       </TableCell>
@@ -355,7 +365,9 @@ export default function StaffPage() {
                           }
                           className="w-fit"
                         >
-                          {staffMember.isActive ? "Active" : "Inactive"}
+                          {staffMember.isActive
+                            ? t("dashboard.active")
+                            : t("dashboard.inactive")}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -374,14 +386,14 @@ export default function StaffPage() {
                               onClick={() => handleEdit(staffMember)}
                             >
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                              {t("common.edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(staffMember)}
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              {t("common.delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -397,9 +409,10 @@ export default function StaffPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                {Math.min(currentPage * pageSize, totalItems)} of {totalItems}{" "}
-                staff
+                {t("dashboard.showing")} {(currentPage - 1) * pageSize + 1}{" "}
+                {t("dashboard.to")}{" "}
+                {Math.min(currentPage * pageSize, totalItems)}{" "}
+                {t("dashboard.of")} {totalItems} {t("dashboard.staff")}
               </div>
               <Pagination>
                 <PaginationContent>
@@ -466,23 +479,24 @@ export default function StaffPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the staff member "
-              {selectedStaff?.username}
-              ". This action cannot be undone.
+              {t("dashboard.deleteStaffConfirm").replace(
+                "{username}",
+                selectedStaff?.username || ""
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSubmitting ? "Deleting..." : "Delete"}
+              {isSubmitting ? t("dashboard.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

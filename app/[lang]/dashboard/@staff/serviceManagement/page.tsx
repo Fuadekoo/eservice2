@@ -28,6 +28,7 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import Image from "next/image";
+import useTranslation from "@/hooks/useTranslation";
 
 interface Requirement {
   id: string;
@@ -71,6 +72,7 @@ interface Service {
 }
 
 export default function StaffServiceManagementPage() {
+  const { t } = useTranslation();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
   const [services, setServices] = useState<Service[]>([]);
@@ -123,11 +125,11 @@ export default function StaffServiceManagementPage() {
         setTotal(result.pagination.total);
         setTotalPages(result.pagination.totalPages);
       } else {
-        toast.error(result.error || "Failed to fetch services");
+        toast.error(result.error || t("dashboard.failedToFetchServices"));
       }
     } catch (error: any) {
       console.error("Error fetching services:", error);
-      toast.error("Failed to fetch services");
+      toast.error(t("dashboard.failedToFetchServices"));
     } finally {
       setIsLoading(false);
     }
@@ -151,10 +153,10 @@ export default function StaffServiceManagementPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Service Management
+            {t("navigation.serviceManagement")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            View services assigned to you
+            {t("dashboard.viewServicesAssignedToYou")}
           </p>
         </div>
 
@@ -165,7 +167,9 @@ export default function StaffServiceManagementPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <Input
-                  placeholder="Search by service name, description, or office..."
+                  placeholder={t(
+                    "dashboard.searchByServiceNameDescriptionOffice"
+                  )}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-11 h-11"
@@ -182,7 +186,10 @@ export default function StaffServiceManagementPage() {
                 <div>
                   <p className="text-2xl font-bold">{total}</p>
                   <p className="text-xs text-muted-foreground">
-                    Service{total !== 1 ? "s" : ""} assigned
+                    {t("dashboard.servicesAssigned").replace(
+                      "{count}",
+                      total.toString()
+                    )}
                   </p>
                 </div>
               </div>
@@ -200,11 +207,13 @@ export default function StaffServiceManagementPage() {
             <CardContent className="py-12">
               <div className="text-center text-muted-foreground">
                 <Briefcase className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">No services found</p>
+                <p className="text-lg font-medium mb-2">
+                  {t("dashboard.noServicesFound")}
+                </p>
                 <p className="text-sm">
                   {search
-                    ? "Try adjusting your search criteria"
-                    : "No services are currently assigned to you"}
+                    ? t("dashboard.tryAdjustingSearchCriteria")
+                    : t("dashboard.noServicesAssignedToYou")}
                 </p>
               </div>
             </CardContent>
@@ -257,7 +266,7 @@ export default function StaffServiceManagementPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground line-clamp-3 min-h-[3.75rem]">
+                    <p className="text-sm text-muted-foreground line-clamp-3 min-h-15">
                       {service.description || "No description available"}
                     </p>
                     <div className="space-y-2.5 pt-2 border-t">
@@ -266,8 +275,10 @@ export default function StaffServiceManagementPage() {
                           <Clock className="w-3.5 h-3.5" />
                         </div>
                         <span className="text-muted-foreground">
-                          <span className="font-medium">Time:</span>{" "}
-                          {service.timeToTake || "Not specified"}
+                          <span className="font-medium">
+                            {t("dashboard.time")}:
+                          </span>{" "}
+                          {service.timeToTake || t("dashboard.notSpecified")}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
@@ -278,8 +289,10 @@ export default function StaffServiceManagementPage() {
                           <span className="font-medium">
                             {service.assignedStaff.length}
                           </span>{" "}
-                          staff member
-                          {service.assignedStaff.length !== 1 ? "s" : ""}
+                          {t("dashboard.staffMember").replace(
+                            "{count}",
+                            service.assignedStaff.length.toString()
+                          )}
                         </span>
                       </div>
                       {service.requirements.length > 0 && (
@@ -291,8 +304,10 @@ export default function StaffServiceManagementPage() {
                             <span className="font-medium">
                               {service.requirements.length}
                             </span>{" "}
-                            requirement
-                            {service.requirements.length !== 1 ? "s" : ""}
+                            {t("dashboard.requirement").replace(
+                              "{count}",
+                              service.requirements.length.toString()
+                            )}
                           </span>
                         </div>
                       )}
@@ -303,7 +318,9 @@ export default function StaffServiceManagementPage() {
                           </div>
                           <div className="flex-1">
                             <span className="text-muted-foreground block mb-1">
-                              <span className="font-medium">Service For:</span>
+                              <span className="font-medium">
+                                {t("dashboard.serviceFor")}:
+                              </span>
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                               {service.serviceFors.slice(0, 2).map((sf) => (
@@ -317,7 +334,8 @@ export default function StaffServiceManagementPage() {
                               ))}
                               {service.serviceFors.length > 2 && (
                                 <Badge variant="outline" className="text-xs">
-                                  +{service.serviceFors.length - 2} more
+                                  +{service.serviceFors.length - 2}{" "}
+                                  {t("dashboard.more")}
                                 </Badge>
                               )}
                             </div>
@@ -336,19 +354,22 @@ export default function StaffServiceManagementPage() {
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm text-muted-foreground">
-                      Showing{" "}
+                      {t("dashboard.showing")}{" "}
                       <span className="font-medium text-foreground">
                         {Math.min((page - 1) * pageSize + 1, total)}
                       </span>{" "}
-                      to{" "}
+                      {t("dashboard.to")}{" "}
                       <span className="font-medium text-foreground">
                         {Math.min(page * pageSize, total)}
                       </span>{" "}
-                      of{" "}
+                      {t("dashboard.of")}{" "}
                       <span className="font-medium text-foreground">
                         {total}
                       </span>{" "}
-                      service{total !== 1 ? "s" : ""}
+                      {t("dashboard.service").replace(
+                        "{count}",
+                        total.toString()
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -357,41 +378,48 @@ export default function StaffServiceManagementPage() {
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1 || isLoading}
                       >
-                        Previous
+                        {t("dashboard.previous")}
                       </Button>
                       <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (page <= 3) {
-                            pageNum = i + 1;
-                          } else if (page >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = page - 2 + i;
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (page <= 3) {
+                              pageNum = i + 1;
+                            } else if (page >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = page - 2 + i;
+                            }
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={
+                                  page === pageNum ? "default" : "outline"
+                                }
+                                size="sm"
+                                className="w-10"
+                                onClick={() => setPage(pageNum)}
+                                disabled={isLoading}
+                              >
+                                {pageNum}
+                              </Button>
+                            );
                           }
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={page === pageNum ? "default" : "outline"}
-                              size="sm"
-                              className="w-10"
-                              onClick={() => setPage(pageNum)}
-                              disabled={isLoading}
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        })}
+                        )}
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        onClick={() =>
+                          setPage((p) => Math.min(totalPages, p + 1))
+                        }
                         disabled={page === totalPages || isLoading}
                       >
-                        Next
+                        {t("dashboard.next")}
                       </Button>
                     </div>
                   </div>
@@ -428,7 +456,7 @@ export default function StaffServiceManagementPage() {
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Building2 className="w-5 h-5" />
-                      Office Information
+                      {t("dashboard.officeInformation")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -460,7 +488,10 @@ export default function StaffServiceManagementPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-muted-foreground" />
-                        <span>Room: {selectedService.office.roomNumber}</span>
+                        <span>
+                          {t("dashboard.room")}:{" "}
+                          {selectedService.office.roomNumber}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -472,10 +503,13 @@ export default function StaffServiceManagementPage() {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="w-5 h-5 text-muted-foreground" />
-                        <span className="font-semibold">Time to Take</span>
+                        <span className="font-semibold">
+                          {t("dashboard.timeToTake")}
+                        </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {selectedService.timeToTake || "Not specified"}
+                        {selectedService.timeToTake ||
+                          t("dashboard.notSpecified")}
                       </p>
                     </CardContent>
                   </Card>
@@ -483,11 +517,15 @@ export default function StaffServiceManagementPage() {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Users className="w-5 h-5 text-muted-foreground" />
-                        <span className="font-semibold">Assigned Staff</span>
+                        <span className="font-semibold">
+                          {t("dashboard.assignedStaff")}
+                        </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {selectedService.assignedStaff.length} staff member
-                        {selectedService.assignedStaff.length !== 1 ? "s" : ""}
+                        {t("dashboard.staffMember").replace(
+                          "{count}",
+                          selectedService.assignedStaff.length.toString()
+                        )}
                       </p>
                     </CardContent>
                   </Card>
@@ -499,7 +537,7 @@ export default function StaffServiceManagementPage() {
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <FileText className="w-5 h-5" />
-                        Requirements
+                        {t("dashboard.requirements")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -528,7 +566,7 @@ export default function StaffServiceManagementPage() {
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Users className="w-5 h-5" />
-                        Service For
+                        {t("dashboard.serviceFor")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -549,7 +587,7 @@ export default function StaffServiceManagementPage() {
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Users className="w-5 h-5" />
-                        Assigned Staff Members
+                        {t("dashboard.assignedStaffMembers")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -576,7 +614,7 @@ export default function StaffServiceManagementPage() {
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>
-                    Created:{" "}
+                    {t("dashboard.created")}:{" "}
                     {format(
                       new Date(selectedService.createdAt),
                       "MMMM dd, yyyy"
@@ -591,4 +629,3 @@ export default function StaffServiceManagementPage() {
     </div>
   );
 }
-

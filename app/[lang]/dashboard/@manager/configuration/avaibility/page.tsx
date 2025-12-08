@@ -17,6 +17,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import type { DaySchedule } from "@/lib/office-availability";
+import useTranslation from "@/hooks/useTranslation";
 
 interface OfficeAvailability {
   id: string;
@@ -28,20 +29,21 @@ interface OfficeAvailability {
   dateOverrides: Record<string, DaySchedule>;
 }
 
-const DAYS = [
-  { key: "0", label: "Sunday" },
-  { key: "1", label: "Monday" },
-  { key: "2", label: "Tuesday" },
-  { key: "3", label: "Wednesday" },
-  { key: "4", label: "Thursday" },
-  { key: "5", label: "Friday" },
-  { key: "6", label: "Saturday" },
-];
-
 export default function AvailabilityPage() {
+  const { t } = useTranslation();
   const params = useParams<{ lang: string }>();
   const router = useRouter();
   const lang = params.lang || "en";
+
+  const DAYS = [
+    { key: "0", label: t("dashboard.sunday") },
+    { key: "1", label: t("dashboard.monday") },
+    { key: "2", label: t("dashboard.tuesday") },
+    { key: "3", label: t("dashboard.wednesday") },
+    { key: "4", label: t("dashboard.thursday") },
+    { key: "5", label: t("dashboard.friday") },
+    { key: "6", label: t("dashboard.saturday") },
+  ];
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [availability, setAvailability] = useState<OfficeAvailability | null>(
     null
@@ -62,7 +64,7 @@ export default function AvailabilityPage() {
         const officeResult = await officeResponse.json();
 
         if (!officeResult.success || !officeResult.data) {
-          toast.error("Failed to load office");
+          toast.error(t("dashboard.failedToLoadOffice"));
           return;
         }
 
@@ -91,7 +93,7 @@ export default function AvailabilityPage() {
         }
       } catch (error: any) {
         console.error("Error fetching availability:", error);
-        toast.error("Failed to load availability configuration");
+        toast.error(t("dashboard.failedToLoadAvailability"));
       } finally {
         setIsLoading(false);
       }
@@ -143,14 +145,14 @@ export default function AvailabilityPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Availability updated successfully");
+        toast.success(t("dashboard.availabilityUpdatedSuccessfully"));
         setAvailability(result.availability);
       } else {
-        toast.error(result.error || "Failed to update availability");
+        toast.error(result.error || t("dashboard.failedToUpdateAvailability"));
       }
     } catch (error: any) {
       console.error("Error updating availability:", error);
-      toast.error("Failed to update availability");
+      toast.error(t("dashboard.failedToUpdateAvailability"));
     } finally {
       setIsSubmitting(false);
     }
@@ -183,10 +185,10 @@ export default function AvailabilityPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Office Availability
+            {t("dashboard.officeAvailability")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Configure your office hours and availability
+            {t("dashboard.configureOfficeHoursAndAvailability")}
           </p>
         </div>
       </div>
@@ -195,14 +197,14 @@ export default function AvailabilityPage() {
         {/* Slot Duration */}
         <Card>
           <CardHeader>
-            <CardTitle>Slot Duration</CardTitle>
+            <CardTitle>{t("dashboard.slotDuration")}</CardTitle>
             <CardDescription>
-              Set the duration for each appointment slot in minutes
+              {t("dashboard.setDurationForAppointmentSlot")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Field>
-              <FieldLabel>Duration (minutes)</FieldLabel>
+              <FieldLabel>{t("dashboard.durationMinutes")}</FieldLabel>
               <Input
                 type="number"
                 min="15"
@@ -215,7 +217,7 @@ export default function AvailabilityPage() {
                 className="max-w-xs"
               />
               <FieldDescription>
-                Common values: 15, 30, 45, 60 minutes
+                {t("dashboard.commonDurationValues")}
               </FieldDescription>
             </Field>
           </CardContent>
@@ -224,9 +226,9 @@ export default function AvailabilityPage() {
         {/* Weekly Schedule */}
         <Card>
           <CardHeader>
-            <CardTitle>Weekly Schedule</CardTitle>
+            <CardTitle>{t("dashboard.weeklySchedule")}</CardTitle>
             <CardDescription>
-              Set the working hours for each day of the week
+              {t("dashboard.setWorkingHoursForEachDay")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -253,13 +255,17 @@ export default function AvailabilityPage() {
                       }
                     />
                     <span className="text-sm text-muted-foreground">
-                      {daySchedule.available ? "Available" : "Closed"}
+                      {daySchedule.available
+                        ? t("dashboard.available")
+                        : t("dashboard.closed")}
                     </span>
                   </div>
                   {daySchedule.available && (
                     <div className="flex items-center gap-2 flex-1">
                       <div className="flex items-center gap-2">
-                        <Label className="text-sm">Start:</Label>
+                        <Label className="text-sm">
+                          {t("dashboard.start")}:
+                        </Label>
                         <Input
                           type="time"
                           value={daySchedule.start}
@@ -270,7 +276,7 @@ export default function AvailabilityPage() {
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <Label className="text-sm">End:</Label>
+                        <Label className="text-sm">{t("dashboard.end")}:</Label>
                         <Input
                           type="time"
                           value={daySchedule.end}
@@ -290,18 +296,18 @@ export default function AvailabilityPage() {
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
+                {t("dashboard.saving")}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                {t("dashboard.saveChanges")}
               </>
             )}
           </Button>

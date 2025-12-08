@@ -319,7 +319,7 @@ export function UserForm({
                     }
                   />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   {offices
                     .filter((office) => office.status) // Only show active offices
                     .map((office) => (
@@ -399,7 +399,7 @@ export function UserForm({
                     }
                   />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
                   {!watchedOfficeId ? (
                     <div className="px-2 py-1.5 text-sm text-muted-foreground">
                       Please select an office first

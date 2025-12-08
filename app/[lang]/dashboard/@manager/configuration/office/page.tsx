@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { LogoUpload } from "@/app/[lang]/dashboard/@admin/office/_components/logo-upload";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import useTranslation from "@/hooks/useTranslation";
 
 interface Office {
   id: string;
@@ -33,6 +34,7 @@ interface Office {
 }
 
 export default function OfficeEditPage() {
+  const { t } = useTranslation();
   const params = useParams<{ lang: string }>();
   const router = useRouter();
   const lang = params.lang || "en";
@@ -78,11 +80,11 @@ export default function OfficeEditPage() {
             startedAt: new Date(officeData.startedAt),
           });
         } else {
-          toast.error(result.error || "Failed to load office");
+          toast.error(result.error || t("dashboard.failedToLoadOffice"));
         }
       } catch (error: any) {
         console.error("Error fetching office:", error);
-        toast.error("Failed to load office");
+        toast.error(t("dashboard.failedToLoadOffice"));
       } finally {
         setIsLoading(false);
       }
@@ -109,7 +111,7 @@ export default function OfficeEditPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Office updated successfully");
+        toast.success(t("dashboard.officeUpdatedSuccessfully"));
         // Refresh office data
         const refreshResponse = await fetch("/api/manager/office");
         const refreshResult = await refreshResponse.json();
@@ -117,11 +119,11 @@ export default function OfficeEditPage() {
           setOffice(refreshResult.data);
         }
       } else {
-        toast.error(result.error || "Failed to update office");
+        toast.error(result.error || t("dashboard.failedToUpdateOffice"));
       }
     } catch (error: any) {
       console.error("Error updating office:", error);
-      toast.error("Failed to update office");
+      toast.error(t("dashboard.failedToUpdateOffice"));
     } finally {
       setIsSubmitting(false);
     }
@@ -145,9 +147,11 @@ export default function OfficeEditPage() {
     return (
       <div className="w-full h-full overflow-y-auto py-6">
         <div className="flex flex-col items-center justify-center py-20">
-          <p className="text-muted-foreground">Office not found</p>
+          <p className="text-muted-foreground">
+            {t("dashboard.officeNotFound")}
+          </p>
           <Button onClick={handleCancel} className="mt-4">
-            Back to Dashboard
+            {t("dashboard.backToDashboard")}
           </Button>
         </div>
       </div>
@@ -166,9 +170,11 @@ export default function OfficeEditPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Office</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("dashboard.editOffice")}
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Update your office information
+            {t("dashboard.updateOfficeInfo")}
           </p>
         </div>
       </div>
@@ -181,29 +187,29 @@ export default function OfficeEditPage() {
           <FormInput
             control={form.control}
             name="name"
-            label="Office Name"
-            placeholder="Enter office name"
+            label={t("dashboard.officeName")}
+            placeholder={t("dashboard.enterOfficeName")}
           />
           <FormInput
             control={form.control}
             name="roomNumber"
-            label="Room Number"
-            placeholder="Enter room number"
+            label={t("dashboard.roomNumber")}
+            placeholder={t("dashboard.enterRoomNumber")}
           />
         </div>
 
         <FormInput
           control={form.control}
           name="address"
-          label="Address"
-          placeholder="Enter office address"
+          label={t("dashboard.address")}
+          placeholder={t("dashboard.enterOfficeAddress")}
         />
 
         <FormInput
           control={form.control}
           name="phoneNumber"
-          label="Phone Number"
-          placeholder="Enter phone number (optional)"
+          label={t("dashboard.phoneNumber")}
+          placeholder={t("dashboard.enterPhoneNumberOptional")}
           type="tel"
         />
 
@@ -220,7 +226,7 @@ export default function OfficeEditPage() {
         />
 
         <Field>
-          <FieldLabel>Slogan</FieldLabel>
+          <FieldLabel>{t("dashboard.slogan")}</FieldLabel>
           <Controller
             control={form.control}
             name="slogan"
@@ -228,7 +234,7 @@ export default function OfficeEditPage() {
               <>
                 <Textarea
                   {...field}
-                  placeholder="Enter office slogan (optional)"
+                  placeholder={t("dashboard.enterOfficeSloganOptional")}
                   rows={3}
                   aria-invalid={fieldState.invalid}
                   value={field.value || ""}
@@ -244,7 +250,7 @@ export default function OfficeEditPage() {
         </Field>
 
         <Field>
-          <FieldLabel>Start Date</FieldLabel>
+          <FieldLabel>{t("dashboard.startDate")}</FieldLabel>
           <Controller
             control={form.control}
             name="startedAt"
@@ -282,10 +288,10 @@ export default function OfficeEditPage() {
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Update Office"}
+            {isSubmitting ? t("dashboard.saving") : t("dashboard.updateOffice")}
           </Button>
         </div>
       </form>

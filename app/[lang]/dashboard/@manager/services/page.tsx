@@ -35,6 +35,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { useRouter, useParams } from "next/navigation";
+import useTranslation from "@/hooks/useTranslation";
 
 interface UserInfo {
   id: string;
@@ -43,6 +44,7 @@ interface UserInfo {
 }
 
 export default function ServicesPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
@@ -195,9 +197,11 @@ export default function ServicesPage() {
     <div className="container mx-auto py-6 space-y-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Services</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("navigation.services")}
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Manage services and assign staff to handle requests
+            {t("dashboard.manageServicesAndAssignStaff")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -206,7 +210,7 @@ export default function ServicesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search by name, description..."
+              placeholder={t("dashboard.searchByNameDescription")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9 pr-9"
@@ -233,11 +237,11 @@ export default function ServicesPage() {
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
+            {t("common.refresh")}
           </Button>
           <Button onClick={handleCreateNew}>
             <Plus className="w-4 h-4 mr-2" />
-            Add Service
+            {t("dashboard.addService")}
           </Button>
         </div>
       </div>
@@ -245,7 +249,9 @@ export default function ServicesPage() {
       {/* Search and Filters */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show:</span>
+          <span className="text-sm text-muted-foreground">
+            {t("dashboard.show")}:
+          </span>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => {
@@ -272,21 +278,25 @@ export default function ServicesPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading services...</p>
+          <p className="text-muted-foreground">
+            {t("dashboard.loadingServices")}
+          </p>
         </div>
       ) : services.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/30 rounded-lg border border-dashed">
           <FileText className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">No services found</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            {t("dashboard.noServicesFound")}
+          </h3>
           <p className="text-muted-foreground mb-6 max-w-md">
             {searchTerm
-              ? "No services match your search criteria. Try a different search term."
-              : "Get started by creating your first service. Services allow customers to request specific assistance, and you can assign staff members to handle these requests."}
+              ? t("dashboard.noServicesMatchSearch")
+              : t("dashboard.getStartedCreateService")}
           </p>
           {!searchTerm && (
             <Button onClick={handleCreateNew} size="lg">
               <Plus className="w-5 h-5 mr-2" />
-              Add Your First Service
+              {t("dashboard.addYourFirstService")}
             </Button>
           )}
         </div>
@@ -309,9 +319,10 @@ export default function ServicesPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                {Math.min(currentPage * pageSize, totalItems)} of {totalItems}{" "}
-                services
+                {t("dashboard.showing")} {(currentPage - 1) * pageSize + 1}{" "}
+                {t("dashboard.to")}{" "}
+                {Math.min(currentPage * pageSize, totalItems)}{" "}
+                {t("dashboard.of")} {totalItems} {t("dashboard.services")}
               </div>
               <Pagination>
                 <PaginationContent>
@@ -399,23 +410,24 @@ export default function ServicesPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the service "{selectedService?.name}
-              ". This action cannot be undone. All staff assignments will also
-              be removed.
+              {t("dashboard.deleteServiceConfirm").replace(
+                "{name}",
+                selectedService?.name || ""
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSubmitting ? "Deleting..." : "Delete"}
+              {isSubmitting ? t("dashboard.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

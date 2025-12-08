@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import useTranslation from "@/hooks/useTranslation";
 
 interface DashboardStats {
   totalStaff: number;
@@ -51,6 +52,7 @@ interface DashboardStats {
 }
 
 export default function ManagerOverviewPage() {
+  const { t } = useTranslation();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -96,7 +98,15 @@ export default function ManagerOverviewPage() {
           "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
         }
       >
-        {status}
+        {status === "Pending"
+          ? t("dashboard.pending")
+          : status === "Approved"
+          ? t("dashboard.approved")
+          : status === "Processing"
+          ? t("dashboard.processing")
+          : status === "Rejected"
+          ? t("dashboard.rejected")
+          : status}
       </Badge>
     );
   };
@@ -125,7 +135,7 @@ export default function ManagerOverviewPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-6">
                 {stats.office.logo ? (
-                  <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                  <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0">
                     <Image
                       src={getLogoUrl(stats.office.logo) || ""}
                       alt={stats.office.name}
@@ -135,7 +145,7 @@ export default function ManagerOverviewPage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center shrink-0">
                     <Building2 className="w-12 h-12 text-muted-foreground" />
                   </div>
                 )}
@@ -148,7 +158,9 @@ export default function ManagerOverviewPage() {
                   )}
                   {stats.role && (
                     <p className="text-sm text-muted-foreground mt-2 font-medium">
-                      You are the {stats.role} of {stats.office.name}
+                      {t("dashboard.youAreTheRoleOfOffice")
+                        .replace("{role}", stats.role)
+                        .replace("{office}", stats.office.name)}
                     </p>
                   )}
                 </div>
@@ -161,11 +173,14 @@ export default function ManagerOverviewPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             {stats?.username
-              ? `Welcome back, ${stats.username}`
-              : "Welcome back"}
+              ? t("dashboard.welcomeBackUser").replace(
+                  "{username}",
+                  stats.username
+                )
+              : t("dashboard.welcomeBack")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Office overview and management
+            {t("dashboard.officeOverviewAndManagement")}
           </p>
         </div>
 
@@ -177,7 +192,7 @@ export default function ManagerOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Total Staff
+                    {t("dashboard.totalStaff")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.totalStaff?.toLocaleString() || 0}
@@ -196,7 +211,7 @@ export default function ManagerOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Pending Requests
+                    {t("dashboard.pendingRequests")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.pendingRequests || 0}
@@ -215,7 +230,7 @@ export default function ManagerOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Scheduled Appointments
+                    {t("dashboard.scheduledAppointments")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.scheduledAppointments || 0}
@@ -234,7 +249,7 @@ export default function ManagerOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Total Services
+                    {t("dashboard.totalServices")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.totalServices || 0}
@@ -254,7 +269,7 @@ export default function ManagerOverviewPage() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Requests</CardTitle>
+                <CardTitle>{t("dashboard.recentRequests")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {stats?.recentRequests && stats.recentRequests.length > 0 ? (
@@ -263,10 +278,10 @@ export default function ManagerOverviewPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Applicant</TableHead>
-                            <TableHead>Service</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>{t("dashboard.applicant")}</TableHead>
+                            <TableHead>{t("dashboard.service")}</TableHead>
+                            <TableHead>{t("common.date")}</TableHead>
+                            <TableHead>{t("common.status")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -290,7 +305,7 @@ export default function ManagerOverviewPage() {
                     <div className="mt-4">
                       <Link href={`/${lang}/dashboard/requestmanagement`}>
                         <Button className="w-full" variant="default">
-                          View All Requests
+                          {t("dashboard.viewAllRequests")}
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </Link>
@@ -299,7 +314,7 @@ export default function ManagerOverviewPage() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No requests yet</p>
+                    <p>{t("dashboard.noRequestsYet")}</p>
                   </div>
                 )}
               </CardContent>
@@ -310,7 +325,7 @@ export default function ManagerOverviewPage() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>{t("dashboard.quickActions")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Link href={`/${lang}/dashboard/requestmanagement`}>
@@ -320,7 +335,7 @@ export default function ManagerOverviewPage() {
                     size="lg"
                   >
                     <ClipboardList className="w-4 h-4 mr-2" />
-                    Review Requests
+                    {t("dashboard.reviewRequests")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/services`}>
@@ -330,7 +345,7 @@ export default function ManagerOverviewPage() {
                     size="lg"
                   >
                     <Briefcase className="w-4 h-4 mr-2" />
-                    Manage Services
+                    {t("dashboard.manageServices")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/staff`}>
@@ -340,7 +355,7 @@ export default function ManagerOverviewPage() {
                     size="lg"
                   >
                     <Users className="w-4 h-4 mr-2" />
-                    Manage Staff
+                    {t("dashboard.manageStaff")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/report`}>
@@ -350,7 +365,7 @@ export default function ManagerOverviewPage() {
                     size="lg"
                   >
                     <FileText className="w-4 h-4 mr-2" />
-                    View Reports
+                    {t("dashboard.viewReports")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/configuration/office`}>
@@ -360,7 +375,7 @@ export default function ManagerOverviewPage() {
                     size="lg"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Office Settings
+                    {t("dashboard.officeSettings")}
                   </Button>
                 </Link>
               </CardContent>

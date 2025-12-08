@@ -10,29 +10,31 @@ import {
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const menu = [
     [
       {
-        key: "overview",
+        key: t("navigation.overview"),
         url: "",
         Icon: <LayoutDashboard className="size-6" />,
       },
     ],
     [
       {
-        key: "requestManagement",
+        key: t("navigation.requestManagement"),
         url: "requestManagement",
         Icon: <ClipboardList className="size-6" />,
       },
       {
-        key: "appointment",
+        key: t("navigation.appointment"),
         url: "appointment",
         Icon: <Calendar className="size-6" />,
       },
       {
-        key: "serviceManagement",
+        key: t("navigation.serviceManagement"),
         url: "serviceManagement",
         Icon: <Briefcase className="size-6" />,
       },
