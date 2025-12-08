@@ -108,7 +108,7 @@ async function main() {
     },
     create: {
       username: "admin",
-      phoneNumber: "+1234567890",
+      phoneNumber: "0900112233",
       password: hashedPassword,
       roleId: adminRole.id,
       isActive: true,
@@ -128,7 +128,7 @@ async function main() {
     },
     create: {
       username: "manager",
-      phoneNumber: "+1234567891",
+      phoneNumber: "0900112234",
       password: hashedPassword,
       roleId: managerRole.id,
       isActive: true,
@@ -150,7 +150,7 @@ async function main() {
     },
     create: {
       username: "staff",
-      phoneNumber: "+1234567892",
+      phoneNumber: "0900112235",
       password: hashedPassword,
       roleId: staffRole.id,
       isActive: true,
@@ -170,7 +170,7 @@ async function main() {
     },
     create: {
       username: "customer",
-      phoneNumber: "+1234567893",
+      phoneNumber: "0900112236",
       password: hashedPassword,
       roleId: customerRole.id,
       isActive: true,
