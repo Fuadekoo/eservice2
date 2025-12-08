@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
 import bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
+import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
 // POST - Register a new customer
 export async function POST(request: NextRequest) {
@@ -106,6 +107,40 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("✅ User registered successfully:", newUser.id);
+
+    // Send welcome SMS to customer
+    try {
+      const welcomeMessage = `🎉 Baga E-Service Platform kanaatti nagaan dhufte!
+
+Maaloo ${name},
+
+Akkaawuntii keessan milkaa'inaan hojjechiif oolee jira!
+
+📱 Odeeffannoo Akkaawuntii:
+Maqaa Fayyadamaa: ${newUser.username}
+Lakkoofsa Bilbilaa: ${normalizedPhone}
+
+✅ Akkaawuntii keessan amma hojii irratti oolee jira.
+
+Amma kan dandeessan:
+• Tajaajila adda addaa platform keenya irratti gaafachuu
+• Gaaffii tajaajilaa keessan haala dhugaa ta'een ilaaluu
+• Odeeffannoo gaaffii keessan irratti argachuu
+• Profaayilii fi filannoo keessan bulchuu
+
+E-Service Platform filachuuf galata guddaa. Tajaajila gaarii siif kennuuf haala hunda goona.
+
+Gaaffii ykn deeggarsa ta'ee, nu qunnamtii siif gochuuf hirkanneessina.
+
+Haala gaariin,
+Gareen E-Service Platform`;
+
+      await sendHahuSMS(normalizedPhone, welcomeMessage);
+      console.log("✅ Welcome SMS sent to customer:", normalizedPhone);
+    } catch (smsError: any) {
+      // Don't fail registration if SMS fails
+      console.error("⚠️ Failed to send welcome SMS:", smsError);
+    }
 
     return NextResponse.json({
       success: true,

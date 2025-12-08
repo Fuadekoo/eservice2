@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
 import { canStaffApproveService } from "@/lib/service-staff-assignment";
+import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
 /**
  * POST - Approve request as staff
@@ -168,6 +169,129 @@ export async function POST(
         appointments: true,
       },
     });
+
+    // Send SMS to customer when request is approved/rejected by staff
+    if (action === "approve" && updatedRequest.user.phoneNumber) {
+      // Check if manager has already approved (final approval)
+      const isFullyApproved = updatedRequest.statusbyadmin === "approved";
+
+      if (isFullyApproved) {
+        // Both staff and manager approved - send final approval message
+        try {
+          const customerMessage = `✅ Gaaffii Tajaajilaa Milkaa'ee!
+
+Maaloo ${updatedRequest.user.username},
+
+Odeeffannoo gammachuu! Gaaffii tajaajilaa keessan guutuu milkaa'ee amma hojii irratti jira.
+
+📋 Odeeffannoo Gaaffii:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tajaajilaa: ${updatedRequest.service.name}
+ID Gaaffii: ${updatedRequest.id.slice(0, 8).toUpperCase()}
+Guyyaa Gaaffii: ${new Date(updatedRequest.date).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+Haala: ✅ GUUTUU MILKAA'EERA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏢 Odeeffannoo Waajjiraa:
+Waajjira: ${updatedRequest.service.office.name}
+Kutaa: ${updatedRequest.service.office.roomNumber}
+Teessoo: ${updatedRequest.service.office.address}
+
+${note ? `📝 Barreeffama Hojjettootaa: ${note}\n\n` : ""}Hojii Itti Aanuu:
+Gaaffii keessan amma tarkaanfii hojii keessatti jira. Yeroo dhiyeessaan walgahii fi hojii itti aanuu irratti nuun qunnamti.
+
+Haala gaaffii keessan fi walgahii adda addaa dashboard fayyadamaa keessan irratti ilaaluu dandeessan.
+
+E-Service Platform filachuuf galata guddaa!
+
+Haala gaariin,
+Gareen E-Service Platform`;
+
+          await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
+          console.log(
+            `✅ Final approval SMS sent to customer: ${updatedRequest.user.phoneNumber}`
+          );
+        } catch (smsError: any) {
+          console.error(
+            "⚠️ Failed to send final approval SMS to customer:",
+            smsError
+          );
+        }
+      } else {
+        // Only staff approved - send pending manager approval message
+        try {
+          const customerMessage = `⏳ Fooyya'iinsa Gaaffii Tajaajilaa
+
+Maaloo ${updatedRequest.user.username},
+
+Gaaffii tajaajilaa keessan hojjettoonni ilaalamtee milkaa'eera. Amma manaajeriin milkaa'uu dhabbataa eegaa jira.
+
+📋 Odeeffannoo Gaaffii:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tajaajilaa: ${updatedRequest.service.name}
+ID Gaaffii: ${updatedRequest.id.slice(0, 8).toUpperCase()}
+Haala: ⏳ Manaajeriin Milkaa'uu Eegaa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${
+  note ? `📝 Barreeffama Hojjettootaa: ${note}\n\n` : ""
+}Gaaffii keessan haala gaariin hordofaa jira. Manaajeriin ilaaluu fi murtii dhabbataa murteessuun booda odeeffannoo biraa argattu.
+
+Obseessuu keessan irratti galata guddaa.
+
+Haala gaariin,
+Gareen E-Service Platform`;
+
+          await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
+          console.log(
+            `✅ Staff approval SMS sent to customer: ${updatedRequest.user.phoneNumber}`
+          );
+        } catch (smsError: any) {
+          console.error(
+            "⚠️ Failed to send staff approval SMS to customer:",
+            smsError
+          );
+        }
+      }
+    } else if (action === "reject" && updatedRequest.user.phoneNumber) {
+      try {
+        const customerMessage = `❌ Fooyya'iinsa Gaaffii Tajaajilaa
+
+Maaloo ${updatedRequest.user.username},
+
+Gaaffii tajaajilaa keessan ilaalamtee milkaa'uu hin dandeenye jedhuun gaddisiisaa jirra.
+
+📋 Odeeffannoo Gaaffii:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tajaajilaa: ${updatedRequest.service.name}
+ID Gaaffii: ${updatedRequest.id.slice(0, 8).toUpperCase()}
+Haala: ❌ HIN MILKAA'AMNE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${
+  note
+    ? `📝 Sababa: ${note}\n\n`
+    : "📝 Odeeffannoo dabalataa argachuuf waajjira qunnamti.\n\n"
+}Gaaffii ykn murtii kana irratti mari'achuuf barbaaddan, waajjira qunnamti.
+
+Rakkoo ta'eef dhiifama gaafanna. Hubannoo keessan irratti galata guddaa.
+
+Haala gaariin,
+Gareen E-Service Platform`;
+
+        await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
+        console.log(
+          `✅ Rejection SMS sent to customer: ${updatedRequest.user.phoneNumber}`
+        );
+      } catch (smsError: any) {
+        console.error("⚠️ Failed to send rejection SMS to customer:", smsError);
+      }
+    }
 
     // Serialize dates
     const serializedRequest = {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
 import { randomUUID } from "crypto";
+import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
 // POST - Create a new request
 export async function POST(request: NextRequest) {
@@ -131,6 +132,76 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(`✅ Created request: ${newRequest.id}`);
+
+    // Send SMS to staff assigned to this service
+    try {
+      // Get all staff assigned to this service
+      const assignedStaff = await prisma.serviceStaffAssignment.findMany({
+        where: { serviceId: serviceId },
+        include: {
+          staff: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  phoneNumber: true,
+                  username: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Send SMS to each assigned staff member
+      const smsPromises = assignedStaff.map(async (assignment) => {
+        const staffPhone = assignment.staff.user.phoneNumber;
+        if (!staffPhone) return;
+
+        const staffMessage = `📋 Gaaffii Tajaajilaa Haaraa Argame!
+
+Maaloo Hojjettoota,
+
+Gaaffii tajaajilaa haaraan ergamee siif kennamee jira.
+
+📝 Odeeffannoo Gaaffii:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Maqaa Tajaajilaa: ${service.name}
+Maqaa Fayyadamaa: ${newRequest.user.username}
+Lakkoofsa Bilbilaa: ${newRequest.user.phoneNumber}
+Teessoo Tajaajilaa: ${currentAddress}
+Guyyaa Gaaffii: ${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+ID Gaaffii: ${newRequest.id.slice(0, 8).toUpperCase()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏢 Odeeffannoo Waajjiraa:
+Waajjira: ${service.office.name}
+Lakkoofsa Kutaa: ${service.office.roomNumber}
+Teessoo Waajjiraa: ${service.office.address}
+
+⚠️ Hojii Barbaachisa:
+Maaloo dashboard hojjettoota keessan keessatti seenee gaaffii kana ilaaluu fi hojjachuuf yeroo dhiyeessaan.
+
+Fayyadamaa keessan deebii keessan eegaa jira. Hojii keessan yeroo qabduu tajaajila gaarii taasisuuf gargaara.
+
+Hojii keessan irratti galata guddaa.
+
+E-Service Platform`;
+
+        try {
+          await sendHahuSMS(staffPhone, staffMessage);
+          console.log(`✅ Notification SMS sent to staff: ${staffPhone}`);
+        } catch (error: any) {
+          console.error(`⚠️ Failed to send SMS to staff ${staffPhone}:`, error);
+        }
+      });
+
+      await Promise.allSettled(smsPromises);
+      console.log(`✅ Sent notifications to ${assignedStaff.length} staff member(s)`);
+    } catch (smsError: any) {
+      // Don't fail request creation if SMS fails
+      console.error("⚠️ Failed to send notification SMS to staff:", smsError);
+    }
 
     return NextResponse.json({
       success: true,
