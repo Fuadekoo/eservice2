@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { updateTranslation } from "../../utils";
+import { updateTranslation } from "@/app/api/languages/utils";
 
 // PUT - Update a single translation
 export async function PUT(

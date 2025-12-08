@@ -4,7 +4,7 @@ import {
   addTranslationKey,
   deleteTranslationKey,
   updateTranslation,
-} from "../utils";
+} from "@/app/api/languages/utils";
 
 // POST - Add a new translation key
 export async function POST(request: NextRequest) {
