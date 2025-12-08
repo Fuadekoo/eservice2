@@ -82,11 +82,11 @@ export function OfficeCombobox({
       <PopoverContent 
         className="p-0" 
         align="start"
-        style={popoverWidth ? { width: `${popoverWidth}px` } : undefined}
+        style={popoverWidth ? { width: `${popoverWidth}px`, maxHeight: '400px' } : { maxHeight: '400px' }}
       >
-        <Command>
+        <Command shouldFilter={true} className="h-full">
           <CommandInput placeholder="Search offices..." />
-          <CommandList>
+          <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
             <CommandEmpty>No office found.</CommandEmpty>
             <CommandGroup>
               {activeOffices.map((office) => (
@@ -97,10 +97,11 @@ export function OfficeCombobox({
                     onValueChange(office.id);
                     setOpen(false);
                   }}
+                  className="cursor-pointer"
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 h-4 w-4 shrink-0",
                       value === office.id ? "opacity-100" : "opacity-0"
                     )}
                   />
