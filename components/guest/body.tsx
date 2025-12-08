@@ -133,14 +133,17 @@ export function Body() {
         </div>
       </section>
 
-      {/* About Section - Fetched from Database */}
-      <About />
+      {/* Services Section - Fetched from Database */}
+      <Service />
 
       {/* Administrator Section - Fetched from Database */}
       <Administrator />
 
-      {/* Services Section - Fetched from Database */}
-      <Service />
+      {/* Gallery Section */}
+      <GalleryDisplay />
+
+      {/* About Section - Fetched from Database */}
+      <About />
 
       {/* Window Services Modal */}
       {selectedWindow && selectedWindowData && (
@@ -202,9 +205,6 @@ export function Body() {
           </Card>
         </div>
       )}
-
-      {/* Gallery Section */}
-      <GalleryDisplay />
     </main>
   );
 }
