@@ -1,7 +1,10 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/db";
 import React from "react";
-import { AccessDenied, AccountStatusMessage } from "./_components/access-denied";
+import {
+  AccessDenied,
+  AccountStatusMessage,
+} from "./_components/access-denied";
 
 export default async function Layout({
   children,
@@ -41,18 +44,25 @@ export default async function Layout({
   // Get role name from relation or session
   const roleName = data.role?.name || session.user.role;
 
+  // Normalize role name to lowercase for case-insensitive comparison
+  const normalizedRole = roleName?.toLowerCase();
+
   // Role-based rendering
   // admin -> admin slot
   // manager -> manager slot
-  // staff or any other role -> staff slot
-  if (roleName === "admin") {
+  // customer -> customer slot
+  // staff -> staff slot
+  // any other role -> unauthorized (AccessDenied)
+  if (normalizedRole === "admin") {
     return admin;
-  } else if (roleName === "manager") {
+  } else if (normalizedRole === "manager") {
     return manager;
-  } else if (roleName === "customer") {
+  } else if (normalizedRole === "customer") {
     return customer;
-  } else {
-    // staff, customer, or any other role goes to staff slot
+  } else if (normalizedRole === "staff") {
     return staff;
+  } else {
+    // Unknown or invalid role - redirect to unauthorized page
+    return <AccessDenied />;
   }
 }
