@@ -427,5 +427,20 @@
     "accessDescription": "የተመዘገቡ ፍቃዶች ስርዓት ሰዎችን የሚመለከቱትን ባህሪያት ብቻ እንዲገቡ ያረጋግጣል",
     "ourMission": "የእኛ ተልእኮ",
     "missionDescription": "የእኛ ዲጅታል መታወቂያ ካርድ አስተዳደር ስርዓት በዘመናዊ ቴክኖሎጂ ተገንብቷል ለምስራቅ ሸዋ ዞን ዜጎች በቀላሉ አገልግሎት ለመስጠት። ደህንነት፣ ማግኘት እና የተጠቃሚ ልምድን እንቅዳለን ከበላይ መታወቂያ ስርዓት ለማድረግ"
+  },
+  "guest": {
+    "welcome": "ወደ ምስራቅ ሸዋ ሴቪስ እንኳን ደህና መጡ",
+    "welcomeDescription": "የመንግስት ሴቪስ በመስመር ላይ ይደረሱ፣ በማንኛውም ጊዜ፣ በማንኛውም ቦታ",
+    "searchPlaceholder": "ሴቪስ ፈልግ...",
+    "getStarted": "ጀምር",
+    "needServices": "አገልግሎት ትፈልጋለህ?",
+    "needServicesDescription": "ጥያቄዎን ይላኩ፣ አገልግሎትዎን በማንኛውም ቦታ፣ በማንኛውም ጊዜ ይድረሱ።",
+    "login": "ግባ",
+    "governmentWindows": "የመንግስት ቢሮዎች",
+    "governmentOffice": "የመንግስት ቢሮዎች",
+    "noServicesAvailable": "አገልግሎት አልተገኘም",
+    "services": "ሴቪስ",
+    "more": "ተጨማሪ",
+    "applyNow": "ያመልክቱ"
   }
 }

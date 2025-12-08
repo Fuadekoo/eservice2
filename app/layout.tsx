@@ -5,7 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 // import { PWARegister } from "@/components/pwa-register";
-// import { LanguageGate } from "@/components/languageGate";
+import { LanguageGate } from "@/components/languageGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,21 +57,23 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var stored = localStorage.getItem('eservice-language');
-                  if (stored && (stored === 'en' || stored === 'am' || stored === 'or')) {
-                    window.__ESERVICE_LANGUAGE__ = stored;
+                  // Check cookies first (primary storage)
+                  function getCookie(name) {
+                    var value = "; " + document.cookie;
+                    var parts = value.split("; " + name + "=");
+                    if (parts.length === 2) return parts.pop().split(";").shift();
+                    return null;
+                  }
+                  
+                  var cookieLang = getCookie('eservice-language');
+                  if (cookieLang && (cookieLang === 'en' || cookieLang === 'am' || cookieLang === 'or')) {
+                    window.__ESERVICE_LANGUAGE__ = cookieLang;
                   } else {
-                    var browserLang = navigator.language || navigator.languages?.[0] || 'en';
-                    if (browserLang.startsWith('am')) {
-                      window.__ESERVICE_LANGUAGE__ = 'am';
-                    } else if (browserLang.startsWith('om') || browserLang.startsWith('or')) {
-                      window.__ESERVICE_LANGUAGE__ = 'or';
-                    } else {
-                      window.__ESERVICE_LANGUAGE__ = 'en';
-                    }
+                    // No cookie set, don't set default - let LanguageGate handle it
+                    window.__ESERVICE_LANGUAGE__ = null;
                   }
                 } catch (e) {
-                  window.__ESERVICE_LANGUAGE__ = 'en';
+                  window.__ESERVICE_LANGUAGE__ = null;
                 }
               })();
             `,
@@ -86,8 +88,8 @@ export default function RootLayout({
             {children}
           </div>
           <Toaster richColors />
-          {/* <PWARegister />
-          <LanguageGate /> */}
+          {/* <PWARegister /> */}
+          <LanguageGate />
         </ThemeProvider>
       </body>
     </html>

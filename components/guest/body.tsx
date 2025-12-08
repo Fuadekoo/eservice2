@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { governmentWindows } from "@/lib/windows-data";
 import { useLocale } from "@/lib/use-locale";
+import useTranslation from "@/hooks/useTranslation";
 import Link from "next/link";
 import Image from "next/image";
 import { GalleryDisplay } from "@/components/gallery/gallery-display";
@@ -18,6 +19,7 @@ import Administrator from "@/components/guest/adminstrator";
 export function Body() {
   const router = useRouter();
   const { locale } = useLocale();
+  const { t } = useTranslation();
   const [selectedWindow, setSelectedWindow] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -50,31 +52,17 @@ export function Body() {
               />
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white dark:text-primary-foreground">
-              {locale === "or"
-                ? "Akka Gaarii Dhuftan Tajaajila East Shoa"
-                : locale === "am"
-                ? "ወደ ምስራቅ ሸዋ ሴቪስ እንኳን ደህና መጡ"
-                : "Welcome to East Shoa Services"}
+              {t("guest.welcome")}
             </h2>
             <p className="text-lg mb-8 text-white/95 dark:text-primary-foreground/90">
-              {locale === "or"
-                ? "Tajaajila mootummaa interneetiin argachuu, yeroo kamiyyuu, bakka kamiyyuu"
-                : locale === "am"
-                ? "የመንግስት ሴቪስ በመስመር ላይ ይደረሱ፣ በማንኛውም ጊዜ፣ በማንኛውም ቦታ"
-                : "Access government services online, anytime, anywhere"}
+              {t("guest.welcomeDescription")}
             </p>
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto">
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder={
-                    locale === "or"
-                      ? "Tajaajila barbaadi..."
-                      : locale === "am"
-                      ? "ሴቪስ ፈልግ..."
-                      : "Search for a service..."
-                  }
+                  placeholder={t("guest.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-4 pr-12 py-3 rounded-lg bg-transparent border-white text-white placeholder:text-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400"
@@ -90,11 +78,7 @@ export function Body() {
                   size="lg"
                   className="bg-white text-blue-700 hover:bg-white/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 px-8 py-6 text-lg"
                 >
-                  {locale === "or"
-                    ? "Eegumsa Jalqabi"
-                    : locale === "am"
-                    ? "ጀምር"
-                    : "Get Started"}
+                  {t("guest.getStarted")}
                 </Button>
               </Link>
             </div>
@@ -102,29 +86,17 @@ export function Body() {
             <div className="mt-8">
               <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto border border-white/30 dark:border-white/20">
                 <h3 className="text-xl font-semibold mb-3 text-white dark:text-primary-foreground">
-                  {locale === "or"
-                    ? "Tajaajila Barbaadduu?"
-                    : locale === "am"
-                    ? "አገልግሎት ትፈልጋለህ?"
-                    : "Need Government Services?"}
+                  {t("guest.needServices")}
                 </h3>
                 <p className="text-sm mb-4 text-white/95 dark:text-primary-foreground/90">
-                  {locale === "or"
-                    ? "Gaafii keessan ergaa, tajaajila keessan bakka kamillee, yeroo kamillee fayyadamaa."
-                    : locale === "am"
-                    ? "ጥያቄዎን ይላኩ፣ አገልግሎትዎን በማንኛውም ቦታ፣ በማንኛውም ጊዜ ይድረሱ።"
-                    : "Submit your request, then access your service anywhere, anytime."}
+                  {t("guest.needServicesDescription")}
                 </p>
                 <Link href={`/${locale}/login`}>
                   <Button
                     size="lg"
                     className="w-full bg-white text-primary hover:bg-white/90 border-white/30 dark:bg-white/20 dark:hover:bg-white/30 dark:text-primary-foreground"
                   >
-                    {locale === "or"
-                      ? "Seenuu"
-                      : locale === "am"
-                      ? "ግባ"
-                      : "Login"}
+                    {t("guest.login")}
                   </Button>
                 </Link>
               </div>
@@ -192,11 +164,7 @@ export function Body() {
                       }}
                       className="mt-3"
                     >
-                      {locale === "or"
-                        ? "Gaafadhu"
-                        : locale === "am"
-                        ? "ያመልክቱ"
-                        : "Apply Now"}
+                      {t("guest.applyNow")}
                     </Button>
                   </div>
                 ))}

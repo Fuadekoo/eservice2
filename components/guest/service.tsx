@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useLocale } from "@/lib/use-locale";
+import useTranslation from "@/hooks/useTranslation";
 import Image from "next/image";
 
 interface Service {
@@ -41,6 +42,7 @@ interface OfficeWithServices {
 export default function Service() {
   const router = useRouter();
   const { locale } = useLocale();
+  const { t } = useTranslation();
   const [officesWithServices, setOfficesWithServices] = useState<
     OfficeWithServices[]
   >([]);
@@ -160,11 +162,7 @@ export default function Service() {
     return (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h3 className="text-2xl font-bold mb-8">
-          {locale === "or"
-            ? "Foddaa Mootummaa"
-            : locale === "am"
-            ? "የመንግስት ቢሮዎች"
-            : "Government Windows"}
+          {t("guest.governmentWindows")}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -192,20 +190,10 @@ export default function Service() {
     return (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h3 className="text-2xl font-bold mb-8">
-          {locale === "or"
-            ? "Foddaa Mootummaa"
-            : locale === "am"
-            ? "የመንግስት ቢሮዎች"
-            : "Government Windows"}
+          {t("guest.governmentWindows")}
         </h3>
         <div className="text-center text-muted-foreground">
-          <p>
-            {locale === "or"
-              ? "Tajaajila hin argamne"
-              : locale === "am"
-              ? "አገልግሎት አልተገኘም"
-              : "No services available"}
-          </p>
+          <p>{t("guest.noServicesAvailable")}</p>
         </div>
       </section>
     );
@@ -214,11 +202,7 @@ export default function Service() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h3 className="text-2xl font-bold mb-8">
-        {locale === "or"
-          ? `Foddaa Mootummaa (${officesWithServices.length})`
-          : locale === "am"
-          ? `የመንግስት ቢሮዎች (${officesWithServices.length})`
-          : `Government Office(${officesWithServices.length})`}
+        {t("guest.governmentOffice")} ({officesWithServices.length})
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {officesWithServices.map((officeGroup) => (
@@ -258,12 +242,7 @@ export default function Service() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {officeGroup.services.length}{" "}
-                  {locale === "or"
-                    ? "tajaajila"
-                    : locale === "am"
-                    ? "ሴቪስ"
-                    : "services"}
+                  {officeGroup.services.length} {t("guest.services")}
                 </p>
                 {/* List services below office name */}
                 <div className="mt-3 space-y-1 overflow-hidden">
@@ -278,12 +257,7 @@ export default function Service() {
                   ))}
                   {officeGroup.services.length > 3 && (
                     <p className="text-xs text-muted-foreground truncate">
-                      +{officeGroup.services.length - 3}{" "}
-                      {locale === "or"
-                        ? "kan biraa"
-                        : locale === "am"
-                        ? "ተጨማሪ"
-                        : "more"}
+                      +{officeGroup.services.length - 3} {t("guest.more")}
                     </p>
                   )}
                 </div>
@@ -362,11 +336,7 @@ export default function Service() {
                       }}
                       className="bg-primary hover:bg-primary/90 text-white"
                     >
-                      {locale === "or"
-                        ? "Gaafadhu"
-                        : locale === "am"
-                        ? "ያመልክቱ"
-                        : "Apply Now"}
+                      {t("guest.applyNow")}
                     </Button>
                     <ChevronRight size={20} className="text-muted-foreground" />
                   </div>

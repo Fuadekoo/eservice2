@@ -427,5 +427,20 @@
     "accessDescription": "Granular permission system ensures users only access features relevant to their role",
     "ourMission": "Our Mission",
     "missionDescription": "Our Digital ID Card Management System is built with modern technology to serve the citizens of East Shawa Zone efficiently. We prioritize security, accessibility, and user experience to deliver a world-class identification system that empowers communities and ensures reliable citizen services"
+  },
+  "guest": {
+    "welcome": "Welcome to East Shoa Services",
+    "welcomeDescription": "Access government services online, anytime, anywhere",
+    "searchPlaceholder": "Search for a service...",
+    "getStarted": "Get Started",
+    "needServices": "Need Government Services?",
+    "needServicesDescription": "Submit your request, then access your service anywhere, anytime.",
+    "login": "Login",
+    "governmentWindows": "Government Windows",
+    "governmentOffice": "Government Office",
+    "noServicesAvailable": "No services available",
+    "services": "services",
+    "more": "more",
+    "applyNow": "Apply Now"
   }
 }

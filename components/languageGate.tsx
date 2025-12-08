@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -9,62 +10,72 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
+import { useLanguageStore } from "@/store/language-store";
+import {
+  getLanguageFromCookie,
+  setLanguageCookie,
+  type Language,
+} from "@/lib/utils/cookies";
+import Cookies from "js-cookie";
 
 const languages = [
   {
-    code: "or",
+    code: "or" as Language,
     name: "Afaan Oromo",
     nativeName: "Afaan Oromoo",
   },
   {
-    code: "am",
+    code: "am" as Language,
     name: "Amharic",
     nativeName: "አማርኛ",
   },
   {
-    code: "en",
+    code: "en" as Language,
     name: "English",
     nativeName: "English",
   },
 ];
 
 export function LanguageGate() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { setLanguage } = useLanguageStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    // Check if user has already selected a language
-    try {
-      const stored = localStorage.getItem("eservice-language");
-      if (!stored || !languages.some((lang) => lang.code === stored)) {
-        // No language selected, show the gate
-        setIsOpen(true);
-      } else {
-        // Language already selected, don't show the gate
-        setIsOpen(false);
-      }
-    } catch {
-      // If localStorage is not available, show the gate
+    // Check if user has already selected a language in cookies
+    const cookieLang = getLanguageFromCookie();
+    const cookieExists = Cookies.get("eservice-language");
+
+    if (
+      !cookieExists ||
+      !cookieLang ||
+      !languages.some((lang) => lang.code === cookieLang)
+    ) {
+      // No language cookie set, show the gate
       setIsOpen(true);
+    } else {
+      // Language already selected, don't show the gate
+      setIsOpen(false);
     }
   }, []);
 
-  const handleLanguageSelect = (langCode: string) => {
-    try {
-      localStorage.setItem("eservice-language", langCode);
-      if (typeof window !== "undefined") {
-        (window as any).__ESERVICE_LANGUAGE__ = langCode;
-        window.dispatchEvent(
-          new CustomEvent("languageChanged", { detail: langCode })
-        );
-      }
-    } catch {
-      // Ignore
-    }
+  const handleLanguageSelect = (langCode: Language) => {
+    // Set language in Zustand store
+    setLanguage(langCode);
+
+    // Set cookie
+    setLanguageCookie(langCode);
+
     setIsOpen(false);
-    // Refresh the page to apply the language change
-    window.location.reload();
+
+    // Redirect to the language-specific URL
+    const currentPath = pathname?.replace(/^\/(en|am|or)/, "") || "";
+    const newPath =
+      currentPath === "/" ? `/${langCode}` : `/${langCode}${currentPath}`;
+    router.replace(newPath);
   };
 
   if (!isMounted) {

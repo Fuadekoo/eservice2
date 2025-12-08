@@ -427,5 +427,20 @@
     "accessDescription": "haqawaan miramnahan",
     "ourMission": "maksaa keenya",
     "missionDescription": "sagantaan bulchiinsa kaardii ID dijitaalaa"
+  },
+  "guest": {
+    "welcome": "Akka Gaarii Dhuftan Tajaajila East Shoa",
+    "welcomeDescription": "Tajaajila mootummaa interneetiin argachuu, yeroo kamiyyuu, bakka kamiyyuu",
+    "searchPlaceholder": "Tajaajila barbaadi...",
+    "getStarted": "Eegumsa Jalqabi",
+    "needServices": "Tajaajila Barbaadduu?",
+    "needServicesDescription": "Gaafii keessan ergaa, tajaajila keessan bakka kamillee, yeroo kamillee fayyadamaa.",
+    "login": "Seenuu",
+    "governmentWindows": "Foddaa Mootummaa",
+    "governmentOffice": "Foddaa Mootummaa",
+    "noServicesAvailable": "Tajaajila hin argamne",
+    "services": "tajaajila",
+    "more": "kan biraa",
+    "applyNow": "Gaafadhu"
   }
 }
