@@ -225,10 +225,10 @@ export default function Service() {
           <Card
             key={officeGroup.officeId}
             onClick={() => handleCardClick(officeGroup)}
-            className="p-6 cursor-pointer hover:shadow-lg transition-all duration-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 border-2 border-transparent hover:border-primary"
+            className="p-6 cursor-pointer hover:shadow-lg transition-all duration-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 border-2 border-transparent hover:border-primary overflow-hidden"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
+            <div className="flex items-start justify-between gap-3 h-full">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 {/* Logo or Icon */}
                 <div className="flex items-center gap-3 mb-3">
                   {officeGroup.officeLogo ? (
@@ -246,7 +246,7 @@ export default function Service() {
                       <Building2 className="w-6 h-6 text-primary" />
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <h4 className="font-semibold text-primary text-lg truncate">
                       {officeGroup.officeName}
                     </h4>
@@ -257,7 +257,7 @@ export default function Service() {
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   {officeGroup.services.length}{" "}
                   {locale === "or"
                     ? "tajaajila"
@@ -266,7 +266,7 @@ export default function Service() {
                     : "services"}
                 </p>
                 {/* List services below office name */}
-                <div className="mt-3 space-y-1">
+                <div className="mt-3 space-y-1 overflow-hidden">
                   {officeGroup.services.slice(0, 3).map((service) => (
                     <p
                       key={service.id}
@@ -277,7 +277,7 @@ export default function Service() {
                     </p>
                   ))}
                   {officeGroup.services.length > 3 && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       +{officeGroup.services.length - 3}{" "}
                       {locale === "or"
                         ? "kan biraa"
@@ -288,7 +288,7 @@ export default function Service() {
                   )}
                 </div>
               </div>
-              <ChevronRight size={20} className="text-primary shrink-0 ml-2" />
+              <ChevronRight size={20} className="text-primary shrink-0" />
             </div>
           </Card>
         ))}
