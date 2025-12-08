@@ -43,3 +43,12 @@ next-env.d.ts
 /generated/prisma
 
 /lib/generated/prisma
+
+
+#file
+/files
+/filedata
+/uploads
+/public/uploads
+/public/files
+/public/filedata
