@@ -152,7 +152,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-dvh overflow-y-auto">
       <div className="container mx-auto p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{t("dashboard.aboutPageManagement")}</h1>

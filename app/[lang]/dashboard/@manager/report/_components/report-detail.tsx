@@ -395,13 +395,13 @@ export function ReportDetail({
                     src={`${getFileUrl(
                       selectedFile.filepath
                     )}#toolbar=1&navpanes=1&scrollbar=1`}
-                    className="w-full h-full border-0"
+                    className="w-full h-dvh border-0"
                     title={selectedFile.name}
                     style={{ minHeight: "100%" }}
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full bg-muted">
+                <div className="flex flex-col items-center justify-center h-dvh bg-muted">
                   <FileText className="w-16 h-16 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground mb-4">
                     Preview not available for this file type

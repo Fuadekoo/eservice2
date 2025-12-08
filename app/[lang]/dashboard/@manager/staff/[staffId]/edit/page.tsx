@@ -73,7 +73,7 @@ export default function EditStaffPage() {
 
   if (loading) {
     return (
-      <div className="w-full h-full py-6">
+      <div className="w-full h-dvh py-6">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -83,7 +83,7 @@ export default function EditStaffPage() {
 
   if (!staff) {
     return (
-      <div className="w-full h-full py-6">
+      <div className="w-full h-dvh py-6">
         <div className="flex flex-col items-center justify-center py-20">
           <p className="text-muted-foreground">Staff not found</p>
           <Button onClick={() => router.push(`/${langParam}/dashboard/staff`)} className="mt-4">
@@ -95,7 +95,7 @@ export default function EditStaffPage() {
   }
 
   return (
-    <div className="w-full h-full py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-dvh py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"

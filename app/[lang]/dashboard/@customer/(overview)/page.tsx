@@ -156,7 +156,7 @@ export default function CustomerOverviewPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6 overflow-y-auto h-full">
+    <div className="container mx-auto py-6 space-y-6 overflow-y-auto h-dvh">
       {/* Welcome Header */}
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">

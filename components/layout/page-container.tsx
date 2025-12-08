@@ -14,7 +14,7 @@ export default function PageContainer({
   return (
     <div
       className={cn(
-        "flex flex-col h-full",
+        "flex flex-col h-dvh",
         scrollable ? "overflow-auto" : "overflow-hidden",
         className
       )}

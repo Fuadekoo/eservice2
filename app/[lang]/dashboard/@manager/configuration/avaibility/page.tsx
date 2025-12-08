@@ -164,7 +164,7 @@ export default function AvailabilityPage() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full overflow-y-auto py-6">
+      <div className="w-full h-dvh overflow-y-auto py-6">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -173,7 +173,7 @@ export default function AvailabilityPage() {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-dvh overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"

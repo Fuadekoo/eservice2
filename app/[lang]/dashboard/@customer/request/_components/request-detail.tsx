@@ -495,7 +495,7 @@ export function RequestDetail({
             <div className="flex flex-col h-[calc(95vh-80px)] overflow-hidden">
               {isImageFile(selectedFile.filepath) ? (
                 <div className="flex-1 overflow-auto bg-muted p-4 flex items-center justify-center min-h-[400px]">
-                  <div className="relative w-full max-w-full h-full">
+                  <div className="relative w-full max-w-full h-dvh">
                     <Image
                       src={getFileUrl(selectedFile.filepath, false)}
                       alt={selectedFile.name}
@@ -523,13 +523,13 @@ export function RequestDetail({
                       selectedFile.filepath,
                       true
                     )}#toolbar=1&navpanes=1&scrollbar=1`}
-                    className="w-full h-full border-0"
+                    className="w-full h-dvh border-0"
                     title={selectedFile.name}
                     style={{ minHeight: "100%" }}
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full bg-muted">
+                <div className="flex flex-col items-center justify-center h-dvh bg-muted">
                   <FileText className="w-16 h-16 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground mb-4">
                     Preview not available for this file type

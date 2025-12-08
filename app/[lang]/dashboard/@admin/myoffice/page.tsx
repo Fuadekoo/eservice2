@@ -24,7 +24,7 @@ export default function MyOfficePage() {
 
   if (isLoadingOffice) {
     return (
-      <div className="w-full h-full overflow-y-auto py-6">
+      <div className="w-full h-dvh overflow-y-auto py-6">
         <div className="container mx-auto">
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -35,7 +35,7 @@ export default function MyOfficePage() {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-dvh overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="container mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

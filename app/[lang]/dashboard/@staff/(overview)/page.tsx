@@ -125,7 +125,7 @@ export default function StaffOverviewPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-dvh overflow-y-auto">
       <div className="container mx-auto py-6 space-y-6">
         {/* Office Logo and Slogan */}
         {stats?.office && (

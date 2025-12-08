@@ -268,7 +268,7 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-dvh overflow-y-auto">
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>

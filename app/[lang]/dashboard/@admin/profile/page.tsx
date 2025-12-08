@@ -119,7 +119,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-dvh overflow-y-auto">
       <div className="container mx-auto py-6 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
