@@ -54,19 +54,21 @@ const authConfig = {
       }
 
       // Public pages accessible without login (for all languages)
+      // Note: Paths with trailing slash will match sub-paths (e.g., /service matches /service/[serviceId])
       const publicPaths = [
         "/about",
         "/login",
         "/signup",
         "/forgetPassword",
-        "/service", // Guest service pages
+        "/service", // Guest service pages - includes /service and /service/[serviceId]
       ];
 
       // Check if pathname matches any public path for any language
       const isPublicPath =
         languages.some((l) => {
           return publicPaths.some((p) => {
-            // Check for exact match or path starts with public path
+            // Check for exact match or path starts with public path followed by /
+            // This allows /en/service to be public and /en/service/[serviceId] to be public
             return (
               pathname === `/${l}${p}` || pathname.startsWith(`/${l}${p}/`)
             );
