@@ -1,46 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { loadAllTranslations, saveTranslations } from "./utils";
 
 // Default languages
 const defaultLanguages = [
   { code: "en", name: "English", nativeName: "English" },
   { code: "am", name: "Amharic", nativeName: "አማርኛ" },
   { code: "or", name: "Oromo", nativeName: "Afaan Oromoo" },
-];
-
-const initialTranslations = [
-  {
-    key: "dashboard",
-    translations: {
-      en: "Dashboard",
-      am: "ዳሽቦርድ",
-      or: "Gabatee",
-    },
-  },
-  {
-    key: "user_authentication_failed",
-    translations: {
-      en: "User Authentication Failed",
-      am: "የተጠቃሚ ማረጋገጫ አልተሳካም",
-      or: "Mirkaneessuu fayyadamaa kufaa",
-    },
-  },
-  {
-    key: "The email or phone field is required",
-    translations: {
-      en: "The Email or Phone Field is Required",
-      am: "የኢሜል ወይም ስልክ ቁጥር መስክ ያስፈልጋል",
-      or: "Diriin imeelii ykn bilbilaa barbaachisaa",
-    },
-  },
-  {
-    key: "The password field is required",
-    translations: {
-      en: "The Password Field is Required",
-      am: "የይለፍ ቃል መስክ ያስፈልጋል",
-      or: "Diriin jecha dabaraa barbaachisaa",
-    },
-  },
 ];
 
 // GET - Fetch languages and translations
@@ -55,13 +21,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // For now, return default languages and translations
-    // In the future, this could be stored in database or JSON files
+    // Load all translations from JSON files
+    const translations = await loadAllTranslations();
+
     return NextResponse.json({
       success: true,
       data: {
         availableLanguages: defaultLanguages,
-        translations: initialTranslations,
+        translations,
       },
     });
   } catch (error: any) {
@@ -89,19 +56,18 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { availableLanguages, translations } = body;
+    const { translations } = body;
 
     // Validate input
-    if (!Array.isArray(availableLanguages) || !Array.isArray(translations)) {
+    if (!Array.isArray(translations)) {
       return NextResponse.json(
         { success: false, error: "Invalid data format" },
         { status: 400 }
       );
     }
 
-    // TODO: Save to database or file system
-    // For now, just return success
-    // In production, you would save this to a database or JSON file
+    // Save translations to JSON files
+    await saveTranslations(translations);
 
     return NextResponse.json({
       success: true,

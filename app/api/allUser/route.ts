@@ -41,12 +41,14 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
+    const roleId = searchParams.get("roleId") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
     const skip = (page - 1) * pageSize;
 
     console.log("📥 Fetching users from database...", {
       search: search || "none",
+      roleId: roleId || "none",
       page,
       pageSize,
     });
@@ -55,6 +57,11 @@ export async function GET(request: NextRequest) {
     // Note: MySQL doesn't support mode: "insensitive" in Prisma
     // We'll fetch all users and filter case-insensitively in the application layer
     let where: any = {};
+
+    // Add role filter if provided
+    if (roleId && roleId.trim()) {
+      where.roleId = roleId.trim();
+    }
 
     // Fetch all users first if search is provided (for case-insensitive filtering)
     let allUsersForSearch: any[] = [];

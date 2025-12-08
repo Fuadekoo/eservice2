@@ -81,6 +81,7 @@ export default function UserManagementPage() {
   // Get state and actions from Zustand store
   const {
     users,
+    roles,
     isLoading,
     isSubmitting,
     isFormOpen,
@@ -92,7 +93,9 @@ export default function UserManagementPage() {
     total,
     totalPages,
     search,
+    roleId,
     fetchUsers,
+    fetchRoles,
     refreshUsers,
     createUser,
     updateUser,
@@ -105,14 +108,16 @@ export default function UserManagementPage() {
     setPage,
     setPageSize,
     setSearch,
+    setRoleId,
   } = useUserStore();
 
   // Local search state for debouncing
   const [searchInput, setSearchInput] = useState(search);
 
-  // Fetch users on mount
+  // Fetch users and roles on mount
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // fetchUsers is stable from Zustand store
 
@@ -121,7 +126,7 @@ export default function UserManagementPage() {
     const timer = setTimeout(() => {
       if (searchInput !== search) {
         setSearch(searchInput);
-        fetchUsers({ page: 1, pageSize, search: searchInput });
+        fetchUsers({ page: 1, pageSize, search: searchInput, roleId });
       }
     }, 500);
 
@@ -336,6 +341,23 @@ export default function UserManagementPage() {
               className="pl-9"
             />
           </div>
+          <Select
+            value={roleId || "all"}
+            onValueChange={(value) => setRoleId(value === "all" ? null : value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t("dashboard.allRoles")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("dashboard.allRoles")}</SelectItem>
+              {roles.map((role) => (
+                <SelectItem key={role.id} value={role.id}>
+                  {role.name}
+                  {role.office && ` (${role.office.name})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
               {t("dashboard.show")}:

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import {
+  addTranslationKey,
+  deleteTranslationKey,
+  updateTranslation,
+} from "../utils";
 
 // POST - Add a new translation key
 export async function POST(request: NextRequest) {
@@ -23,8 +28,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Save to database or file system
-    // For now, just return success
+    // Add translation key to JSON files
+    await addTranslationKey(key, translations);
 
     return NextResponse.json({
       success: true,
@@ -65,8 +70,11 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // TODO: Update in database or file system
-    // For now, just return success
+    // Update translation key in JSON files
+    // Update each language separately
+    for (const langCode in translations) {
+      await updateTranslation(langCode, key, translations[langCode]);
+    }
 
     return NextResponse.json({
       success: true,
@@ -107,8 +115,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // TODO: Delete from database or file system
-    // For now, just return success
+    // Decode the key (it's URL encoded)
+    const decodedKey = decodeURIComponent(key);
+
+    // Delete translation key from JSON files
+    await deleteTranslationKey(decodedKey);
 
     return NextResponse.json({
       success: true,

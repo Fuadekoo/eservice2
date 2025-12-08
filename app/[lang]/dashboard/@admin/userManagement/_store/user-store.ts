@@ -21,12 +21,14 @@ interface UserStore {
   total: number;
   totalPages: number;
   search: string;
+  roleId: string | null; // Role filter
 
   // Actions - Fetch
   fetchUsers: (params?: {
     page?: number;
     pageSize?: number;
     search?: string;
+    roleId?: string | null;
   }) => Promise<void>;
   fetchRoles: (officeId?: string | null) => Promise<void>;
   fetchOffices: () => Promise<void>;
@@ -36,6 +38,7 @@ interface UserStore {
   setPage: (page: number) => void;
   setPageSize: (size: number) => void;
   setSearch: (query: string) => void;
+  setRoleId: (roleId: string | null) => void;
 
   // Actions - CRUD
   createUser: (data: UserFormValues) => Promise<boolean>;
@@ -72,12 +75,14 @@ export const useUserStore = create<UserStore>((set, get) => ({
   total: 0,
   totalPages: 0,
   search: "",
+  roleId: null,
 
   // Fetch users from API with pagination and search
   fetchUsers: async (params?: {
     page?: number;
     pageSize?: number;
     search?: string;
+    roleId?: string | null;
   }) => {
     try {
       set({ isLoading: true });
@@ -85,8 +90,9 @@ export const useUserStore = create<UserStore>((set, get) => ({
       const page = params?.page ?? state.page;
       const pageSize = params?.pageSize ?? state.pageSize;
       const search = params?.search ?? state.search;
+      const roleId = params?.roleId !== undefined ? params.roleId : state.roleId;
 
-      console.log("🔄 Fetching users...", { page, pageSize, search });
+      console.log("🔄 Fetching users...", { page, pageSize, search, roleId });
 
       const queryParams = new URLSearchParams({
         page: page.toString(),
@@ -94,6 +100,9 @@ export const useUserStore = create<UserStore>((set, get) => ({
       });
       if (search && search.trim()) {
         queryParams.append("search", search.trim());
+      }
+      if (roleId && roleId !== "all") {
+        queryParams.append("roleId", roleId);
       }
 
       const response = await fetch(`/api/allUser?${queryParams.toString()}`, {
@@ -250,6 +259,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       page: state.page,
       pageSize: state.pageSize,
       search: state.search,
+      roleId: state.roleId,
     });
   },
 
@@ -261,6 +271,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       page,
       pageSize: state.pageSize,
       search: state.search,
+      roleId: state.roleId,
     });
   },
 
@@ -268,12 +279,24 @@ export const useUserStore = create<UserStore>((set, get) => ({
   setPageSize: (size: number) => {
     set({ pageSize: size, page: 1 }); // Reset to page 1 when changing page size
     const state = get();
-    get().fetchUsers({ page: 1, pageSize: size, search: state.search });
+    get().fetchUsers({ page: 1, pageSize: size, search: state.search, roleId: state.roleId });
   },
 
   // Set search
   setSearch: (query: string) => {
     set({ search: query, page: 1 }); // Reset to page 1 when searching
+  },
+
+  // Set role filter
+  setRoleId: (roleId: string | null) => {
+    set({ roleId, page: 1 }); // Reset to page 1 when filtering
+    const state = get();
+    get().fetchUsers({
+      page: 1,
+      pageSize: state.pageSize,
+      search: state.search,
+      roleId,
+    });
   },
 
   // Create a new user
@@ -307,6 +330,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
           page: state.page,
           pageSize: state.pageSize,
           search: state.search,
+          roleId: state.roleId,
         }); // Refresh the list
         set({ isFormOpen: false, selectedUser: null });
         return true;
@@ -360,6 +384,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
           page: state.page,
           pageSize: state.pageSize,
           search: state.search,
+          roleId: state.roleId,
         }); // Refresh the list
         set({ isFormOpen: false, selectedUser: null });
         return true;
@@ -406,6 +431,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
           page: state.page,
           pageSize: state.pageSize,
           search: state.search,
+          roleId: state.roleId,
         }); // Refresh the list
         set({ isDeleteDialogOpen: false, selectedUser: null });
         return true;
@@ -455,6 +481,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
           page: state.page,
           pageSize: state.pageSize,
           search: state.search,
+          roleId: state.roleId,
         });
         set({ isStatusDialogOpen: false, selectedUser: null });
         return true;

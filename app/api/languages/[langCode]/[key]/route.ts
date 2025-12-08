@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { updateTranslation } from "../utils";
 
 // PUT - Update a single translation
 export async function PUT(
@@ -32,8 +33,8 @@ export async function PUT(
     // Decode the key (it's URL encoded)
     const decodedKey = decodeURIComponent(key);
 
-    // TODO: Update in database or file system
-    // For now, just return success
+    // Update translation in JSON file
+    await updateTranslation(langCode, decodedKey, value);
 
     return NextResponse.json({
       success: true,
