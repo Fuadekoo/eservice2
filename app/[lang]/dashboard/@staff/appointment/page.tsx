@@ -44,6 +44,15 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import useTranslation from "@/hooks/useTranslation";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Appointment {
   id: string;
@@ -395,33 +404,70 @@ export default function StaffAppointmentPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 border-t pt-4">
                     <div className="text-sm text-muted-foreground">
                       {t("dashboard.showing")}{" "}
                       {Math.min((page - 1) * pageSize + 1, total)}{" "}
                       {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
                       {t("dashboard.of")} {total} {t("dashboard.appointments")}
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                      >
-                        {t("dashboard.previous")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={page === totalPages}
-                      >
-                        {t("dashboard.next")}
-                      </Button>
-                    </div>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => page > 1 && setPage(page - 1)}
+                            className={
+                              page === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                          (pageNum) => {
+                            if (
+                              pageNum === 1 ||
+                              pageNum === totalPages ||
+                              (pageNum >= page - 1 && pageNum <= page + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={pageNum}>
+                                  <PaginationLink
+                                    onClick={() => setPage(pageNum)}
+                                    isActive={pageNum === page}
+                                    className="cursor-pointer"
+                                  >
+                                    {pageNum}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            } else if (
+                              pageNum === page - 2 ||
+                              pageNum === page + 2
+                            ) {
+                              return (
+                                <PaginationItem key={`ellipsis-${pageNum}`}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
+                          }
+                        )}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              page < totalPages && setPage(page + 1)
+                            }
+                            className={
+                              page === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 )}
               </>

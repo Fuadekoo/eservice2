@@ -38,6 +38,15 @@ import { Plus, Building2, Loader2, Trash2 } from "lucide-react";
 import { useOfficeStore } from "./_store/office-store";
 import { useRouter, useParams } from "next/navigation";
 import useTranslation from "@/hooks/useTranslation";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function OfficePage() {
   const { t } = useTranslation();
@@ -169,36 +178,76 @@ export default function OfficePage() {
     router.push(`/${lang}/dashboard/office/${office.id}`);
   };
 
-  const Pagination = () => {
-    if (total === 0) return null;
+  const PaginationComponent = () => {
+    if (total === 0 || totalPages <= 1) return null;
 
     const start = (page - 1) * pageSize + 1;
     const end = Math.min(page * pageSize, total);
 
     return (
-      <div className="flex items-center justify-between gap-3 py-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t">
         <div className="text-sm text-muted-foreground">
           {t("dashboard.showing")} {start}-{end} {t("dashboard.of")} {total} {t("dashboard.offices")}
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-          >
-            {t("common.previous")}
-          </Button>
-          <div className="min-w-8 text-center text-sm font-medium">{page}</div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(Math.min(totalPages, page + 1))}
-            disabled={page === totalPages}
-          >
-            {t("common.next")}
-          </Button>
-        </div>
+        {totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => page > 1 && setPage(page - 1)}
+                  className={
+                    page === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNum) => {
+                  // Show first page, last page, current page, and pages around current
+                  if (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= page - 1 && pageNum <= page + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => setPage(pageNum)}
+                          isActive={pageNum === page}
+                          className="cursor-pointer"
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (
+                    pageNum === page - 2 ||
+                    pageNum === page + 2
+                  ) {
+                    // Show ellipsis
+                    return (
+                      <PaginationItem key={`ellipsis-${pageNum}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                }
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => page < totalPages && setPage(page + 1)}
+                  className={
+                    page === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     );
   };
@@ -274,7 +323,7 @@ export default function OfficePage() {
         </Card>
 
         {/* Cards grid */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {data.map((office) => (
               <OfficeCard
@@ -287,7 +336,7 @@ export default function OfficePage() {
               />
             ))}
           </div>
-          <Pagination />
+          <PaginationComponent />
         </div>
         </div>
       </div>

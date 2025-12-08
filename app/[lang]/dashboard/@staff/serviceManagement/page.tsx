@@ -29,6 +29,15 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import Image from "next/image";
 import useTranslation from "@/hooks/useTranslation";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Requirement {
   id: string;
@@ -371,57 +380,67 @@ export default function StaffServiceManagementPage() {
                         total.toString()
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1 || isLoading}
-                      >
-                        {t("dashboard.previous")}
-                      </Button>
-                      <div className="flex items-center gap-1">
-                        {Array.from(
-                          { length: Math.min(5, totalPages) },
-                          (_, i) => {
-                            let pageNum;
-                            if (totalPages <= 5) {
-                              pageNum = i + 1;
-                            } else if (page <= 3) {
-                              pageNum = i + 1;
-                            } else if (page >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i;
-                            } else {
-                              pageNum = page - 2 + i;
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => page > 1 && setPage(page - 1)}
+                            className={
+                              page === 1 || isLoading
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
                             }
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={
-                                  page === pageNum ? "default" : "outline"
-                                }
-                                size="sm"
-                                className="w-10"
-                                onClick={() => setPage(pageNum)}
-                                disabled={isLoading}
-                              >
-                                {pageNum}
-                              </Button>
-                            );
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                          (pageNum) => {
+                            if (
+                              pageNum === 1 ||
+                              pageNum === totalPages ||
+                              (pageNum >= page - 1 && pageNum <= page + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={pageNum}>
+                                  <PaginationLink
+                                    onClick={() => !isLoading && setPage(pageNum)}
+                                    isActive={pageNum === page}
+                                    className={
+                                      isLoading
+                                        ? "pointer-events-none opacity-50"
+                                        : "cursor-pointer"
+                                    }
+                                  >
+                                    {pageNum}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            } else if (
+                              pageNum === page - 2 ||
+                              pageNum === page + 2
+                            ) {
+                              return (
+                                <PaginationItem key={`ellipsis-${pageNum}`}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
                           }
                         )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={page === totalPages || isLoading}
-                      >
-                        {t("dashboard.next")}
-                      </Button>
-                    </div>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              page < totalPages && setPage(page + 1)
+                            }
+                            className={
+                              page === totalPages || isLoading
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 </CardContent>
               </Card>
