@@ -22,7 +22,9 @@ export function Body() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleApplyClick = (serviceId: number) => {
-    const callbackUrl = encodeURIComponent(`/${locale}/dashboard/request?serviceId=${serviceId}`);
+    const callbackUrl = encodeURIComponent(
+      `/${locale}/dashboard/request?serviceId=${serviceId}`
+    );
     router.push(`/${locale}/login?callbackUrl=${callbackUrl}`);
   };
 
@@ -82,47 +84,21 @@ export function Body() {
                 </button>
               </div>
             </div>
-            <div className="mt-6 flex flex-wrap gap-4 justify-center">
+            <div className="mt-6 flex justify-center">
               <Link href={`/${locale}/login`}>
                 <Button
                   size="lg"
-                  className="bg-white text-blue-700 hover:bg-white/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+                  className="bg-white text-blue-700 hover:bg-white/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 px-8 py-6 text-lg"
                 >
                   {locale === "or"
-                    ? "Seenuun Fayyadhaa"
+                    ? "Eegumsa Jalqabi"
                     : locale === "am"
-                    ? "የደንበኛ ግባ"
-                    : "Customer Login"}
-                </Button>
-              </Link>
-              <Link href={`/${locale}/login`}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-white/10 dark:bg-transparent border-white text-white hover:bg-white/20 dark:border-primary-foreground dark:text-primary-foreground dark:hover:bg-primary-foreground/10"
-                >
-                  {locale === "or"
-                    ? "Seenuun Bulchiinsaa"
-                    : locale === "am"
-                    ? "የአስተዳደር ግባ"
-                    : "Admin Login"}
-                </Button>
-              </Link>
-              <Link href={`/${locale}/login`}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-white/10 dark:bg-transparent border-white text-white hover:bg-white/20 dark:border-primary-foreground dark:text-primary-foreground dark:hover:bg-primary-foreground/10"
-                >
-                  {locale === "or"
-                    ? "Seenuun Qorannoo"
-                    : locale === "am"
-                    ? "የሚስጥር ግባ"
-                    : "Secretary Login"}
+                    ? "ጀምር"
+                    : "Get Started"}
                 </Button>
               </Link>
             </div>
-            {/* Public Request Form Link */}
+            {/* Login and Service Access */}
             <div className="mt-8">
               <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto border border-white/30 dark:border-white/20">
                 <h3 className="text-xl font-semibold mb-3 text-white dark:text-primary-foreground">
@@ -134,21 +110,21 @@ export function Body() {
                 </h3>
                 <p className="text-sm mb-4 text-white/95 dark:text-primary-foreground/90">
                   {locale === "or"
-                    ? "Seenuu hin dandeessuu? Qorannoon siif tajaajila. Gaafii keessan ergaa, yeroo dhiyaatee bilbilamaa."
+                    ? "Gaafii keessan ergaa, tajaajila keessan bakka kamillee, yeroo kamillee fayyadamaa."
                     : locale === "am"
-                    ? "መግባት አትችልም? በሚስጥር እንረዳዎታለን። ጥያቄዎን ይላኩ፣ በቅርቡ እንጠራዎታለን።"
-                    : "Can't log in? Our secretary will assist you. Submit your request and we'll contact you soon."}
+                    ? "ጥያቄዎን ይላኩ፣ አገልግሎትዎን በማንኛውም ቦታ፣ በማንኛውም ጊዜ ይድረሱ።"
+                    : "Submit your request, then access your service anywhere, anytime."}
                 </p>
-                <Link href="/dashboard/request">
+                <Link href={`/${locale}/login`}>
                   <Button
                     size="lg"
                     className="w-full bg-white text-primary hover:bg-white/90 border-white/30 dark:bg-white/20 dark:hover:bg-white/30 dark:text-primary-foreground"
                   >
                     {locale === "or"
-                      ? "Gaafii Tajaajilaa Ergi"
+                      ? "Seenuu"
                       : locale === "am"
-                      ? "የአገልግሎት ጥያቄ ላክ"
-                      : "Submit Service Request"}
+                      ? "ግባ"
+                      : "Login"}
                   </Button>
                 </Link>
               </div>
