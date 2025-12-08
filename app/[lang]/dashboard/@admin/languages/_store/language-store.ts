@@ -15,12 +15,28 @@ export interface TranslationKey {
 
 // API functions for dynamic language management
 async function fetchLanguagesFromApi() {
-  const res = await fetch("/api/languages", { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load languages");
-  return res.json() as Promise<{
-    availableLanguages: Language[];
-    translations: TranslationKey[];
-  }>;
+  try {
+    const res = await fetch("/api/languages", { cache: "no-store" });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to load languages: ${res.status} ${res.statusText}`);
+    }
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to load languages");
+    }
+    return {
+      availableLanguages: data.data?.availableLanguages || defaultLanguages,
+      translations: data.data?.translations || initialTranslations,
+    };
+  } catch (error: any) {
+    console.error("Error fetching languages:", error);
+    // Return defaults on error instead of throwing
+    return {
+      availableLanguages: defaultLanguages,
+      translations: initialTranslations,
+    };
+  }
 }
 
 async function saveLanguagesToApi(payload: {

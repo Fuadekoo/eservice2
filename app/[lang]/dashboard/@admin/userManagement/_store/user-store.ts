@@ -198,10 +198,11 @@ export const useUserStore = create<UserStore>((set, get) => ({
     }
   },
 
-  // Fetch offices from API
+  // Fetch offices from API - fetch ALL offices (no pagination)
   fetchOffices: async () => {
     try {
-      const response = await fetch("/api/office", {
+      // Fetch all offices by using a large limit
+      const response = await fetch("/api/office?page=1&limit=1000", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -178,95 +178,99 @@ export default function ManagerReportPage() {
 
     return (
       <>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("dashboard.reportName")}</TableHead>
-              <TableHead>{t("dashboard.description")}</TableHead>
-              {reportType === "received" ? (
-                <TableHead>{t("dashboard.sentBy")}</TableHead>
-              ) : (
-                <TableHead>{t("dashboard.sentTo")}</TableHead>
-              )}
-              <TableHead>{t("dashboard.files")}</TableHead>
-              <TableHead>{t("common.status")}</TableHead>
-              <TableHead>{t("common.date")}</TableHead>
-              <TableHead className="text-right">
-                {t("common.actions")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports.map((report) => (
-              <TableRow key={report.id}>
-                <TableCell className="font-medium">{report.name}</TableCell>
-                <TableCell>
-                  <p className="text-sm line-clamp-2 max-w-md">
-                    {report.description}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  {reportType === "received" ? (
-                    report.reportSentByUser ? (
+        <div className="h-dvh overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("dashboard.reportName")}</TableHead>
+                <TableHead>{t("dashboard.description")}</TableHead>
+                {reportType === "received" ? (
+                  <TableHead>{t("dashboard.sentBy")}</TableHead>
+                ) : (
+                  <TableHead>{t("dashboard.sentTo")}</TableHead>
+                )}
+                <TableHead>{t("dashboard.files")}</TableHead>
+                <TableHead>{t("common.status")}</TableHead>
+                <TableHead>{t("common.date")}</TableHead>
+                <TableHead className="text-right">
+                  {t("common.actions")}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reports.map((report) => (
+                <TableRow key={report.id}>
+                  <TableCell className="font-medium">{report.name}</TableCell>
+                  <TableCell>
+                    <p className="text-sm line-clamp-2 max-w-md">
+                      {report.description}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    {reportType === "received" ? (
+                      report.reportSentByUser ? (
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">
+                              {report.reportSentByUser.username}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {report.reportSentByUser.phoneNumber}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          N/A
+                        </span>
+                      )
+                    ) : report.reportSentToUser ? (
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">
-                            {report.reportSentByUser.username}
+                            {report.reportSentToUser.username}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {report.reportSentByUser.phoneNumber}
+                            {report.reportSentToUser.phoneNumber}
                           </p>
                         </div>
                       </div>
                     ) : (
                       <span className="text-sm text-muted-foreground">N/A</span>
-                    )
-                  ) : report.reportSentToUser ? (
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">
-                          {report.reportSentToUser.username}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {report.reportSentToUser.phoneNumber}
-                        </p>
-                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {report.fileData?.length || 0} file(s)
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{getStatusBadge(report.receiverStatus)}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="text-sm">
+                        {format(new Date(report.createdAt), "MMM dd, yyyy")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(report.createdAt), "hh:mm a")}
+                      </p>
                     </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">N/A</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {report.fileData?.length || 0} file(s)
-                  </Badge>
-                </TableCell>
-                <TableCell>{getStatusBadge(report.receiverStatus)}</TableCell>
-                <TableCell>
-                  <div>
-                    <p className="text-sm">
-                      {format(new Date(report.createdAt), "MMM dd, yyyy")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(report.createdAt), "hh:mm a")}
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleViewDetails(report)}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleViewDetails(report)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Pagination */}
         {total > 0 && (

@@ -242,7 +242,8 @@ export default function RequestManagementPage() {
             </div>
           ) : (
             <>
-              <Table>
+              <div className="h-dvh overflow-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("dashboard.service")}</TableHead>
@@ -289,6 +290,7 @@ export default function RequestManagementPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Pagination */}
               {total > 0 && (

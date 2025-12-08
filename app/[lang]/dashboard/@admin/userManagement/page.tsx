@@ -386,7 +386,7 @@ export default function UserManagementPage() {
         ) : (
           <>
             <div className="rounded-md border overflow-hidden">
-              <div className="overflow-y-auto max-h-[calc(100vh-400px)]">
+              <div className="h-dvh overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>

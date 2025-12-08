@@ -326,80 +326,82 @@ export default function StaffAppointmentPage() {
               </div>
             ) : (
               <>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("dashboard.service")}</TableHead>
-                        <TableHead>{t("dashboard.customer")}</TableHead>
-                        <TableHead>{t("dashboard.date")}</TableHead>
-                        <TableHead>{t("dashboard.time")}</TableHead>
-                        <TableHead>{t("common.status")}</TableHead>
-                        <TableHead className="text-right">
-                          {t("common.actions")}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAppointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
-                          <TableCell className="font-medium">
-                            <div>
-                              <p className="font-medium">
-                                {appointment.request.service.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {appointment.request.service.description}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {appointment.request.user.username}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {appointment.request.user.phoneNumber}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-muted-foreground" />
-                              {format(
-                                new Date(appointment.date),
-                                "MMM dd, yyyy"
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {appointment.time ? (
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-muted-foreground" />
-                                {appointment.time}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">
-                                {t("dashboard.notSpecified")}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(appointment.status)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewDetails(appointment)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
+                <div className="rounded-md border overflow-hidden">
+                  <div className="h-dvh overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t("dashboard.service")}</TableHead>
+                          <TableHead>{t("dashboard.customer")}</TableHead>
+                          <TableHead>{t("dashboard.date")}</TableHead>
+                          <TableHead>{t("dashboard.time")}</TableHead>
+                          <TableHead>{t("common.status")}</TableHead>
+                          <TableHead className="text-right">
+                            {t("common.actions")}
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAppointments.map((appointment) => (
+                          <TableRow key={appointment.id}>
+                            <TableCell className="font-medium">
+                              <div>
+                                <p className="font-medium">
+                                  {appointment.request.service.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {appointment.request.service.description}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">
+                                  {appointment.request.user.username}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {appointment.request.user.phoneNumber}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-muted-foreground" />
+                                {format(
+                                  new Date(appointment.date),
+                                  "MMM dd, yyyy"
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {appointment.time ? (
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-muted-foreground" />
+                                  {appointment.time}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  {t("dashboard.notSpecified")}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(appointment.status)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewDetails(appointment)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
 
                 {/* Pagination */}
@@ -423,37 +425,38 @@ export default function StaffAppointmentPage() {
                             }
                           />
                         </PaginationItem>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                          (pageNum) => {
-                            if (
-                              pageNum === 1 ||
-                              pageNum === totalPages ||
-                              (pageNum >= page - 1 && pageNum <= page + 1)
-                            ) {
-                              return (
-                                <PaginationItem key={pageNum}>
-                                  <PaginationLink
-                                    onClick={() => setPage(pageNum)}
-                                    isActive={pageNum === page}
-                                    className="cursor-pointer"
-                                  >
-                                    {pageNum}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            } else if (
-                              pageNum === page - 2 ||
-                              pageNum === page + 2
-                            ) {
-                              return (
-                                <PaginationItem key={`ellipsis-${pageNum}`}>
-                                  <PaginationEllipsis />
-                                </PaginationItem>
-                              );
-                            }
-                            return null;
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1
+                        ).map((pageNum) => {
+                          if (
+                            pageNum === 1 ||
+                            pageNum === totalPages ||
+                            (pageNum >= page - 1 && pageNum <= page + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNum}>
+                                <PaginationLink
+                                  onClick={() => setPage(pageNum)}
+                                  isActive={pageNum === page}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          } else if (
+                            pageNum === page - 2 ||
+                            pageNum === page + 2
+                          ) {
+                            return (
+                              <PaginationItem key={`ellipsis-${pageNum}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
                           }
-                        )}
+                          return null;
+                        })}
                         <PaginationItem>
                           <PaginationNext
                             onClick={() =>

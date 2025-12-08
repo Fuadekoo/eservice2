@@ -22,6 +22,7 @@ import {
 import { User } from "../_types";
 import { useUserStore } from "../_store";
 import { toast } from "sonner";
+import { OfficeCombobox } from "./office-combobox";
 
 interface UserFormProps {
   user?: User | null;
@@ -292,7 +293,8 @@ export function UserForm({
           name="officeId"
           render={({ field, fieldState }) => (
             <>
-              <Select
+              <OfficeCombobox
+                offices={offices}
                 value={field.value || ""}
                 onValueChange={(value) => {
                   if (value) {
@@ -305,36 +307,14 @@ export function UserForm({
                     form.setValue("roleId", "", { shouldValidate: false });
                   }
                 }}
+                placeholder={
+                  user
+                    ? "Select an office (optional)"
+                    : "Select an office *"
+                }
                 disabled={isLoading}
-              >
-                <SelectTrigger
-                  className="w-full"
-                  aria-invalid={fieldState.invalid}
-                >
-                  <SelectValue
-                    placeholder={
-                      user
-                        ? "Select an office (optional)"
-                        : "Select an office *"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto">
-                  {offices
-                    .filter((office) => office.status) // Only show active offices
-                    .map((office) => (
-                      <SelectItem key={office.id} value={office.id}>
-                        {office.name}{" "}
-                        {office.roomNumber && `(${office.roomNumber})`}
-                      </SelectItem>
-                    ))}
-                  {offices.filter((office) => office.status).length === 0 && (
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      No active offices available
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
+                error={fieldState.invalid}
+              />
               {fieldState.error && (
                 <FieldDescription className="text-destructive mt-1">
                   {fieldState.error.message}

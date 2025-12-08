@@ -217,14 +217,22 @@ export default function RequestManagementPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("dashboard.allStatus")}</SelectItem>
-                <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
-                <SelectItem value="approved">{t("dashboard.approved")}</SelectItem>
-                <SelectItem value="rejected">{t("dashboard.rejected")}</SelectItem>
+                <SelectItem value="pending">
+                  {t("dashboard.pending")}
+                </SelectItem>
+                <SelectItem value="approved">
+                  {t("dashboard.approved")}
+                </SelectItem>
+                <SelectItem value="rejected">
+                  {t("dashboard.rejected")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{t("dashboard.show")}:</span>
+            <span className="text-sm text-muted-foreground">
+              {t("dashboard.show")}:
+            </span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => setPageSize(parseInt(value))}
@@ -254,7 +262,9 @@ export default function RequestManagementPage() {
           ) : requests.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">{t("dashboard.noRequestsFound")}</p>
+              <p className="text-lg font-medium">
+                {t("dashboard.noRequestsFound")}
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
                 {search || officeId || status
                   ? t("dashboard.tryAdjustingFilters")
@@ -263,92 +273,101 @@ export default function RequestManagementPage() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("dashboard.customer")}</TableHead>
-                    <TableHead>{t("dashboard.service")}</TableHead>
-                    <TableHead>{t("navigation.office")}</TableHead>
-                    <TableHead>{t("common.date")}</TableHead>
-                    <TableHead>{t("common.status")}</TableHead>
-                    <TableHead>{t("dashboard.staffApproval")}</TableHead>
-                    <TableHead>{t("dashboard.managerApproval")}</TableHead>
-                    <TableHead className="text-right">{t("common.actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{request.user.username}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {request.user.phoneNumber}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{request.service.name}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {request.service.description}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-muted-foreground" />
+              <div className="h-dvh overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("dashboard.customer")}</TableHead>
+                      <TableHead>{t("dashboard.service")}</TableHead>
+                      <TableHead>{t("navigation.office")}</TableHead>
+                      <TableHead>{t("common.date")}</TableHead>
+                      <TableHead>{t("common.status")}</TableHead>
+                      <TableHead>{t("dashboard.staffApproval")}</TableHead>
+                      <TableHead>{t("dashboard.managerApproval")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("common.actions")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {requests.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>
                           <div>
-                            <p className="text-sm">
-                              {request.service.office.name}
+                            <p className="font-medium">
+                              {request.user.username}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              Room {request.service.office.roomNumber}
+                            <p className="text-sm text-muted-foreground">
+                              {request.user.phoneNumber}
                             </p>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm">
-                            {format(new Date(request.date), "MMM dd, yyyy")}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(request.createdAt), "MMM dd")}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(
-                          calculateOverallStatus(
-                            request.statusbystaff,
-                            request.statusbyadmin
-                          )
-                        )}
-                      </TableCell>
-                      <TableCell>{getStaffApproval(request)}</TableCell>
-                      <TableCell>{getManagerApproval(request)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewDetails(request)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {request.service.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {request.service.description}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm">
+                                {request.service.office.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Room {request.service.office.roomNumber}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm">
+                              {format(new Date(request.date), "MMM dd, yyyy")}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(new Date(request.createdAt), "MMM dd")}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(
+                            calculateOverallStatus(
+                              request.statusbystaff,
+                              request.statusbyadmin
+                            )
+                          )}
+                        </TableCell>
+                        <TableCell>{getStaffApproval(request)}</TableCell>
+                        <TableCell>{getManagerApproval(request)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewDetails(request)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
               {/* Pagination */}
               {total > 0 && (
                 <div className="border-t p-4">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm text-muted-foreground">
-                      {t("dashboard.showing")} {(page - 1) * pageSize + 1} {t("dashboard.to")}{" "}
-                      {Math.min(page * pageSize, total)} {t("dashboard.of")} {total} {t("dashboard.requests")}
+                      {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
+                      {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
+                      {t("dashboard.of")} {total} {t("dashboard.requests")}
                     </div>
                     {totalPages > 1 && (
                       <Pagination>

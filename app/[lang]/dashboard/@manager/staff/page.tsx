@@ -289,120 +289,122 @@ export default function StaffPage() {
         </div>
       ) : (
         <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("dashboard.staff")}</TableHead>
-                  <TableHead>{t("dashboard.contact")}</TableHead>
-                  <TableHead>{t("dashboard.role")}</TableHead>
-                  <TableHead>{t("dashboard.office")}</TableHead>
-                  <TableHead>{t("common.status")}</TableHead>
-                  <TableHead className="text-right">
-                    {t("common.actions")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staff.map((staffMember) => {
-                  const initials = staffMember.username
-                    ? staffMember.username.substring(0, 2).toUpperCase()
-                    : "ST";
-                  return (
-                    <TableRow key={staffMember.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback>{initials}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <div className="font-medium">
-                              {staffMember.username}
+          <div className="rounded-md border overflow-hidden">
+            <div className="h-dvh overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("dashboard.staff")}</TableHead>
+                    <TableHead>{t("dashboard.contact")}</TableHead>
+                    <TableHead>{t("dashboard.role")}</TableHead>
+                    <TableHead>{t("dashboard.office")}</TableHead>
+                    <TableHead>{t("common.status")}</TableHead>
+                    <TableHead className="text-right">
+                      {t("common.actions")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staff.map((staffMember) => {
+                    const initials = staffMember.username
+                      ? staffMember.username.substring(0, 2).toUpperCase()
+                      : "ST";
+                    return (
+                      <TableRow key={staffMember.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>{initials}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <div className="font-medium">
+                                {staffMember.username}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-3 w-3 text-muted-foreground" />
-                          <span>{staffMember.phoneNumber}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {staffMember.role ? (
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <span>{staffMember.phoneNumber}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {staffMember.role ? (
+                            <Badge
+                              variant="secondary"
+                              className="flex items-center gap-1 w-fit"
+                            >
+                              <Shield className="h-3 w-3" />
+                              {staffMember.role.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">
+                              {t("dashboard.noRole")}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {staffMember.office ? (
+                            <Badge
+                              variant="outline"
+                              className="flex items-center gap-1 w-fit"
+                            >
+                              <Building2 className="h-3 w-3" />
+                              {staffMember.office.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">
+                              {t("dashboard.noOffice")}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <Badge
-                            variant="secondary"
-                            className="flex items-center gap-1 w-fit"
+                            variant={
+                              staffMember.isActive ? "default" : "destructive"
+                            }
+                            className="w-fit"
                           >
-                            <Shield className="h-3 w-3" />
-                            {staffMember.role.name}
+                            {staffMember.isActive
+                              ? t("dashboard.active")
+                              : t("dashboard.inactive")}
                           </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            {t("dashboard.noRole")}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {staffMember.office ? (
-                          <Badge
-                            variant="outline"
-                            className="flex items-center gap-1 w-fit"
-                          >
-                            <Building2 className="h-3 w-3" />
-                            {staffMember.office.name}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            {t("dashboard.noOffice")}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            staffMember.isActive ? "default" : "destructive"
-                          }
-                          className="w-fit"
-                        >
-                          {staffMember.isActive
-                            ? t("dashboard.active")
-                            : t("dashboard.inactive")}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEdit(staffMember)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              {t("common.edit")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteClick(staffMember)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              {t("common.delete")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEdit(staffMember)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                {t("common.edit")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(staffMember)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {t("common.delete")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Pagination */}

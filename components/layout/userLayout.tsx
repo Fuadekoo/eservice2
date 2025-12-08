@@ -32,7 +32,7 @@ export default function UserLayout({
         <SideBar {...{ menu }} />
         <div className="overflow-hidden grid grid-rows-[auto_1fr] min-h-screen">
           <Header />
-          <article className="grid overflow-hidden">{children}</article>
+          <article className="h-dvh overflow-auto">{children}</article>
         </div>
       </div>
     </div>

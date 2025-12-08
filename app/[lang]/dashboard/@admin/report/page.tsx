@@ -247,7 +247,9 @@ export default function ReportManagementPage() {
                     <SelectValue placeholder={t("dashboard.allOffices")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("dashboard.allOffices")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("dashboard.allOffices")}
+                    </SelectItem>
                     {offices.map((office) => (
                       <SelectItem key={office.id} value={office.id}>
                         {office.name}
@@ -265,11 +267,19 @@ export default function ReportManagementPage() {
                     <SelectValue placeholder={t("dashboard.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t("dashboard.allStatus")}</SelectItem>
-                    <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
+                    <SelectItem value="all">
+                      {t("dashboard.allStatus")}
+                    </SelectItem>
+                    <SelectItem value="pending">
+                      {t("dashboard.pending")}
+                    </SelectItem>
                     <SelectItem value="sent">{t("dashboard.sent")}</SelectItem>
-                    <SelectItem value="received">{t("dashboard.received")}</SelectItem>
-                    <SelectItem value="read">{t("dashboard.readApproved")}</SelectItem>
+                    <SelectItem value="received">
+                      {t("dashboard.received")}
+                    </SelectItem>
+                    <SelectItem value="read">
+                      {t("dashboard.readApproved")}
+                    </SelectItem>
                     <SelectItem value="archived">
                       {t("dashboard.archivedRejected")}
                     </SelectItem>
@@ -277,7 +287,9 @@ export default function ReportManagementPage() {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{t("dashboard.show")}:</span>
+                <span className="text-sm text-muted-foreground">
+                  {t("dashboard.show")}:
+                </span>
                 <Select
                   value={pageSize.toString()}
                   onValueChange={(value) => setPageSize(parseInt(value))}
@@ -310,7 +322,9 @@ export default function ReportManagementPage() {
             ) : reports.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium">{t("dashboard.noReportsFound")}</p>
+                <p className="text-lg font-medium">
+                  {t("dashboard.noReportsFound")}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {search || status
                     ? t("dashboard.tryAdjustingFilters")
@@ -319,142 +333,150 @@ export default function ReportManagementPage() {
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("dashboard.reportName")}</TableHead>
-                      <TableHead>{t("common.description")}</TableHead>
-                      <TableHead>{t("dashboard.sentBy")}</TableHead>
-                      <TableHead>{t("navigation.office")}</TableHead>
-                      <TableHead>{t("dashboard.files")}</TableHead>
-                      <TableHead>{t("common.status")}</TableHead>
-                      <TableHead>{t("dashboard.receivedDate")}</TableHead>
-                      <TableHead className="text-right">{t("common.actions")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reports.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell className="font-medium">
-                          {report.name}
-                        </TableCell>
-                        <TableCell>
-                          <p className="text-sm line-clamp-2 max-w-md">
-                            {report.description}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          {report.reportSentByUser ? (
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {report.reportSentByUser.username}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {report.reportSentByUser.phoneNumber}
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              N/A
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {report.reportSentByUser?.office ? (
-                            <div className="flex items-center gap-2">
-                              <Building2 className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm">
-                                {report.reportSentByUser.office.name}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              N/A
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {report.fileData?.length || 0} file(s)
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(report.receiverStatus)}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="text-sm">
-                              {format(
-                                new Date(report.createdAt),
-                                "MMM dd, yyyy"
-                              )}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(new Date(report.createdAt), "hh:mm a")}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {report.receiverStatus !== "read" &&
-                              report.receiverStatus !== "archived" && (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleApproveReject(report.id, "approve")
-                                    }
-                                    disabled={isProcessing === report.id}
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  >
-                                    {isProcessing === report.id ? (
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <Check className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleApproveReject(report.id, "reject")
-                                    }
-                                    disabled={isProcessing === report.id}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    {isProcessing === report.id ? (
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <X className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                </>
-                              )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewDetails(report)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                <div className="h-dvh overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("dashboard.reportName")}</TableHead>
+                        <TableHead>{t("common.description")}</TableHead>
+                        <TableHead>{t("dashboard.sentBy")}</TableHead>
+                        <TableHead>{t("navigation.office")}</TableHead>
+                        <TableHead>{t("dashboard.files")}</TableHead>
+                        <TableHead>{t("common.status")}</TableHead>
+                        <TableHead>{t("dashboard.receivedDate")}</TableHead>
+                        <TableHead className="text-right">
+                          {t("common.actions")}
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {reports.map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell className="font-medium">
+                            {report.name}
+                          </TableCell>
+                          <TableCell>
+                            <p className="text-sm line-clamp-2 max-w-md">
+                              {report.description}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            {report.reportSentByUser ? (
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-muted-foreground" />
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {report.reportSentByUser.username}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {report.reportSentByUser.phoneNumber}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                N/A
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {report.reportSentByUser?.office ? (
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-sm">
+                                  {report.reportSentByUser.office.name}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                N/A
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {report.fileData?.length || 0} file(s)
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(report.receiverStatus)}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="text-sm">
+                                {format(
+                                  new Date(report.createdAt),
+                                  "MMM dd, yyyy"
+                                )}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(report.createdAt), "hh:mm a")}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {report.receiverStatus !== "read" &&
+                                report.receiverStatus !== "archived" && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleApproveReject(
+                                          report.id,
+                                          "approve"
+                                        )
+                                      }
+                                      disabled={isProcessing === report.id}
+                                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    >
+                                      {isProcessing === report.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <Check className="w-4 h-4" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleApproveReject(report.id, "reject")
+                                      }
+                                      disabled={isProcessing === report.id}
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      {isProcessing === report.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <X className="w-4 h-4" />
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewDetails(report)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Pagination */}
                 {total > 0 && (
                   <div className="border-t p-4">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="text-sm text-muted-foreground">
-                        {t("dashboard.showing")} {(page - 1) * pageSize + 1} {t("dashboard.to")}{" "}
-                        {Math.min(page * pageSize, total)} {t("dashboard.of")} {total} {t("dashboard.reports")}
+                        {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
+                        {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
+                        {t("dashboard.of")} {total} {t("dashboard.reports")}
                       </div>
                       {totalPages > 1 && (
                         <Pagination>

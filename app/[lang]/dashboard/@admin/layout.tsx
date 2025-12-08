@@ -76,8 +76,10 @@ export default async function Layout({
 
   return (
     <UserLayout menu={menu}>
-      <InstallPrompt />
-      {children}
+      <div className="h-dvh overflow-auto">
+        <InstallPrompt />
+        {children}
+      </div>
     </UserLayout>
   );
 }
