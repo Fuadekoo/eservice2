@@ -59,7 +59,7 @@ export async function sendHahuOTP(
 ) {
   const apiSecret = process.env.API_SECRET;
   const apiDevice = process.env.API_DEVICE;
-  const apiMode = mode || process.env.API_MODE || "sms";
+  const apiMode = mode || process.env.API_MODE || "devices";
 
   if (!apiSecret || !apiDevice) {
     console.error("❌ Missing required environment variables for Hahu OTP API");
@@ -72,10 +72,12 @@ export async function sendHahuOTP(
   // Prepare request data
   const formData = new URLSearchParams();
   formData.append("secret", apiSecret);
+  formData.append("type", "sms");
   formData.append("mode", apiMode);
   formData.append("device", apiDevice);
   formData.append("sim", sim.toString());
   formData.append("phone", phone);
+  formData.append("expire", "60");
   formData.append("message", otpMessage);
 
   // Send OTP request to Hahu API

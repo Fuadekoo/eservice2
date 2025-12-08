@@ -35,18 +35,27 @@ export async function POST(request: NextRequest) {
     const result = await verifyHahuOTP(code);
 
     // Check if verification was successful
-    // The response structure may vary, but typically contains 'valid', 'success', or 'status' field
+    // Hahu API returns: { status: 200, message: 'OTP has been verified!', data: false }
+    // We check for status 200 and success message
     const isValid =
+      result.status === 200 ||
+      result.status === "200" ||
       result.valid === true ||
       result.success === true ||
       result.status === "valid" ||
       result.status === "success" ||
+      (result.message &&
+        (result.message.toLowerCase().includes("verified") ||
+          result.message.toLowerCase().includes("success"))) ||
       (result.data &&
         (result.data.valid === true || result.data.success === true));
 
     if (!isValid) {
       return NextResponse.json(
-        { success: false, error: "Invalid or expired OTP code" },
+        {
+          success: false,
+          error: result.message || "Invalid or expired OTP code",
+        },
         { status: 400 }
       );
     }
