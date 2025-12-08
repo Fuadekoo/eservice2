@@ -4,7 +4,7 @@ import React from "react";
 import useTranslation from "@/hooks/useTranslation";
 import { Navbar } from "@/components/guest/navbar";
 import { Footer } from "@/components/guest/footer";
-import { About } from "@/components/guest/about";
+import About from "@/components/guest/about";
 
 function Page() {
   const { t } = useTranslation();
