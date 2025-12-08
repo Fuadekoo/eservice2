@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import useTranslation from "@/hooks/useTranslation";
 import {
   Table,
   TableBody,
@@ -44,6 +45,7 @@ export default function AdminOverviewPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
@@ -124,10 +126,12 @@ export default function AdminOverviewPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {username ? `Welcome back, ${username}` : "Welcome back"}
+            {username 
+              ? t("dashboard.welcomeBackUser").replace("{username}", username)
+              : t("dashboard.welcomeBack")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            System overview and management
+            {t("dashboard.systemOverview")}
           </p>
         </div>
 
@@ -139,7 +143,7 @@ export default function AdminOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Total Users
+                    {t("dashboard.totalUsers")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.totalUsers?.toLocaleString() || 0}
@@ -158,7 +162,7 @@ export default function AdminOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Pending Applications
+                    {t("dashboard.pendingApplications")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.pendingApplications || 0}
@@ -177,7 +181,7 @@ export default function AdminOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Scheduled Appointments
+                    {t("dashboard.scheduledAppointments")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.scheduledAppointments || 0}
@@ -196,7 +200,7 @@ export default function AdminOverviewPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">
-                    System Growth
+                    {t("dashboard.systemGrowth")}
                   </p>
                   <p className="text-3xl font-bold">
                     {stats?.systemGrowth !== undefined
@@ -218,7 +222,7 @@ export default function AdminOverviewPage() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Applications</CardTitle>
+                <CardTitle>{t("dashboard.recentApplications")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {stats?.recentApplications &&
@@ -228,10 +232,10 @@ export default function AdminOverviewPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Applicant</TableHead>
-                            <TableHead>Service</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>{t("dashboard.applicant")}</TableHead>
+                            <TableHead>{t("dashboard.service")}</TableHead>
+                            <TableHead>{t("common.date")}</TableHead>
+                            <TableHead>{t("common.status")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -255,7 +259,7 @@ export default function AdminOverviewPage() {
                     <div className="mt-4">
                       <Link href={`/${lang}/dashboard/requestManagement`}>
                         <Button className="w-full" variant="default">
-                          View All Applications
+                          {t("dashboard.viewAllApplications")}
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </Link>
@@ -264,7 +268,7 @@ export default function AdminOverviewPage() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No applications yet</p>
+                    <p>{t("dashboard.noApplicationsYet")}</p>
                   </div>
                 )}
               </CardContent>
@@ -275,7 +279,7 @@ export default function AdminOverviewPage() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>{t("dashboard.quickActions")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Link href={`/${lang}/dashboard/requestManagement`}>
@@ -285,7 +289,7 @@ export default function AdminOverviewPage() {
                     size="lg"
                   >
                     <ClipboardList className="w-4 h-4 mr-2" />
-                    Review Applications
+                    {t("dashboard.reviewApplications")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/userManagement`}>
@@ -295,7 +299,7 @@ export default function AdminOverviewPage() {
                     size="lg"
                   >
                     <Users className="w-4 h-4 mr-2" />
-                    Manage Users
+                    {t("dashboard.manageUsers")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/report`}>
@@ -305,7 +309,7 @@ export default function AdminOverviewPage() {
                     size="lg"
                   >
                     <FileText className="w-4 h-4 mr-2" />
-                    View Reports
+                    {t("dashboard.viewReports")}
                   </Button>
                 </Link>
                 <Link href={`/${lang}/dashboard/office`}>
@@ -315,7 +319,7 @@ export default function AdminOverviewPage() {
                     size="lg"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    System Settings
+                    {t("dashboard.systemSettings")}
                   </Button>
                 </Link>
               </CardContent>

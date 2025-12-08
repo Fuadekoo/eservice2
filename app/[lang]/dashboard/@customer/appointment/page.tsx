@@ -16,8 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function AppointmentPage() {
+  const { t } = useTranslation();
   const {
     appointments,
     approvedRequests,
@@ -45,9 +47,7 @@ export default function AppointmentPage() {
 
   const handleCreate = () => {
     if (approvedRequests.length === 0) {
-      toast.error(
-        "You don't have any approved requests. Please wait for your requests to be approved first."
-      );
+      toast.error(t("dashboard.noApprovedRequests"));
       return;
     }
     setSelectedAppointment(null);
@@ -62,7 +62,7 @@ export default function AppointmentPage() {
   const handleDelete = async (appointment: Appointment) => {
     try {
       await deleteAppointment(appointment.id);
-      toast.success("Appointment deleted successfully");
+      toast.success(t("dashboard.appointmentDeletedSuccessfully"));
     } catch (error: any) {
       toast.error(error.message || "Failed to delete appointment");
     }
@@ -92,7 +92,7 @@ export default function AppointmentPage() {
   ) => {
     try {
       await updateAppointment(id, data);
-      toast.success("Appointment updated successfully");
+      toast.success(t("dashboard.appointmentUpdatedSuccessfully"));
     } catch (error: any) {
       toast.error(error.message || "Failed to update appointment");
     }
@@ -101,7 +101,7 @@ export default function AppointmentPage() {
   const handleDeleteFromDetail = async (id: string) => {
     try {
       await deleteAppointment(id);
-      toast.success("Appointment deleted successfully");
+      toast.success(t("dashboard.appointmentDeletedSuccessfully"));
     } catch (error: any) {
       toast.error(error.message || "Failed to delete appointment");
     }
@@ -127,22 +127,22 @@ export default function AppointmentPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Appointments</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.myAppointments")}</h1>
           <p className="text-muted-foreground mt-1">
-            Manage your scheduled appointments
+            {t("dashboard.manageScheduledAppointments")}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder={t("dashboard.filterByStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Appointments</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="all">{t("dashboard.allAppointments")}</SelectItem>
+              <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
+              <SelectItem value="approved">{t("dashboard.approved")}</SelectItem>
+              <SelectItem value="completed">{t("dashboard.completed")}</SelectItem>
+              <SelectItem value="cancelled">{t("dashboard.cancelled")}</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -157,11 +157,11 @@ export default function AppointmentPage() {
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
+            {t("common.refresh")}
           </Button>
           <Button onClick={handleCreate} disabled={approvedRequests.length === 0}>
             <Plus className="w-4 h-4 mr-2" />
-            New Appointment
+            {t("dashboard.newAppointment")}
           </Button>
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function AppointmentPage() {
           <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 p-6 relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Scheduled
+                {t("dashboard.scheduled")}
               </p>
               <p className="text-4xl font-bold text-blue-700 dark:text-blue-400">
                 {stats.scheduled}
@@ -186,7 +186,7 @@ export default function AppointmentPage() {
           <div className="rounded-lg border bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 p-6 relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Completed
+                {t("dashboard.completed")}
               </p>
               <p className="text-4xl font-bold text-green-700 dark:text-green-400">
                 {stats.completed}
@@ -199,7 +199,7 @@ export default function AppointmentPage() {
           <div className="rounded-lg border bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 p-6 relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Cancelled
+                {t("dashboard.cancelled")}
               </p>
               <p className="text-4xl font-bold text-red-700 dark:text-red-400">
                 {stats.cancelled}
@@ -214,7 +214,7 @@ export default function AppointmentPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading appointments...</p>
+          <p className="text-muted-foreground">{t("dashboard.loadingAppointments")}</p>
         </div>
       )}
 
@@ -222,18 +222,18 @@ export default function AppointmentPage() {
       {!isLoading && filteredAppointments.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Calendar className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">No appointments found</h3>
+          <h3 className="text-xl font-semibold mb-2">{t("dashboard.noAppointmentsFound")}</h3>
           <p className="text-muted-foreground mb-6">
             {statusFilter !== "all"
-              ? `No ${statusFilter} appointments available.`
+              ? t("dashboard.noAppointmentsForStatus").replace("{status}", statusFilter)
               : approvedRequests.length === 0
-              ? "You need to have an approved request before you can create an appointment."
-              : "You haven't created any appointments yet."}
+              ? t("dashboard.needApprovedRequestForAppointment")
+              : t("dashboard.noAppointmentsCreatedYet")}
           </p>
           {approvedRequests.length > 0 && (
             <Button onClick={handleCreate}>
               <Plus className="w-4 h-4 mr-2" />
-              Create Your First Appointment
+              {t("dashboard.createYourFirstAppointment")}
             </Button>
           )}
         </div>

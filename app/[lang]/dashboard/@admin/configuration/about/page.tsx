@@ -30,8 +30,10 @@ import { AdministrationFormValues } from "./_schema";
 import { AboutFormValues } from "./_schema";
 import { Administration } from "./_types";
 import { About } from "./_types";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"administrators" | "about">(
     "administrators"
   );
@@ -153,9 +155,9 @@ export default function AboutPage() {
     <div className="h-full overflow-y-auto">
       <div className="container mx-auto p-6 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">About Page Management</h1>
+          <h1 className="text-3xl font-bold">{t("dashboard.aboutPageManagement")}</h1>
           <p className="text-muted-foreground mt-1">
-            Manage administrators and about page content
+            {t("dashboard.manageAdministratorsAndAbout")}
           </p>
         </div>
 
@@ -169,21 +171,21 @@ export default function AboutPage() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="administrators">
             <Users className="w-4 h-4 mr-2" />
-            Administrators
+            {t("dashboard.administrators")}
           </TabsTrigger>
           <TabsTrigger value="about">
             <Info className="w-4 h-4 mr-2" />
-            About Content
+            {t("dashboard.aboutContent")}
           </TabsTrigger>
         </TabsList>
 
         {/* Administrators Tab */}
         <TabsContent value="administrators" className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Administrators</h2>
+            <h2 className="text-2xl font-semibold">{t("dashboard.administrators")}</h2>
             <Button onClick={handleCreateAdmin}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Administrator
+              {t("dashboard.addAdministrator")}
             </Button>
           </div>
 
@@ -194,11 +196,11 @@ export default function AboutPage() {
           ) : administrators.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">
-                No administrators found
+                {t("dashboard.noAdministratorsFound")}
               </p>
               <Button onClick={handleCreateAdmin}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Your First Administrator
+                {t("dashboard.addYourFirstAdministrator")}
               </Button>
             </div>
           ) : (
@@ -220,8 +222,8 @@ export default function AboutPage() {
               <DialogHeader>
                 <DialogTitle>
                   {selectedAdministration
-                    ? "Edit Administrator"
-                    : "Add Administrator"}
+                    ? t("dashboard.editAdministrator")
+                    : t("dashboard.addAdministrator")}
                 </DialogTitle>
               </DialogHeader>
               <AdministrationForm
@@ -243,23 +245,21 @@ export default function AboutPage() {
           >
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete the administrator &quot;
-                  {selectedAdministration?.name}&quot;. This action cannot be
-                  undone.
+                  {t("dashboard.deleteAdministratorConfirm").replace("{name}", selectedAdministration?.name || "")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isSubmittingAdmin}>
-                  Cancel
+                  {t("common.cancel")}
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteConfirmAdmin}
                   disabled={isSubmittingAdmin}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  {isSubmittingAdmin ? "Deleting..." : "Delete"}
+                  {isSubmittingAdmin ? t("dashboard.deleting") : t("common.delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -269,10 +269,10 @@ export default function AboutPage() {
         {/* About Content Tab */}
         <TabsContent value="about" className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">About Content</h2>
+            <h2 className="text-2xl font-semibold">{t("dashboard.aboutContent")}</h2>
             <Button onClick={handleCreateAbout}>
               <Plus className="w-4 h-4 mr-2" />
-              Add About Section
+              {t("dashboard.addAboutSection")}
             </Button>
           </div>
 
@@ -283,11 +283,11 @@ export default function AboutPage() {
           ) : aboutSections.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">
-                No about sections found
+                {t("dashboard.noAboutSectionsFound")}
               </p>
               <Button onClick={handleCreateAbout}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Your First About Section
+                {t("dashboard.addYourFirstAboutSection")}
               </Button>
             </div>
           ) : (
@@ -308,7 +308,7 @@ export default function AboutPage() {
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {selectedAbout ? "Edit About Section" : "Add About Section"}
+                  {selectedAbout ? t("dashboard.editAboutSection") : t("dashboard.addAboutSection")}
                 </DialogTitle>
               </DialogHeader>
               <AboutForm
@@ -330,22 +330,21 @@ export default function AboutPage() {
           >
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete the about section &quot;
-                  {selectedAbout?.name}&quot;. This action cannot be undone.
+                  {t("dashboard.deleteAboutSectionConfirm").replace("{name}", selectedAbout?.name || "")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isSubmittingAbout}>
-                  Cancel
+                  {t("common.cancel")}
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteConfirmAbout}
                   disabled={isSubmittingAbout}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  {isSubmittingAbout ? "Deleting..." : "Delete"}
+                  {isSubmittingAbout ? t("dashboard.deleting") : t("common.delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

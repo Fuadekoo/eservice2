@@ -44,8 +44,10 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { calculateOverallStatus } from "@/lib/request-status";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function RequestManagementPage() {
+  const { t } = useTranslation();
   const {
     requests,
     offices,
@@ -94,7 +96,7 @@ export default function RequestManagementPage() {
         return (
           <Badge variant="default" className="flex items-center gap-1 w-fit">
             <CheckCircle2 className="w-3 h-3" />
-            Approved
+            {t("dashboard.approved")}
           </Badge>
         );
       case "rejected":
@@ -104,14 +106,14 @@ export default function RequestManagementPage() {
             className="flex items-center gap-1 w-fit"
           >
             <XCircle className="w-3 h-3" />
-            Rejected
+            {t("dashboard.rejected")}
           </Badge>
         );
       default:
         return (
           <Badge variant="secondary" className="flex items-center gap-1 w-fit">
             <Clock className="w-3 h-3" />
-            Pending
+            {t("dashboard.pending")}
           </Badge>
         );
     }
@@ -123,13 +125,13 @@ export default function RequestManagementPage() {
     if (hasStaffApproval) {
       return (
         <Badge variant="default" className="text-xs bg-green-600">
-          Done
+          {t("dashboard.done")}
         </Badge>
       );
     }
     return (
       <Badge variant="outline" className="text-xs">
-        Pending
+        {t("dashboard.pending")}
       </Badge>
     );
   };
@@ -140,13 +142,13 @@ export default function RequestManagementPage() {
     if (hasManagerApproval) {
       return (
         <Badge variant="default" className="text-xs bg-blue-600">
-          Done
+          {t("dashboard.done")}
         </Badge>
       );
     }
     return (
       <Badge variant="outline" className="text-xs">
-        Pending
+        {t("dashboard.pending")}
       </Badge>
     );
   };
@@ -158,10 +160,10 @@ export default function RequestManagementPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Request Management
+              {t("navigation.requestManagement")}
             </h1>
             <p className="text-muted-foreground mt-1">
-              View and manage all service requests
+              {t("dashboard.viewAndManageAllRequests")}
             </p>
           </div>
           <Button
@@ -182,7 +184,7 @@ export default function RequestManagementPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search by service, office, or customer..."
+                placeholder={t("dashboard.searchRequests")}
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-9"
@@ -195,10 +197,10 @@ export default function RequestManagementPage() {
               }
             >
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="All Offices" />
+                <SelectValue placeholder={t("dashboard.allOffices")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Offices</SelectItem>
+                <SelectItem value="all">{t("dashboard.allOffices")}</SelectItem>
                 {offices.map((office) => (
                   <SelectItem key={office.id} value={office.id}>
                     {office.name}
@@ -211,18 +213,18 @@ export default function RequestManagementPage() {
               onValueChange={(value) => setStatus(value === "all" ? "" : value)}
             >
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="All Status" />
+                <SelectValue placeholder={t("dashboard.allStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="all">{t("dashboard.allStatus")}</SelectItem>
+                <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
+                <SelectItem value="approved">{t("dashboard.approved")}</SelectItem>
+                <SelectItem value="rejected">{t("dashboard.rejected")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Show:</span>
+            <span className="text-sm text-muted-foreground">{t("dashboard.show")}:</span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => setPageSize(parseInt(value))}
@@ -238,7 +240,7 @@ export default function RequestManagementPage() {
               </SelectContent>
             </Select>
             <span className="text-sm text-muted-foreground">
-              items per page
+              {t("dashboard.itemsPerPage")}
             </span>
           </div>
         </div>
@@ -252,11 +254,11 @@ export default function RequestManagementPage() {
           ) : requests.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No requests found</p>
+              <p className="text-lg font-medium">{t("dashboard.noRequestsFound")}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {search || officeId || status
-                  ? "Try adjusting your filters"
-                  : "No requests have been submitted yet"}
+                  ? t("dashboard.tryAdjustingFilters")
+                  : t("dashboard.noRequestsSubmittedYet")}
               </p>
             </div>
           ) : (
@@ -264,14 +266,14 @@ export default function RequestManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Office</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Staff Approval</TableHead>
-                    <TableHead>Manager Approval</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t("dashboard.customer")}</TableHead>
+                    <TableHead>{t("dashboard.service")}</TableHead>
+                    <TableHead>{t("navigation.office")}</TableHead>
+                    <TableHead>{t("common.date")}</TableHead>
+                    <TableHead>{t("common.status")}</TableHead>
+                    <TableHead>{t("dashboard.staffApproval")}</TableHead>
+                    <TableHead>{t("dashboard.managerApproval")}</TableHead>
+                    <TableHead className="text-right">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -345,8 +347,8 @@ export default function RequestManagementPage() {
                 <div className="border-t p-4">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm text-muted-foreground">
-                      Showing {(page - 1) * pageSize + 1} to{" "}
-                      {Math.min(page * pageSize, total)} of {total} requests
+                      {t("dashboard.showing")} {(page - 1) * pageSize + 1} {t("dashboard.to")}{" "}
+                      {Math.min(page * pageSize, total)} {t("dashboard.of")} {total} {t("dashboard.requests")}
                     </div>
                     {totalPages > 1 && (
                       <Pagination>

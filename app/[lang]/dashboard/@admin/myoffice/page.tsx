@@ -11,8 +11,10 @@ import { AppointmentsSection } from "./_components/appointments-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function MyOfficePage() {
+  const { t } = useTranslation();
   const { office, isLoadingOffice, fetchOffice } = useMyOfficeStore();
   const [activeTab, setActiveTab] = useState("office");
 
@@ -38,9 +40,9 @@ export default function MyOfficePage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Office</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t("navigation.myoffice")}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your office, services, requests, and appointments
+              {t("dashboard.manageOfficeServicesRequests")}
             </p>
           </div>
         </div>
@@ -50,8 +52,7 @@ export default function MyOfficePage() {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              You haven't assigned an office yet. Please create or select an
-              office to get started.
+              {t("dashboard.noOfficeAssignedYet")}
             </AlertDescription>
           </Alert>
         )}
@@ -61,11 +62,11 @@ export default function MyOfficePage() {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="office">
               <Building2 className="w-4 h-4 mr-2" />
-              Office
+              {t("navigation.office")}
             </TabsTrigger>
-            <TabsTrigger value="services">Services</TabsTrigger>
-            <TabsTrigger value="requests">Requests</TabsTrigger>
-            <TabsTrigger value="appointments">Appointments</TabsTrigger>
+            <TabsTrigger value="services">{t("navigation.services")}</TabsTrigger>
+            <TabsTrigger value="requests">{t("navigation.request")}</TabsTrigger>
+            <TabsTrigger value="appointments">{t("navigation.appointment")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="office" className="mt-6">

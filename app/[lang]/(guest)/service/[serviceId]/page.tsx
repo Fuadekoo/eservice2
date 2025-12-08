@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useLocale } from "@/lib/use-locale";
+import useTranslation from "@/hooks/useTranslation";
 import Image from "next/image";
 import { Navbar } from "@/components/guest/navbar";
 import { Footer } from "@/components/guest/footer";
@@ -47,6 +48,7 @@ export default function ServiceDetailPage() {
   const params = useParams<{ lang: string; serviceId: string }>();
   const router = useRouter();
   const { locale } = useLocale();
+  const { t } = useTranslation();
   const { serviceId } = params;
 
   const [service, setService] = useState<ServiceDetail | null>(null);
@@ -104,11 +106,7 @@ export default function ServiceDetailPage() {
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-primary" />
             <p className="text-muted-foreground">
-              {locale === "or"
-                ? "Tajaajila saaxilamoo..."
-                : locale === "am"
-                ? "አገልግሎት በመጫን ላይ..."
-                : "Loading service details..."}
+              {t("guest.loadingServiceDetails")}
             </p>
           </div>
         </div>
@@ -126,21 +124,13 @@ export default function ServiceDetailPage() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">
-                  {locale === "or"
-                    ? "Dogoggora"
-                    : locale === "am"
-                    ? "ስህተት"
-                    : "Error"}
+                  {t("guest.error")}
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  {error || "Service not found"}
+                  {error || t("guest.serviceNotFound")}
                 </p>
                 <Button onClick={() => router.back()} variant="outline">
-                  {locale === "or"
-                    ? "Deebi'i"
-                    : locale === "am"
-                    ? "ተመለስ"
-                    : "Go Back"}
+                  {t("guest.goBack")}
                 </Button>
               </div>
             </CardContent>
@@ -163,11 +153,7 @@ export default function ServiceDetailPage() {
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {locale === "or"
-              ? "Deebi'i"
-              : locale === "am"
-              ? "ተመለስ"
-              : "Back"}
+            {t("guest.back")}
           </Button>
 
           {/* Service Header */}
@@ -209,11 +195,7 @@ export default function ServiceDetailPage() {
               <div className="space-y-4">
                 <div>
                   <h3 className="font-semibold mb-2">
-                    {locale === "or"
-                      ? "Ibsa"
-                      : locale === "am"
-                      ? "መግለጫ"
-                      : "Description"}
+                    {t("guest.description")}
                   </h3>
                   <p className="text-muted-foreground">{service.description}</p>
                 </div>
@@ -222,12 +204,7 @@ export default function ServiceDetailPage() {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4" />
                     <span>
-                      {locale === "or"
-                        ? "Yeroo fudhachuu:"
-                        : locale === "am"
-                        ? "የሚወስድ ጊዜ:"
-                        : "Time to take:"}{" "}
-                      {service.timeToTake}
+                      {t("guest.timeToTake")} {service.timeToTake}
                     </span>
                   </div>
                 )}
@@ -237,12 +214,7 @@ export default function ServiceDetailPage() {
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <FileText className="w-4 h-4" />
                       <span>
-                        {locale === "or"
-                          ? "Kutaa:"
-                          : locale === "am"
-                          ? "ክፍል:"
-                          : "Room:"}{" "}
-                        {service.office.roomNumber}
+                        {t("guest.room")} {service.office.roomNumber}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
@@ -257,11 +229,7 @@ export default function ServiceDetailPage() {
                   size="lg"
                   className="w-full sm:w-auto"
                 >
-                  {locale === "or"
-                    ? "Gaafadhu"
-                    : locale === "am"
-                    ? "ያመልክቱ"
-                    : "Apply Now"}
+                  {t("guest.applyNow")}
                 </Button>
               </div>
             </CardContent>
@@ -272,11 +240,7 @@ export default function ServiceDetailPage() {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>
-                  {locale === "or"
-                    ? "Hordoffii"
-                    : locale === "am"
-                    ? "መስፈርቶች"
-                    : "Requirements"}
+                  {t("guest.requirements")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -304,11 +268,7 @@ export default function ServiceDetailPage() {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>
-                  {locale === "or"
-                    ? "Tajaajila Kanaaf"
-                    : locale === "am"
-                    ? "ይህ አገልግሎት ለ"
-                    : "This Service is For"}
+                  {t("guest.thisServiceIsFor")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -337,11 +297,7 @@ export default function ServiceDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  {locale === "or"
-                    ? "Hojjettoota Qabamoo"
-                    : locale === "am"
-                    ? "የተመደቡ ሰራተኞች"
-                    : "Assigned Staff"}
+                  {t("guest.assignedStaff")}
                 </CardTitle>
               </CardHeader>
               <CardContent>

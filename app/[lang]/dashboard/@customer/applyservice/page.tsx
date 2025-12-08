@@ -32,8 +32,10 @@ import { Loader2, Upload, X, FileText, Calendar, MapPin, CheckCircle2, Building2
 import Image from "next/image";
 import { applyServiceSchema, ApplyServiceFormValues } from "./_schema";
 import { useApplyServiceStore } from "./_store/apply-service-store";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function ApplyServicePage() {
+  const { t } = useTranslation();
   const params = useParams<{ lang: string }>();
   const router = useRouter();
   const lang = params.lang || "en";
@@ -89,11 +91,11 @@ export default function ApplyServicePage() {
 
   // Steps definition
   const STEPS = [
-    { id: 1, title: "Select Office", icon: Building2, completed: !!watchedOfficeId },
-    { id: 2, title: "Select Service", icon: FileText, completed: !!watchedServiceId },
-    { id: 3, title: "View Information", icon: List, completed: !!selectedService },
-    { id: 4, title: "Application Details", icon: FileCheck, completed: !!(form.watch("currentAddress") && form.watch("date")) },
-    { id: 5, title: "Upload Files", icon: Upload, completed: files.length > 0 },
+    { id: 1, title: t("dashboard.selectOffice"), icon: Building2, completed: !!watchedOfficeId },
+    { id: 2, title: t("dashboard.selectService"), icon: FileText, completed: !!watchedServiceId },
+    { id: 3, title: t("dashboard.viewInformation"), icon: List, completed: !!selectedService },
+    { id: 4, title: t("dashboard.applicationDetails"), icon: FileCheck, completed: !!(form.watch("currentAddress") && form.watch("date")) },
+    { id: 5, title: t("dashboard.uploadFiles"), icon: Upload, completed: files.length > 0 },
   ];
 
   // Fetch offices on mount
@@ -150,22 +152,22 @@ export default function ApplyServicePage() {
   };
 
   const DAYS = [
-    { key: "0", label: "Sunday" },
-    { key: "1", label: "Monday" },
-    { key: "2", label: "Tuesday" },
-    { key: "3", label: "Wednesday" },
-    { key: "4", label: "Thursday" },
-    { key: "5", label: "Friday" },
-    { key: "6", label: "Saturday" },
+    { key: "0", label: t("dashboard.sunday") },
+    { key: "1", label: t("dashboard.monday") },
+    { key: "2", label: t("dashboard.tuesday") },
+    { key: "3", label: t("dashboard.wednesday") },
+    { key: "4", label: t("dashboard.thursday") },
+    { key: "5", label: t("dashboard.friday") },
+    { key: "6", label: t("dashboard.saturday") },
   ];
 
   return (
     <div className="w-full h-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Apply for Service</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.applyForService")}</h1>
         <p className="text-muted-foreground mt-1">
-          Fill in the details to apply for a service
+          {t("dashboard.fillDetailsToApply")}
         </p>
       </div>
 
@@ -176,8 +178,8 @@ export default function ApplyServicePage() {
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Progress</span>
-                <span className="text-muted-foreground">{currentStep} of {totalSteps} steps</span>
+                <span className="font-medium">{t("dashboard.progress")}</span>
+                <span className="text-muted-foreground">{currentStep} {t("dashboard.of")} {totalSteps} {t("dashboard.steps")}</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -239,10 +241,10 @@ export default function ApplyServicePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className={`w-5 h-5 ${watchedOfficeId ? 'text-primary' : ''}`} />
-              Step 1: Select Office
+              {t("dashboard.step1")}: {t("dashboard.selectOffice")}
             </CardTitle>
             <CardDescription>
-              Choose the office you want to apply to
+              {t("dashboard.chooseOfficeToApply")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -250,8 +252,8 @@ export default function ApplyServicePage() {
               control={form.control}
               name="officeId"
               render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>Office *</FieldLabel>
+                  <Field>
+                  <FieldLabel>{t("navigation.office")} *</FieldLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
@@ -261,7 +263,7 @@ export default function ApplyServicePage() {
                     disabled={isLoadingOffices || isSubmitting}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select an office" />
+                      <SelectValue placeholder={t("dashboard.selectAnOffice")} />
                     </SelectTrigger>
                     <SelectContent>
                       {isLoadingOffices ? (
@@ -270,7 +272,7 @@ export default function ApplyServicePage() {
                         </div>
                       ) : offices.length === 0 ? (
                         <div className="p-4 text-sm text-muted-foreground">
-                          No offices available
+                          {t("dashboard.noOfficesAvailable")}
                         </div>
                       ) : (
                         offices.map((office) => (
@@ -278,7 +280,7 @@ export default function ApplyServicePage() {
                             <div className="flex flex-col">
                               <span className="font-medium">{office.name}</span>
                               <span className="text-xs text-muted-foreground">
-                                Room {office.roomNumber} - {office.address}
+                                {t("dashboard.room")} {office.roomNumber} - {office.address}
                               </span>
                             </div>
                           </SelectItem>
@@ -303,10 +305,10 @@ export default function ApplyServicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className={`w-5 h-5 ${watchedServiceId ? 'text-primary' : ''}`} />
-                Step 2: Select Service
+                {t("dashboard.step2")}: {t("dashboard.selectService")}
               </CardTitle>
               <CardDescription>
-                Choose the service you want to apply for
+                {t("dashboard.chooseServiceToApply")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -315,14 +317,14 @@ export default function ApplyServicePage() {
                 name="serviceId"
                 render={({ field, fieldState }) => (
                   <Field>
-                    <FieldLabel>Service *</FieldLabel>
+                    <FieldLabel>{t("dashboard.service")} *</FieldLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                       disabled={isLoadingServices || isSubmitting}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a service" />
+                        <SelectValue placeholder={t("dashboard.selectAService")} />
                       </SelectTrigger>
                       <SelectContent>
                         {isLoadingServices ? (
@@ -331,7 +333,7 @@ export default function ApplyServicePage() {
                           </div>
                         ) : services.length === 0 ? (
                           <div className="p-4 text-sm text-muted-foreground">
-                            No services available for this office
+                            {t("dashboard.noServicesAvailableForOffice")}
                           </div>
                         ) : (
                           services.map((service) => (
@@ -363,7 +365,7 @@ export default function ApplyServicePage() {
                 <div className="mt-4 p-4 bg-muted rounded-lg">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    Office Availability
+                    {t("dashboard.officeAvailability")}
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                     {DAYS.map((day) => {
@@ -389,7 +391,7 @@ export default function ApplyServicePage() {
                     })}
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Slot Duration: {officeAvailability.slotDuration} minutes
+                    {t("dashboard.slotDuration")}: {officeAvailability.slotDuration} {t("dashboard.minutes")}
                   </p>
                 </div>
               )}
@@ -403,14 +405,14 @@ export default function ApplyServicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <List className="w-5 h-5 text-primary" />
-                Step 3: Requirements & Service Information
+                {t("dashboard.step3")}: {t("dashboard.requirementsAndServiceInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedService.requirements &&
                 selectedService.requirements.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Requirements:</h4>
+                    <h4 className="font-medium mb-2">{t("dashboard.requirements")}:</h4>
                     <ul className="list-disc list-inside space-y-1 text-sm">
                       {selectedService.requirements.map((req) => (
                         <li key={req.id}>
@@ -430,7 +432,7 @@ export default function ApplyServicePage() {
               {selectedService.serviceFors &&
                 selectedService.serviceFors.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Service For:</h4>
+                    <h4 className="font-medium mb-2">{t("dashboard.serviceFor")}:</h4>
                     <ul className="list-disc list-inside space-y-1 text-sm">
                       {selectedService.serviceFors.map((sf) => (
                         <li key={sf.id}>
@@ -456,7 +458,7 @@ export default function ApplyServicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileCheck className="w-5 h-5 text-primary" />
-                Step 4: Application Details
+                {t("dashboard.step4")}: {t("dashboard.applicationDetails")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -467,11 +469,11 @@ export default function ApplyServicePage() {
                   <Field>
                     <FieldLabel className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      Current Address *
+                      {t("dashboard.currentAddress")} *
                     </FieldLabel>
                     <Input
                       {...field}
-                      placeholder="Enter your current address"
+                      placeholder={t("dashboard.enterCurrentAddress")}
                       disabled={isSubmitting}
                       aria-invalid={fieldState.invalid}
                     />
@@ -491,7 +493,7 @@ export default function ApplyServicePage() {
                   <Field>
                     <FieldLabel className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      Preferred Date *
+                      {t("dashboard.preferredDate")} *
                     </FieldLabel>
                     <Input
                       type="date"
@@ -527,10 +529,10 @@ export default function ApplyServicePage() {
                 name="notes"
                 render={({ field, fieldState }) => (
                   <Field>
-                    <FieldLabel>Notes (Optional)</FieldLabel>
+                    <FieldLabel>{t("dashboard.notesOptional")}</FieldLabel>
                     <Textarea
                       {...field}
-                      placeholder="Add any additional notes or information..."
+                      placeholder={t("dashboard.addAdditionalNotes")}
                       rows={4}
                       disabled={isSubmitting}
                       aria-invalid={fieldState.invalid}
@@ -553,10 +555,10 @@ export default function ApplyServicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="w-5 h-5 text-primary" />
-                Step 5: Attach Files
+                {t("dashboard.step5")}: {t("dashboard.attachFiles")}
               </CardTitle>
               <CardDescription>
-                Upload PDF files or images (Max 10MB per file)
+                {t("dashboard.uploadFilesDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -580,7 +582,7 @@ export default function ApplyServicePage() {
                   >
                     <span>
                       <Upload className="w-4 h-4 mr-2" />
-                      Choose Files (PDF or Images)
+                      {t("dashboard.chooseFiles")}
                     </span>
                   </Button>
                 </label>
@@ -647,16 +649,16 @@ export default function ApplyServicePage() {
               onClick={() => router.back()}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting...
+                  {t("dashboard.submitting")}
                 </>
               ) : (
-                "Submit Application"
+                t("dashboard.submitApplication")
               )}
             </Button>
           </div>
@@ -670,9 +672,9 @@ export default function ApplyServicePage() {
             <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
               <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Request Submitted Successfully!</h2>
+            <h2 className="text-2xl font-bold mb-2">{t("dashboard.requestSubmittedSuccessfully")}</h2>
             <p className="text-muted-foreground">
-              Your request has been submitted to the office. You will be redirected to your applications page.
+              {t("dashboard.requestSubmittedMessage")}
             </p>
           </div>
         </DialogContent>

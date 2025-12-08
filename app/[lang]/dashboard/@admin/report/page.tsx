@@ -48,8 +48,10 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { ReportDetail } from "./_components/report-detail";
 import { Card, CardContent } from "@/components/ui/card";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function ReportManagementPage() {
+  const { t } = useTranslation();
   const {
     reports,
     selectedReport,
@@ -155,7 +157,7 @@ export default function ReportManagementPage() {
             className="flex items-center gap-1 w-fit bg-blue-600"
           >
             <Send className="w-3 h-3" />
-            Sent
+            {t("dashboard.sent")}
           </Badge>
         );
       case "received":
@@ -165,7 +167,7 @@ export default function ReportManagementPage() {
             className="flex items-center gap-1 w-fit bg-green-600"
           >
             <CheckCircle2 className="w-3 h-3" />
-            Received
+            {t("dashboard.received")}
           </Badge>
         );
       case "read":
@@ -175,21 +177,21 @@ export default function ReportManagementPage() {
             className="flex items-center gap-1 w-fit bg-purple-600"
           >
             <CheckCircle2 className="w-3 h-3" />
-            Read
+            {t("dashboard.read")}
           </Badge>
         );
       case "archived":
         return (
           <Badge variant="secondary" className="flex items-center gap-1 w-fit">
             <Archive className="w-3 h-3" />
-            Archived
+            {t("dashboard.archived")}
           </Badge>
         );
       default:
         return (
           <Badge variant="secondary" className="flex items-center gap-1 w-fit">
             <Clock className="w-3 h-3" />
-            Pending
+            {t("dashboard.pending")}
           </Badge>
         );
     }
@@ -202,10 +204,10 @@ export default function ReportManagementPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Report Management
+              {t("dashboard.reportManagement")}
             </h1>
             <p className="text-muted-foreground mt-1">
-              View and manage reports you have received
+              {t("dashboard.viewAndManageReports")}
             </p>
           </div>
           <Button
@@ -228,7 +230,7 @@ export default function ReportManagementPage() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by report name, description, or sender..."
+                    placeholder={t("dashboard.searchReports")}
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
                     className="pl-9"
@@ -242,10 +244,10 @@ export default function ReportManagementPage() {
                   disabled={isLoadingOffices}
                 >
                   <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="All Offices" />
+                    <SelectValue placeholder={t("dashboard.allOffices")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Offices</SelectItem>
+                    <SelectItem value="all">{t("dashboard.allOffices")}</SelectItem>
                     {offices.map((office) => (
                       <SelectItem key={office.id} value={office.id}>
                         {office.name}
@@ -260,22 +262,22 @@ export default function ReportManagementPage() {
                   }
                 >
                   <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t("dashboard.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="sent">Sent</SelectItem>
-                    <SelectItem value="received">Received</SelectItem>
-                    <SelectItem value="read">Read (Approved)</SelectItem>
+                    <SelectItem value="all">{t("dashboard.allStatus")}</SelectItem>
+                    <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
+                    <SelectItem value="sent">{t("dashboard.sent")}</SelectItem>
+                    <SelectItem value="received">{t("dashboard.received")}</SelectItem>
+                    <SelectItem value="read">{t("dashboard.readApproved")}</SelectItem>
                     <SelectItem value="archived">
-                      Archived (Rejected)
+                      {t("dashboard.archivedRejected")}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Show:</span>
+                <span className="text-sm text-muted-foreground">{t("dashboard.show")}:</span>
                 <Select
                   value={pageSize.toString()}
                   onValueChange={(value) => setPageSize(parseInt(value))}
@@ -291,7 +293,7 @@ export default function ReportManagementPage() {
                   </SelectContent>
                 </Select>
                 <span className="text-sm text-muted-foreground">
-                  items per page
+                  {t("dashboard.itemsPerPage")}
                 </span>
               </div>
             </div>
@@ -308,11 +310,11 @@ export default function ReportManagementPage() {
             ) : reports.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium">No reports found</p>
+                <p className="text-lg font-medium">{t("dashboard.noReportsFound")}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {search || status
-                    ? "Try adjusting your filters"
-                    : "No reports have been received yet"}
+                    ? t("dashboard.tryAdjustingFilters")
+                    : t("dashboard.noReportsReceivedYet")}
                 </p>
               </div>
             ) : (
@@ -320,14 +322,14 @@ export default function ReportManagementPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Report Name</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Sent By</TableHead>
-                      <TableHead>Office</TableHead>
-                      <TableHead>Files</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Received Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t("dashboard.reportName")}</TableHead>
+                      <TableHead>{t("common.description")}</TableHead>
+                      <TableHead>{t("dashboard.sentBy")}</TableHead>
+                      <TableHead>{t("navigation.office")}</TableHead>
+                      <TableHead>{t("dashboard.files")}</TableHead>
+                      <TableHead>{t("common.status")}</TableHead>
+                      <TableHead>{t("dashboard.receivedDate")}</TableHead>
+                      <TableHead className="text-right">{t("common.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -451,8 +453,8 @@ export default function ReportManagementPage() {
                   <div className="border-t p-4">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="text-sm text-muted-foreground">
-                        Showing {(page - 1) * pageSize + 1} to{" "}
-                        {Math.min(page * pageSize, total)} of {total} reports
+                        {t("dashboard.showing")} {(page - 1) * pageSize + 1} {t("dashboard.to")}{" "}
+                        {Math.min(page * pageSize, total)} {t("dashboard.of")} {total} {t("dashboard.reports")}
                       </div>
                       {totalPages > 1 && (
                         <Pagination>

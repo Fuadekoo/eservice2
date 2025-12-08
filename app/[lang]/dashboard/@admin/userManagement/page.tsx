@@ -74,8 +74,10 @@ import {
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function UserManagementPage() {
+  const { t } = useTranslation();
   // Get state and actions from Zustand store
   const {
     users,
@@ -179,7 +181,7 @@ export default function UserManagementPage() {
   const handleDeleteClick = (user: User) => {
     // Prevent deletion of admin users
     if (isAdmin(user)) {
-      toast.error("Cannot delete admin users. Admin accounts are protected.");
+      toast.error(t("dashboard.cannotDeleteAdminUsers"));
       return;
     }
     setSelectedUser(user);
@@ -269,9 +271,9 @@ export default function UserManagementPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.userManagement")}</h1>
           <p className="text-muted-foreground mt-1">
-            Manage users, assign roles, and assign offices
+            {t("dashboard.manageUsersDescription")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -284,24 +286,24 @@ export default function UserManagementPage() {
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
+            {t("common.refresh")}
           </Button>
           <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleCreateNew}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add User
+                {t("dashboard.addUser")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {selectedUser ? "Edit User" : "Create New User"}
+                  {selectedUser ? t("dashboard.editUser") : t("dashboard.createNewUser")}
                 </DialogTitle>
                 <DialogDescription>
                   {selectedUser
-                    ? "Update user information below."
-                    : "Fill in the details to create a new user. Select an office and role to assign permissions."}
+                    ? t("dashboard.updateUserInfo")
+                    : t("dashboard.createUserDescription")}
                 </DialogDescription>
               </DialogHeader>
               <UserForm
@@ -323,14 +325,14 @@ export default function UserManagementPage() {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users by name, phone, role, or office..."
+            placeholder={t("dashboard.searchUsers")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show:</span>
+          <span className="text-sm text-muted-foreground">{t("dashboard.show")}:</span>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => setPageSize(parseInt(value))}
@@ -352,21 +354,21 @@ export default function UserManagementPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading users...</p>
+          <p className="text-muted-foreground">{t("dashboard.loadingUsers")}</p>
         </div>
       ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/30 rounded-lg border border-dashed">
           <UsersIcon className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">No users found</h3>
+          <h3 className="text-xl font-semibold mb-2">{t("dashboard.noUsersFound")}</h3>
           <p className="text-muted-foreground mb-6 max-w-md">
             {search
-              ? "No users match your search criteria. Try a different search term."
-              : "Get started by creating your first user. Assign roles and offices to manage access and permissions."}
+              ? t("dashboard.noUsersMatchSearch")
+              : t("dashboard.getStartedCreateUser")}
           </p>
           {!search && (
             <Button onClick={handleCreateNew} size="lg">
               <Plus className="w-5 h-5 mr-2" />
-              Add Your First User
+              {t("dashboard.addYourFirstUser")}
             </Button>
           )}
         </div>
@@ -376,12 +378,12 @@ export default function UserManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Office</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("dashboard.user")}</TableHead>
+                  <TableHead>{t("dashboard.contact")}</TableHead>
+                  <TableHead>{t("dashboard.role")}</TableHead>
+                  <TableHead>{t("dashboard.office")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -427,7 +429,7 @@ export default function UserManagementPage() {
                             <span>{user.phoneNumber}</span>
                             {user.phoneNumberVerified && (
                               <Badge variant="outline" className="text-xs">
-                                Verified
+                                {t("dashboard.verified")}
                               </Badge>
                             )}
                           </div>
@@ -444,7 +446,7 @@ export default function UserManagementPage() {
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            No role
+                            {t("dashboard.noRole")}
                           </span>
                         )}
                       </TableCell>
@@ -459,7 +461,7 @@ export default function UserManagementPage() {
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            No office
+                            {t("dashboard.noOffice")}
                           </span>
                         )}
                       </TableCell>
@@ -476,11 +478,11 @@ export default function UserManagementPage() {
                             ) : (
                               <XCircle className="h-3 w-3" />
                             )}
-                            {user.isActive === true ? "Active" : "Inactive"}
+                            {user.isActive === true ? t("dashboard.active") : t("dashboard.inactive")}
                           </Badge>
                           {user.emailVerified && (
                             <Badge variant="outline" className="w-fit text-xs">
-                              Email Verified
+                              {t("dashboard.emailVerified")}
                             </Badge>
                           )}
                         </div>
@@ -499,7 +501,7 @@ export default function UserManagementPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(user)}>
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                              {t("common.edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleToggleStatusClick(user)}
@@ -507,12 +509,12 @@ export default function UserManagementPage() {
                               {user.isActive ? (
                                 <>
                                   <XCircle className="mr-2 h-4 w-4" />
-                                  Deactivate
+                                  {t("dashboard.deactivate")}
                                 </>
                               ) : (
                                 <>
                                   <CheckCircle className="mr-2 h-4 w-4" />
-                                  Activate
+                                  {t("dashboard.activate")}
                                 </>
                               )}
                             </DropdownMenuItem>
@@ -522,7 +524,7 @@ export default function UserManagementPage() {
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
+                                {t("common.delete")}
                               </DropdownMenuItem>
                             )}
                             {isAdmin(user) && (
@@ -531,7 +533,7 @@ export default function UserManagementPage() {
                                 className="text-muted-foreground cursor-not-allowed"
                               >
                                 <Shield className="mr-2 h-4 w-4" />
-                                Cannot delete admin
+                                {t("dashboard.cannotDeleteAdmin")}
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -548,8 +550,8 @@ export default function UserManagementPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {(page - 1) * pageSize + 1} to{" "}
-                {Math.min(page * pageSize, total)} of {total} users
+                {t("dashboard.showing")} {(page - 1) * pageSize + 1} {t("dashboard.to")}{" "}
+                {Math.min(page * pageSize, total)} {t("dashboard.of")} {total} {t("dashboard.users")}
               </div>
               <Pagination>
                 <PaginationContent>
@@ -604,23 +606,21 @@ export default function UserManagementPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the user "
-              {selectedUser?.name || selectedUser?.username}". This action
-              cannot be undone.
+              {t("dashboard.deleteUserConfirm").replace("{name}", selectedUser?.name || selectedUser?.username || "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSubmitting ? "Deleting..." : "Delete"}
+              {isSubmitting ? t("dashboard.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -630,15 +630,13 @@ export default function UserManagementPage() {
       <AlertDialog open={isStatusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Change User Status?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.changeUserStatus")}</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedUser && (
                 <>
-                  This will {selectedUser.isActive ? "deactivate" : "activate"}{" "}
-                  the user "{selectedUser.name || selectedUser.username}".
                   {selectedUser.isActive
-                    ? " The user will not be able to access the system."
-                    : " The user will be able to access the system."}
+                    ? t("dashboard.deactivateUserConfirm").replace("{name}", selectedUser.name || selectedUser.username || "")
+                    : t("dashboard.activateUserConfirm").replace("{name}", selectedUser.name || selectedUser.username || "")}
                 </>
               )}
             </AlertDialogDescription>
@@ -648,7 +646,7 @@ export default function UserManagementPage() {
               disabled={isSubmitting}
               onClick={() => setSelectedUser(null)}
             >
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleToggleStatusConfirm}
@@ -656,11 +654,11 @@ export default function UserManagementPage() {
             >
               {isSubmitting
                 ? selectedUser?.isActive
-                  ? "Deactivating..."
-                  : "Activating..."
+                  ? t("dashboard.deactivating")
+                  : t("dashboard.activating")
                 : selectedUser?.isActive
-                ? "Deactivate"
-                : "Activate"}
+                ? t("dashboard.deactivate")
+                : t("dashboard.activate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

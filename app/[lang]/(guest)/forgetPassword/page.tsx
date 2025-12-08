@@ -13,11 +13,13 @@ import { Loader2, Phone, KeyRound, Lock } from "lucide-react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useForgotPasswordStore } from "./_store/forgot-password-store";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
+  const { t } = useTranslation();
 
   const {
     step,
@@ -111,9 +113,9 @@ export default function ForgotPasswordPage() {
               className="space-y-4"
             >
               <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold mb-2">Reset Password</h1>
+                <h1 className="text-2xl font-bold mb-2">{t("guest.resetPassword")}</h1>
                 <p className="text-muted-foreground text-sm">
-                  Enter your phone number to receive an OTP code
+                  {t("guest.resetPasswordDescription")}
                 </p>
               </div>
 
@@ -121,12 +123,12 @@ export default function ForgotPasswordPage() {
                 <>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Phone Number
+                      {t("guest.phoneNumber")}
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="0910737199 or +251910737199"
+                        placeholder={t("guest.phonePlaceholder")}
                         className="pl-10 w-full"
                         type="tel"
                         {...form.register("phoneNumber")}
@@ -147,7 +149,7 @@ export default function ForgotPasswordPage() {
                     {(form.formState.isSubmitting || isSendingOTP) && (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     )}
-                    {isSendingOTP ? "Sending OTP..." : "Send OTP"}
+                    {isSendingOTP ? t("guest.sendingOTP") : t("guest.sendOTP")}
                   </Button>
                 </>
               ) : step === "otp" ? (
@@ -156,7 +158,7 @@ export default function ForgotPasswordPage() {
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-blue-800 dark:text-blue-300">
-                        We sent a verification code to{" "}
+                        {t("guest.otpSentTo")}{" "}
                         <span className="font-semibold">{phoneNumber}</span>
                       </p>
                       {countdown > 0 ? (
@@ -174,7 +176,7 @@ export default function ForgotPasswordPage() {
                           {isSendingOTP ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            "Resend"
+                            t("guest.resend")
                           )}
                         </Button>
                       )}
@@ -184,8 +186,8 @@ export default function ForgotPasswordPage() {
                   <FormOTPInput
                     control={form.control}
                     name="otpCode"
-                    label="OTP Code"
-                    description="Enter the 6-digit code sent to your phone"
+                    label={t("guest.otpCode")}
+                    description={t("guest.otpDescription")}
                     length={6}
                   />
 
@@ -196,7 +198,7 @@ export default function ForgotPasswordPage() {
                       onClick={() => setStep("phone")}
                       className="flex-1"
                     >
-                      Back
+                      {t("guest.back")}
                     </Button>
                     <Button
                       type="submit"
@@ -206,7 +208,7 @@ export default function ForgotPasswordPage() {
                       {(form.formState.isSubmitting || isVerifyingOTP) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isVerifyingOTP ? "Verifying..." : "Verify & Continue"}
+                      {isVerifyingOTP ? t("guest.verifying") : t("guest.verifyContinue")}
                     </Button>
                   </div>
                 </>
@@ -214,19 +216,18 @@ export default function ForgotPasswordPage() {
                 <>
                   <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg mb-4">
                     <p className="text-sm text-green-800 dark:text-green-300 text-center">
-                      ✓ OTP verified successfully. Please enter your new
-                      password.
+                      {t("guest.otpVerifiedReset")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      New Password
+                      {t("guest.newPassword")}
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Enter your new password"
+                        placeholder={t("guest.newPasswordPlaceholder")}
                         className="pl-10 w-full"
                         type="password"
                         {...form.register("newPassword")}
@@ -238,18 +239,18 @@ export default function ForgotPasswordPage() {
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Must be at least 6 characters
+                      {t("guest.passwordMinLength")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Confirm New Password
+                      {t("guest.confirmNewPassword")}
                     </label>
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Confirm your new password"
+                        placeholder={t("guest.confirmNewPasswordPlaceholder")}
                         className="pl-10 w-full"
                         type="password"
                         {...form.register("confirmPassword")}
@@ -269,7 +270,7 @@ export default function ForgotPasswordPage() {
                       onClick={() => setStep("otp")}
                       className="flex-1"
                     >
-                      Back
+                      {t("guest.back")}
                     </Button>
                     <Button
                       type="submit"
@@ -279,19 +280,19 @@ export default function ForgotPasswordPage() {
                       {(form.formState.isSubmitting || isResetting) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isResetting ? "Resetting..." : "Reset Password"}
+                      {isResetting ? t("guest.resetting") : t("guest.resetPasswordButton")}
                     </Button>
                   </div>
                 </>
               )}
 
               <div className="text-center text-sm text-muted-foreground pt-2">
-                Remember your password?{" "}
+                {t("guest.rememberPassword")}{" "}
                 <Link
                   href={`/${lang}/login`}
                   className="underline-offset-2 hover:underline text-foreground font-medium"
                 >
-                  Sign in
+                  {t("guest.signIn")}
                 </Link>
               </div>
             </form>
@@ -309,9 +310,9 @@ export default function ForgotPasswordPage() {
             />
           </Link>
           <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Reset Your Password</h2>
+            <h2 className="text-xl font-semibold mb-2">{t("guest.resetYourPassword")}</h2>
             <p className="text-muted-foreground">
-              Enter your phone number to receive a verification code
+              {t("guest.resetPasswordSidebar")}
             </p>
           </div>
         </div>

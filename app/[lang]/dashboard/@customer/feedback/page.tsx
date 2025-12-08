@@ -13,8 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function FeedbackPage() {
+  const { t } = useTranslation();
   const {
     approvedRequests,
     isLoading,
@@ -85,21 +87,21 @@ export default function FeedbackPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Star className="w-8 h-8 text-yellow-500" />
-            Feedback
+            {t("navigation.feedback")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Share your experience and rate your approved requests
+            {t("dashboard.shareExperienceAndRate")}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter feedback" />
+              <SelectValue placeholder={t("dashboard.filterFeedback")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Requests</SelectItem>
-              <SelectItem value="with-feedback">With Feedback</SelectItem>
-              <SelectItem value="without-feedback">Without Feedback</SelectItem>
+              <SelectItem value="all">{t("dashboard.allRequests")}</SelectItem>
+              <SelectItem value="with-feedback">{t("dashboard.withFeedback")}</SelectItem>
+              <SelectItem value="without-feedback">{t("dashboard.withoutFeedback")}</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -111,7 +113,7 @@ export default function FeedbackPage() {
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
-            Refresh
+            {t("common.refresh")}
           </Button>
         </div>
       </div>
@@ -123,7 +125,7 @@ export default function FeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Requests
+                  {t("dashboard.totalRequests")}
                 </p>
                 <p className="text-2xl font-bold mt-1">{stats.total}</p>
               </div>
@@ -134,7 +136,7 @@ export default function FeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  With Feedback
+                  {t("dashboard.withFeedback")}
                 </p>
                 <p className="text-2xl font-bold mt-1 text-green-600">
                   {stats.withFeedback}
@@ -147,7 +149,7 @@ export default function FeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Pending Feedback
+                  {t("dashboard.pendingFeedback")}
                 </p>
                 <p className="text-2xl font-bold mt-1 text-orange-600">
                   {stats.withoutFeedback}
@@ -160,7 +162,7 @@ export default function FeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Average Rating
+                  {t("dashboard.averageRating")}
                 </p>
                 <p className="text-2xl font-bold mt-1 text-yellow-600">
                   {stats.averageRating > 0
@@ -178,7 +180,7 @@ export default function FeedbackPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading approved requests...</p>
+          <p className="text-muted-foreground">{t("dashboard.loadingApprovedRequests")}</p>
         </div>
       )}
 
@@ -187,11 +189,10 @@ export default function FeedbackPage() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Star className="w-20 h-20 text-muted-foreground mb-6" />
           <h3 className="text-xl font-semibold mb-2">
-            No approved requests yet
+            {t("dashboard.noApprovedRequestsYet")}
           </h3>
           <p className="text-muted-foreground">
-            You need to have approved requests before you can provide feedback.
-            Once your requests are approved, you'll see them here.
+            {t("dashboard.needApprovedRequestsForFeedback")}
           </p>
         </div>
       )}
@@ -203,12 +204,12 @@ export default function FeedbackPage() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <MessageSquare className="w-20 h-20 text-muted-foreground mb-6" />
             <h3 className="text-xl font-semibold mb-2">
-              No requests found
+              {t("dashboard.noRequestsFound")}
             </h3>
             <p className="text-muted-foreground">
               {filter === "with-feedback"
-                ? "You haven't provided feedback for any requests yet."
-                : "All your requests already have feedback."}
+                ? t("dashboard.noFeedbackProvidedYet")
+                : t("dashboard.allRequestsHaveFeedback")}
             </p>
           </div>
         )}

@@ -100,8 +100,8 @@ export default function Page() {
                     <h3 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1">
                       {authError.includes("Account Blocked") ||
                       authError.includes("blocked")
-                        ? "Account Blocked"
-                        : "Authentication Error"}
+                        ? t("guest.accountBlocked")
+                        : t("guest.authenticationError")}
                     </h3>
                     <p className="text-sm text-red-700 dark:text-red-300">
                       {authError}
@@ -114,12 +114,12 @@ export default function Page() {
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
-                  Phone Number
+                  {t("guest.phoneNumber")}
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="0912345678 or +251912345678"
+                    placeholder={t("guest.phonePlaceholder")}
                     className="pl-10 w-full"
                     type="tel"
                     {...register("phoneNumber")}
@@ -176,17 +176,17 @@ export default function Page() {
                   href={`/${lang}/forgetPassword`}
                   className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
                 >
-                  Forgot password?
+                  {t("guest.forgotPassword")}
                 </Link>
               </div>
 
               <div className="text-center text-sm text-muted-foreground pt-2">
-                Don't have an account?{" "}
+                {t("guest.dontHaveAccount")}{" "}
                 <Link
                   href={`/${lang}/signup`}
                   className="underline-offset-2 hover:underline text-foreground font-medium"
                 >
-                  Create an account
+                  {t("guest.createAccount")}
                 </Link>
               </div>
             </form>
@@ -204,10 +204,10 @@ export default function Page() {
           </Link>
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">
-              Welcome to East Shoa E-Service
+              {t("guest.welcomeToService")}
             </h2>
             <p className="text-muted-foreground">
-              Sign in to access your account and manage your services with ease
+              {t("guest.signInDescription")}
             </p>
           </div>
         </div>

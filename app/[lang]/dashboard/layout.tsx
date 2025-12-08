@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/db";
 import React from "react";
-import Logout from "./logout";
+import { AccessDenied, AccountStatusMessage } from "./_components/access-denied";
 
 export default async function Layout({
   children,
@@ -19,17 +19,7 @@ export default async function Layout({
   const session = await auth();
 
   if (!session?.user) {
-    return (
-      <div className="grid place-content-center gap-5">
-        <div className="p-10 bg-destructive/10 border border-destructive/50 rounded-xl text-destructive">
-          <p className="text-2xl first-letter:font-bold">Access Denied!</p>
-          <p className="text-sm">
-            You need to be logged in to access this area.
-          </p>
-        </div>
-        <Logout />
-      </div>
-    );
+    return <AccessDenied />;
   }
 
   const data = await prisma.user.findFirst({
@@ -45,21 +35,7 @@ export default async function Layout({
   });
 
   if (!data || !data.isActive) {
-    return (
-      <div className="grid place-content-center gap-5">
-        <div className="p-10 bg-destructive/10 border border-destructive/50 rounded-xl text-destructive">
-          <p className="text-2xl first-letter:font-bold">
-            {!data?.isActive ? "Account Blocked!" : "Account Inactive!"}
-          </p>
-          <p className="text-sm">
-            {!data?.isActive
-              ? "Your account has been blocked. Please contact an administrator to unblock your account."
-              : "Your account is not active. Please contact an administrator."}
-          </p>
-        </div>
-        <Logout />
-      </div>
-    );
+    return <AccountStatusMessage isBlocked={!data?.isActive} />;
   }
 
   // Get role name from relation or session

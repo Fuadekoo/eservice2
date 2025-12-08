@@ -13,11 +13,13 @@ import { Loader2, User, Phone, KeyRound, Lock } from "lucide-react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSignUpStore } from "./_store/signup-store";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function SignUpPage() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
+  const { t } = useTranslation();
 
   const {
     step,
@@ -118,9 +120,9 @@ export default function SignUpPage() {
               className="space-y-4"
             >
               <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold mb-2">Create an account</h1>
+                <h1 className="text-2xl font-bold mb-2">{t("guest.createAccountTitle")}</h1>
                 <p className="text-muted-foreground text-sm">
-                  Sign up for your East Shoa E-Service account
+                  {t("guest.signUpDescription")}
                 </p>
               </div>
 
@@ -128,12 +130,12 @@ export default function SignUpPage() {
                 <>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Full Name
+                      {t("guest.fullName")}
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="John Doe"
+                        placeholder={t("guest.fullNamePlaceholder")}
                         className="pl-10 w-full"
                         {...form.register("name")}
                       />
@@ -147,12 +149,12 @@ export default function SignUpPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Phone Number
+                      {t("guest.phoneNumber")}
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="0910737199 or +251910737199"
+                        placeholder={t("guest.phonePlaceholder")}
                         className="pl-10 w-full"
                         type="tel"
                         {...form.register("phoneNumber")}
@@ -173,7 +175,7 @@ export default function SignUpPage() {
                     {(form.formState.isSubmitting || isSendingOTP) && (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     )}
-                    {isSendingOTP ? "Sending OTP..." : "Get OTP"}
+                    {isSendingOTP ? t("guest.sendingOTP") : t("guest.getOTP")}
                   </Button>
                 </>
               ) : step === "otp" ? (
@@ -182,7 +184,7 @@ export default function SignUpPage() {
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-blue-800 dark:text-blue-300">
-                        We sent a verification code to{" "}
+                        {t("guest.otpSentTo")}{" "}
                         <span className="font-semibold">{phoneNumber}</span>
                       </p>
                       {countdown > 0 ? (
@@ -200,7 +202,7 @@ export default function SignUpPage() {
                           {isSendingOTP ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            "Resend"
+                            t("guest.resend")
                           )}
                         </Button>
                       )}
@@ -210,8 +212,8 @@ export default function SignUpPage() {
                   <FormOTPInput
                     control={form.control}
                     name="otpCode"
-                    label="OTP Code"
-                    description="Enter the 6-digit code sent to your phone"
+                    label={t("guest.otpCode")}
+                    description={t("guest.otpDescription")}
                     length={6}
                   />
 
@@ -222,7 +224,7 @@ export default function SignUpPage() {
                       onClick={() => setStep("details")}
                       className="flex-1"
                     >
-                      Back
+                      {t("guest.back")}
                     </Button>
                     <Button
                       type="submit"
@@ -232,7 +234,7 @@ export default function SignUpPage() {
                       {(form.formState.isSubmitting || isVerifyingOTP) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isVerifyingOTP ? "Verifying..." : "Verify & Continue"}
+                      {isVerifyingOTP ? t("guest.verifying") : t("guest.verifyContinue")}
                     </Button>
                   </div>
                 </>
@@ -240,18 +242,18 @@ export default function SignUpPage() {
                 <>
                   <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg mb-4">
                     <p className="text-sm text-green-800 dark:text-green-300 text-center">
-                      ✓ OTP verified successfully. Please set your password.
+                      {t("guest.otpVerified")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Password
+                      {t("auth.password")}
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Enter your password"
+                        placeholder={t("guest.passwordPlaceholder")}
                         className="pl-10 w-full"
                         type="password"
                         {...form.register("password")}
@@ -263,18 +265,18 @@ export default function SignUpPage() {
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Must be at least 6 characters
+                      {t("guest.passwordMinLength")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Confirm Password
+                      {t("user.confirmPassword")}
                     </label>
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Confirm your password"
+                        placeholder={t("guest.confirmPasswordPlaceholder")}
                         className="pl-10 w-full"
                         type="password"
                         {...form.register("confirmPassword")}
@@ -294,7 +296,7 @@ export default function SignUpPage() {
                       onClick={() => setStep("otp")}
                       className="flex-1"
                     >
-                      Back
+                      {t("guest.back")}
                     </Button>
                     <Button
                       type="submit"
@@ -304,19 +306,19 @@ export default function SignUpPage() {
                       {(form.formState.isSubmitting || isRegistering) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isRegistering ? "Creating Account..." : "Register"}
+                      {isRegistering ? t("guest.creatingAccount") : t("guest.register")}
                     </Button>
                   </div>
                 </>
               )}
 
               <div className="text-center text-sm text-muted-foreground pt-2">
-                Already have an account?{" "}
+                {t("guest.alreadyHaveAccount")}{" "}
                 <Link
                   href={`/${lang}/login`}
                   className="underline-offset-2 hover:underline text-foreground font-medium"
                 >
-                  Sign in
+                  {t("guest.signIn")}
                 </Link>
               </div>
             </form>
@@ -335,10 +337,10 @@ export default function SignUpPage() {
           </Link>
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">
-              Welcome to East Shoa E-Service
+              {t("guest.welcomeToService")}
             </h2>
             <p className="text-muted-foreground">
-              Join us and manage your services with ease
+              {t("guest.joinUs")}
             </p>
           </div>
         </div>

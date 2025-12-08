@@ -24,8 +24,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { GalleryFormValues } from "./_schema";
 import { toast } from "sonner";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function GalleryPage() {
+  const { t } = useTranslation();
   const {
     galleries,
     isLoading,
@@ -87,14 +89,14 @@ export default function GalleryPage() {
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Gallery Management</h1>
+            <h1 className="text-3xl font-bold">{t("dashboard.galleryManagement")}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your gallery collections and images
+              {t("dashboard.manageGalleryCollections")}
             </p>
           </div>
           <Button onClick={handleCreate}>
             <Plus className="w-4 h-4 mr-2" />
-            Create Gallery
+            {t("dashboard.createGallery")}
           </Button>
         </div>
 
@@ -104,10 +106,10 @@ export default function GalleryPage() {
         </div>
       ) : galleries.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">No galleries found</p>
+          <p className="text-muted-foreground mb-4">{t("dashboard.noGalleriesFound")}</p>
           <Button onClick={handleCreate}>
             <Plus className="w-4 h-4 mr-2" />
-            Create Your First Gallery
+            {t("dashboard.createYourFirstGallery")}
           </Button>
         </div>
       ) : (
@@ -128,7 +130,7 @@ export default function GalleryPage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedGallery ? "Edit Gallery" : "Create Gallery"}
+              {selectedGallery ? t("dashboard.editGallery") : t("dashboard.createGallery")}
             </DialogTitle>
           </DialogHeader>
           <GalleryForm
@@ -147,23 +149,21 @@ export default function GalleryPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the gallery &quot;
-              {selectedGallery?.name}&quot; and all its images. This action
-              cannot be undone.
+              {t("dashboard.deleteGalleryConfirm").replace("{name}", selectedGallery?.name || "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSubmitting ? "Deleting..." : "Delete"}
+              {isSubmitting ? t("dashboard.deleting") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

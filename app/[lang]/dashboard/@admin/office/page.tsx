@@ -37,8 +37,10 @@ import {
 import { Plus, Building2, Loader2, Trash2 } from "lucide-react";
 import { useOfficeStore } from "./_store/office-store";
 import { useRouter, useParams } from "next/navigation";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function OfficePage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
@@ -176,7 +178,7 @@ export default function OfficePage() {
     return (
       <div className="flex items-center justify-between gap-3 py-3">
         <div className="text-sm text-muted-foreground">
-          Showing {start}-{end} of {total} offices
+          {t("dashboard.showing")} {start}-{end} {t("dashboard.of")} {total} {t("dashboard.offices")}
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -185,7 +187,7 @@ export default function OfficePage() {
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
           >
-            Previous
+            {t("common.previous")}
           </Button>
           <div className="min-w-8 text-center text-sm font-medium">{page}</div>
           <Button
@@ -194,7 +196,7 @@ export default function OfficePage() {
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
           >
-            Next
+            {t("common.next")}
           </Button>
         </div>
       </div>
@@ -208,16 +210,16 @@ export default function OfficePage() {
         {loading && data.length === 0 && (
           <div className="flex items-center justify-center p-8 text-muted-foreground">
             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            Loading offices...
+            {t("dashboard.loadingOffices")}
           </div>
         )}
 
         {!loading && data.length === 0 && (
           <div className="flex flex-col items-center justify-center p-8 text-muted-foreground border rounded-lg">
             <Building2 className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium">No offices yet</p>
+            <p className="text-lg font-medium">{t("dashboard.noOfficesYet")}</p>
             <p className="text-sm">
-              Click "New Office" to create your first office
+              {t("dashboard.clickNewOfficeToCreate")}
             </p>
           </div>
         )}
@@ -225,12 +227,12 @@ export default function OfficePage() {
         {/* Header: description + create button */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
-            Create and manage your office locations and information.
+            {t("dashboard.createAndManageOffices")}
           </div>
           <div>
             <Button onClick={handleCreateNew} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              New Office
+              {t("dashboard.newOffice")}
             </Button>
           </div>
         </div>
@@ -241,14 +243,14 @@ export default function OfficePage() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2 flex-1">
                 <Input
-                  placeholder="Search offices by name, address, room number, phone, subdomain, or slogan..."
+                  placeholder={t("dashboard.searchOffices")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full sm:w-[260px]"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Per page</span>
+                <span className="text-sm text-muted-foreground">{t("dashboard.perPage")}</span>
                 <Select
                   value={String(pageSize)}
                   onValueChange={(v) => {
@@ -295,12 +297,12 @@ export default function OfficePage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedOffice ? "Edit Office" : "Create New Office"}
+              {selectedOffice ? t("dashboard.editOffice") : t("dashboard.createNewOffice")}
             </DialogTitle>
             <DialogDescription>
               {selectedOffice
-                ? "Update office information below."
-                : "Fill in the details to create a new office."}
+                ? t("dashboard.updateOfficeInfo")
+                : t("dashboard.fillDetailsToCreateOffice")}
             </DialogDescription>
           </DialogHeader>
           <OfficeForm
@@ -325,27 +327,22 @@ export default function OfficePage() {
               </div>
               <div>
                 <AlertDialogTitle className="text-xl">
-                  Delete Office?
+                  {t("dashboard.deleteOffice")}
                 </AlertDialogTitle>
               </div>
             </div>
             <AlertDialogDescription className="pt-3 text-base">
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
-                &quot;{selectedOffice?.name}&quot;
-              </span>
-              ?
+              {t("dashboard.deleteOfficeConfirm").replace("{name}", selectedOffice?.name || "")}
               <br />
               <br />
               <span className="text-muted-foreground">
-                This action cannot be undone. All associated data (services,
-                staff, requests, etc.) will be affected.
+                {t("dashboard.deleteOfficeWarning")}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel disabled={isSubmitting}>
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -353,7 +350,7 @@ export default function OfficePage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Deleting..." : "Yes, Delete"}
+              {isSubmitting ? t("dashboard.deleting") : t("dashboard.yesDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -363,15 +360,13 @@ export default function OfficePage() {
       <AlertDialog open={isStatusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <AlertDialogContent className="sm:max-w-[425px]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dashboard.areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
               {selectedOffice && (
                 <>
-                  This will {selectedOffice.status ? "deactivate" : "activate"}{" "}
-                  the office &quot;{selectedOffice.name}&quot;.
                   {selectedOffice.status
-                    ? " The office will be hidden from active listings."
-                    : " The office will be available for use."}
+                    ? t("dashboard.deactivateOfficeConfirm").replace("{name}", selectedOffice.name)
+                    : t("dashboard.activateOfficeConfirm").replace("{name}", selectedOffice.name)}
                 </>
               )}
             </AlertDialogDescription>
@@ -381,7 +376,7 @@ export default function OfficePage() {
               disabled={isSubmitting}
               onClick={() => setSelectedOffice(null)}
             >
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleToggleStatusConfirm}
@@ -389,11 +384,11 @@ export default function OfficePage() {
             >
               {isSubmitting
                 ? selectedOffice?.status
-                  ? "Deactivating..."
-                  : "Activating..."
+                  ? t("dashboard.deactivating")
+                  : t("dashboard.activating")
                 : selectedOffice?.status
-                ? "Deactivate"
-                : "Activate"}
+                ? t("dashboard.deactivate")
+                : t("dashboard.activate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

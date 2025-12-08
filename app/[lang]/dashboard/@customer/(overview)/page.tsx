@@ -23,8 +23,10 @@ import { calculateOverallStatus } from "@/lib/request-status";
 import { RequestStatus } from "../request/_types";
 import { Appointment } from "../appointment/_types";
 import Link from "next/link";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function CustomerOverviewPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ lang: string }>();
   const lang = params.lang || "en";
@@ -111,13 +113,13 @@ export default function CustomerOverviewPage() {
       case RequestStatus.APPROVED:
         return (
           <Badge variant="default" className="bg-green-600">
-            Approved
+            {t("dashboard.approved")}
           </Badge>
         );
       case RequestStatus.REJECTED:
-        return <Badge variant="destructive">Rejected</Badge>;
+        return <Badge variant="destructive">{t("dashboard.rejected")}</Badge>;
       default:
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">{t("dashboard.pending")}</Badge>;
     }
   };
 
@@ -126,19 +128,19 @@ export default function CustomerOverviewPage() {
       case "approved":
         return (
           <Badge variant="default" className="bg-blue-600">
-            Scheduled
+            {t("dashboard.scheduled")}
           </Badge>
         );
       case "completed":
         return (
           <Badge variant="default" className="bg-green-600">
-            Completed
+            {t("dashboard.completed")}
           </Badge>
         );
       case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
+        return <Badge variant="destructive">{t("dashboard.cancelled")}</Badge>;
       default:
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">{t("dashboard.pending")}</Badge>;
     }
   };
 
@@ -147,7 +149,7 @@ export default function CustomerOverviewPage() {
       <div className="container mx-auto py-6">
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <p className="text-muted-foreground">{t("dashboard.loadingDashboard")}</p>
         </div>
       </div>
     );
@@ -158,10 +160,12 @@ export default function CustomerOverviewPage() {
       {/* Welcome Header */}
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user?.username || "User"}!
+          {user?.username 
+            ? t("dashboard.welcomeBackUser").replace("{username}", user.username)
+            : t("dashboard.welcomeBack")}
         </h1>
         <p className="text-muted-foreground">
-          Here's your service dashboard overview
+          {t("dashboard.hereIsYourDashboard")}
         </p>
       </div>
 
@@ -173,7 +177,7 @@ export default function CustomerOverviewPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                  Total Applications
+                  {t("dashboard.totalApplications")}
                 </p>
                 <p className="text-3xl font-bold">{stats.total}</p>
               </div>
@@ -190,7 +194,7 @@ export default function CustomerOverviewPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                  Pending
+                  {t("dashboard.pending")}
                 </p>
                 <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
                   {stats.pending}
@@ -209,7 +213,7 @@ export default function CustomerOverviewPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                  Approved
+                  {t("dashboard.approved")}
                 </p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {stats.approved}
@@ -228,7 +232,7 @@ export default function CustomerOverviewPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                  Appointments
+                  {t("dashboard.appointments")}
                 </p>
                 <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                   {stats.appointments}
@@ -248,7 +252,7 @@ export default function CustomerOverviewPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Recent Applications</h2>
+              <h2 className="text-xl font-semibold">{t("dashboard.recentApplications")}</h2>
             </div>
             <div className="space-y-4">
               {recentApplications.length > 0 ? (
@@ -276,14 +280,14 @@ export default function CustomerOverviewPage() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No applications yet</p>
+                  <p className="text-sm">{t("dashboard.noApplicationsYet")}</p>
                 </div>
               )}
             </div>
             {requests.length > 3 && (
               <Button variant="default" className="w-full mt-4" asChild>
                 <Link href={`/${lang}/dashboard/request`}>
-                  View All Applications
+                  {t("dashboard.viewAllApplications")}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
@@ -295,7 +299,7 @@ export default function CustomerOverviewPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Your Appointments</h2>
+              <h2 className="text-xl font-semibold">{t("dashboard.yourAppointments")}</h2>
             </div>
             <div className="space-y-4">
               {upcomingAppointments.length > 0 ? (
@@ -321,14 +325,14 @@ export default function CustomerOverviewPage() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No upcoming appointments</p>
+                  <p className="text-sm">{t("dashboard.noUpcomingAppointments")}</p>
                 </div>
               )}
             </div>
             {appointments.length > 3 && (
               <Button variant="outline" className="w-full mt-4" asChild>
                 <Link href={`/${lang}/dashboard/appointment`}>
-                  View All Appointments
+                  {t("dashboard.viewAllAppointments")}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
@@ -340,7 +344,7 @@ export default function CustomerOverviewPage() {
       {/* Quick Actions */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <h2 className="text-xl font-semibold mb-4">{t("dashboard.quickActions")}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Button
               variant="default"
@@ -349,7 +353,7 @@ export default function CustomerOverviewPage() {
             >
               <Link href={`/${lang}/dashboard/applyservice`}>
                 <Plus className="w-4 h-4 mr-2" />
-                Apply New Service
+                {t("dashboard.applyNewService")}
               </Link>
             </Button>
             <Button
@@ -359,7 +363,7 @@ export default function CustomerOverviewPage() {
             >
               <Link href={`/${lang}/dashboard/appointment`}>
                 <Calendar className="w-4 h-4 mr-2" />
-                Book Appointment
+                {t("dashboard.bookAppointment")}
               </Link>
             </Button>
             <Button
@@ -369,7 +373,7 @@ export default function CustomerOverviewPage() {
             >
               <Link href={`/${lang}/dashboard/appointment`}>
                 <Calendar className="w-4 h-4 mr-2" />
-                My Appointments
+                {t("dashboard.myAppointments")}
               </Link>
             </Button>
             <Button
@@ -379,7 +383,7 @@ export default function CustomerOverviewPage() {
             >
               <Link href={`/${lang}/dashboard/request`}>
                 <Download className="w-4 h-4 mr-2" />
-                Download Documents
+                {t("dashboard.downloadDocuments")}
               </Link>
             </Button>
           </div>
