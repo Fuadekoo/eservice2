@@ -24,7 +24,38 @@ async function main() {
   }
 
   // Clear existing data (skip if tables don't exist)
+  // Delete in order: child tables first, then parent tables
   console.log("🗑️  Cleaning existing data...");
+
+  // Delete reports first (they reference users via foreign keys)
+  try {
+    await prisma.report.deleteMany();
+    console.log("✅ Reports table cleaned");
+  } catch (error: any) {
+    if (error.code === "P2021") {
+      console.log(
+        "⚠️  Reports table doesn't exist yet (this is ok if migrations haven't run)"
+      );
+    } else {
+      throw error;
+    }
+  }
+
+  // Delete appointments that might reference users
+  try {
+    await prisma.appointment.deleteMany();
+    console.log("✅ Appointments table cleaned");
+  } catch (error: any) {
+    if (error.code === "P2021") {
+      console.log(
+        "⚠️  Appointments table doesn't exist yet (this is ok if migrations haven't run)"
+      );
+    } else {
+      throw error;
+    }
+  }
+
+  // Now delete users (other tables with cascade will be deleted automatically)
   try {
     await prisma.user.deleteMany();
     console.log("✅ Users table cleaned");
