@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 // PUT - Update a single translation
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { langCode: string; key: string } }
+  { params }: { params: Promise<{ langCode: string; key: string }> | { langCode: string; key: string } }
 ) {
   try {
     const session = await auth();
@@ -16,7 +16,9 @@ export async function PUT(
       );
     }
 
-    const { langCode, key } = params;
+    // Handle params as Promise or object (Next.js 15 compatibility)
+    const resolvedParams = await Promise.resolve(params);
+    const { langCode, key } = resolvedParams;
     const body = await request.json();
     const { value } = body;
 
