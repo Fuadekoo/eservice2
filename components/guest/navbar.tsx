@@ -3,53 +3,49 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, Globe, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
+import { useLanguageStore } from "@/store/language-store";
+import type { Language } from "@/lib/utils/cookies";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const languages = [
+  { code: "en" as Language, name: "English", nativeName: "EN" },
+  { code: "am" as Language, name: "Amharic", nativeName: "አማ" },
+  { code: "or" as Language, name: "Oromo", nativeName: "OM" },
+];
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-
-  const languages = [
-    { code: "en", name: "English", nativeName: "EN" },
-    { code: "am", name: "Amharic", nativeName: "አማ" },
-    { code: "or", name: "Afan Oromo", nativeName: "OM" },
-  ];
-
-  const [currentLocale, setCurrentLocale] = useState("en");
+  const pathname = usePathname();
+  const { language, setLanguage } = useLanguageStore();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Initialize locale from localStorage
-    try {
-      const stored = localStorage.getItem("eservice-language");
-      if (stored && languages.some((l) => l.code === stored)) {
-        setCurrentLocale(stored);
-      }
-    } catch {
-      // Ignore
-    }
+    setIsMounted(true);
   }, []);
 
-  const handleLocaleChange = (langCode: string) => {
-    setCurrentLocale(langCode);
-    try {
-      localStorage.setItem("eservice-language", langCode);
-      if (typeof window !== "undefined") {
-        (window as any).__ESERVICE_LANGUAGE__ = langCode;
-        window.dispatchEvent(
-          new CustomEvent("languageChanged", { detail: langCode })
-        );
-      }
-    } catch {
-      // Ignore
-    }
-    setLangMenuOpen(false);
-    router.refresh();
+  const handleLanguageChange = (langCode: Language) => {
+    setLanguage(langCode);
+    // Update URL to reflect language change
+    const currentPath = pathname?.replace(/^\/(en|am|or)/, "") || "";
+    const newPath = currentPath === "" || currentPath === "/" 
+      ? `/${langCode}` 
+      : `/${langCode}${currentPath}`;
+    router.replace(newPath);
   };
+
+  const currentLanguage =
+    languages.find((lang) => lang.code === language) || languages[0];
 
   return (
     <header className="sticky top-0 z-50 bg-primary text-primary-foreground shadow-lg">
@@ -85,32 +81,38 @@ export function Navbar() {
             </Link>
 
             {/* Language Toggle */}
-            <div className="relative">
-              <button
-                onClick={() => setLangMenuOpen(!langMenuOpen)}
-                className="flex items-center gap-2 hover:opacity-90 transition"
-              >
-                <Globe size={18} />
-                <span className="uppercase font-semibold">{currentLocale}</span>
-              </button>
-              {langMenuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white text-foreground rounded-lg shadow-lg py-2 z-50">
+            {isMounted && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 hover:opacity-90 hover:bg-primary-foreground/10 text-primary-foreground"
+                  >
+                    <Globe size={18} />
+                    <span className="uppercase font-semibold">
+                      {currentLanguage.nativeName}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
                   {languages.map((lang) => (
-                    <button
+                    <DropdownMenuItem
                       key={lang.code}
-                      onClick={() => handleLocaleChange(lang.code)}
-                      className={`w-full text-left px-4 py-2 hover:bg-blue-100 transition ${
-                        currentLocale === lang.code
-                          ? "bg-blue-50 font-semibold"
-                          : ""
-                      }`}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={language === lang.code ? "bg-accent" : ""}
                     >
-                      {lang.name}
-                    </button>
+                      <div className="flex items-center gap-2 w-full">
+                        <span className="font-medium">{lang.nativeName}</span>
+                        <span className="text-muted-foreground text-xs ml-auto">
+                          ({lang.name})
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
                   ))}
-                </div>
-              )}
-            </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Theme Toggle */}
             <button
@@ -121,7 +123,7 @@ export function Navbar() {
             </button>
 
             {/* Sign In Button */}
-            <Link href={`/${currentLocale}/login`}>
+            <Link href={`/${language}/login`}>
               <Button variant="secondary" size="sm">
                 Sign In
               </Button>
@@ -137,31 +139,35 @@ export function Navbar() {
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            <div className="relative">
-              <button
-                onClick={() => setLangMenuOpen(!langMenuOpen)}
-                className="p-2 hover:bg-primary-foreground/10 rounded-lg transition"
-              >
-                <Globe size={18} />
-              </button>
-              {langMenuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white text-foreground rounded-lg shadow-lg py-2 z-50">
+            {isMounted && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-primary-foreground/10 text-primary-foreground"
+                  >
+                    <Globe size={18} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
                   {languages.map((lang) => (
-                    <button
+                    <DropdownMenuItem
                       key={lang.code}
-                      onClick={() => handleLocaleChange(lang.code)}
-                      className={`w-full text-left px-4 py-2 hover:bg-blue-100 transition ${
-                        currentLocale === lang.code
-                          ? "bg-blue-50 font-semibold"
-                          : ""
-                      }`}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={language === lang.code ? "bg-accent" : ""}
                     >
-                      {lang.name}
-                    </button>
+                      <div className="flex items-center gap-2 w-full">
+                        <span className="font-medium">{lang.nativeName}</span>
+                        <span className="text-muted-foreground text-xs ml-auto">
+                          ({lang.name})
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
                   ))}
-                </div>
-              )}
-            </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             <button
               className="p-2"
@@ -190,7 +196,7 @@ export function Navbar() {
               Services
             </Link>
             <Link
-              href={`/${currentLocale}/login`}
+              href={`/${language}/login`}
               className="w-full"
               onClick={() => setMobileMenuOpen(false)}
             >
