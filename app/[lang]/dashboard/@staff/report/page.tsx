@@ -368,7 +368,7 @@ export default function StaffReportPage() {
               {t("dashboard.reportManagement") || "Report Management"}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {t("dashboard.viewReceivedAndSentReports") ||
+              {t("dashboard.viewReceivedAndSentReportsStaff") ||
                 "View received and sent reports"}
             </p>
           </div>
