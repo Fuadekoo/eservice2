@@ -7,7 +7,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import useTranslation from "@/hooks/useTranslation";
 
 export default function SideBar({
@@ -21,7 +21,22 @@ export default function SideBar({
 }) {
   const selected = usePathname().split("/")[3] ?? "";
   const { lang } = useParams<{ lang: string }>();
-  const { t } = useTranslation();
+  const { t, translationsLoaded } = useTranslation();
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Listen for language changes to force re-render
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setForceUpdate((prev) => prev + 1);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("languageChanged", handleLanguageChange);
+      return () => {
+        window.removeEventListener("languageChanged", handleLanguageChange);
+      };
+    }
+  }, []);
 
   return (
     <nav
@@ -51,8 +66,11 @@ export default function SideBar({
                 {i !== 0 && <hr className="border-primary" />}
                 <div key={i + ""} className="py-3 flex flex-col gap-2">
                   {item.map(({ key, url, Icon }, i) => {
-                    const href = url ? `/${lang}/dashboard/${url}` : `/${lang}/dashboard`;
-                    const isSelected = url === "" ? selected === "" : selected === url;
+                    const href = url
+                      ? `/${lang}/dashboard/${url}`
+                      : `/${lang}/dashboard`;
+                    const isSelected =
+                      url === "" ? selected === "" : selected === url;
                     return (
                       <Button
                         key={i + ""}
