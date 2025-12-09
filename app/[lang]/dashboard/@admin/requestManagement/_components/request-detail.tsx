@@ -32,6 +32,20 @@ import { format } from "date-fns";
 import { useRequestManagementStore } from "../_store/request-management-store";
 import Image from "next/image";
 import { calculateOverallStatus } from "@/lib/request-status";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import useTranslation from "@/hooks/useTranslation";
 
 interface RequestDetailProps {
   request: Request | null;
@@ -69,22 +83,53 @@ export function RequestDetail({
   open,
   onOpenChange,
 }: RequestDetailProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("details");
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [serviceStaff, setServiceStaff] = useState<any[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [approveNote, setApproveNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentRequest, setCurrentRequest] = useState<Request | null>(request);
 
-  const { fetchRequestById } = useRequestManagementStore();
+  const { fetchRequestById, fetchRequests } = useRequestManagementStore();
 
   // Refresh request data when dialog opens
   useEffect(() => {
     if (open && request) {
-      fetchRequestById(request.id);
+      fetchRequestDetails(request.id);
       fetchServiceStaff();
     }
-  }, [open, request?.id, fetchRequestById]);
+  }, [open, request?.id]);
+
+  const fetchRequestDetails = async (requestId: string) => {
+    try {
+      await fetchRequestById(requestId);
+      // The store will update selectedRequest, so we sync it
+      const store = useRequestManagementStore.getState();
+      if (store.selectedRequest) {
+        setCurrentRequest(store.selectedRequest);
+      }
+    } catch (error) {
+      console.error("Error fetching request details:", error);
+    }
+  };
+
+  // Sync with store's selectedRequest when it updates
+  useEffect(() => {
+    if (open) {
+      const store = useRequestManagementStore.getState();
+      if (store.selectedRequest) {
+        setCurrentRequest(store.selectedRequest);
+      } else if (request) {
+        setCurrentRequest(request);
+      }
+    }
+  }, [open, request]);
 
   // Fetch staff assigned to this service
   const fetchServiceStaff = async () => {
@@ -107,14 +152,84 @@ export function RequestDetail({
     }
   };
 
-  if (!request) return null;
+  if (!currentRequest) return null;
 
   const overallStatus = calculateOverallStatus(
-    request.statusbystaff,
-    request.statusbyadmin
+    currentRequest.statusbystaff,
+    currentRequest.statusbyadmin
   );
   const statusInfo = statusConfig[overallStatus];
   const StatusIcon = statusInfo.icon;
+
+  const canApprove = currentRequest.statusbyadmin === "pending";
+
+  const handleApprove = async () => {
+    if (!currentRequest) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/request/${currentRequest.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          statusbyadmin: "approved",
+          approveNote: approveNote || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Request approved successfully");
+        setIsApproveDialogOpen(false);
+        setApproveNote("");
+        fetchRequestDetails(currentRequest.id);
+        fetchRequests();
+        onOpenChange(false);
+      } else {
+        toast.error(result.error || "Failed to approve request");
+      }
+    } catch (error: any) {
+      console.error("Error approving request:", error);
+      toast.error("Failed to approve request");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!currentRequest) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/request/${currentRequest.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          statusbyadmin: "rejected",
+          approveNote: approveNote || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Request rejected");
+        setIsRejectDialogOpen(false);
+        setApproveNote("");
+        fetchRequestDetails(currentRequest.id);
+        fetchRequests();
+        onOpenChange(false);
+      } else {
+        toast.error(result.error || "Failed to reject request");
+      }
+    } catch (error: any) {
+      console.error("Error rejecting request:", error);
+      toast.error("Failed to reject request");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleViewFile = (file: FileData) => {
     setSelectedFile(file);
@@ -153,13 +268,27 @@ export function RequestDetail({
         <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-2xl">Request Details</DialogTitle>
-                <DialogDescription>
-                  View and manage service request details
-                </DialogDescription>
+              <div className="flex items-center gap-3">
+                <StatusIcon
+                  className={`w-5 h-5 ${
+                    statusInfo.variant === "default"
+                      ? "text-green-600"
+                      : statusInfo.variant === "destructive"
+                      ? "text-red-600"
+                      : "text-muted-foreground"
+                  }`}
+                />
+                <div>
+                  <DialogTitle className="text-2xl">
+                    Request Details
+                  </DialogTitle>
+                  <DialogDescription>
+                    View and manage service request details
+                  </DialogDescription>
+                </div>
               </div>
               <div className="flex items-center gap-2">
+                <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                 <Button
                   variant="outline"
                   size="icon"
@@ -183,13 +312,29 @@ export function RequestDetail({
             </div>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {/* Status Badge */}
-            <div className="flex items-center gap-2">
-              <StatusIcon className="w-4 h-4" />
-              <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+          {/* Approval Actions */}
+          {canApprove && (
+            <div className="flex gap-2 pb-4 border-b">
+              <Button
+                onClick={() => setIsApproveDialogOpen(true)}
+                className="flex-1"
+                variant="default"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Approve Request
+              </Button>
+              <Button
+                onClick={() => setIsRejectDialogOpen(true)}
+                className="flex-1"
+                variant="destructive"
+              >
+                <XCircle className="w-4 h-4 mr-2" />
+                Reject Request
+              </Button>
             </div>
+          )}
 
+          <div className="space-y-4">
             {/* Staff List for this Service */}
             <Card>
               <CardHeader>
@@ -233,10 +378,10 @@ export function RequestDetail({
               <TabsList>
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="files">
-                  Files ({request.fileData.length})
+                  Files ({currentRequest.fileData?.length || 0})
                 </TabsTrigger>
                 <TabsTrigger value="appointments">
-                  Appointments ({request.appointments.length})
+                  Appointments ({currentRequest.appointments?.length || 0})
                 </TabsTrigger>
               </TabsList>
 
@@ -252,13 +397,15 @@ export function RequestDetail({
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Username:</strong> {request.user.username}
+                        <strong>Username:</strong>{" "}
+                        {currentRequest.user?.username || "N/A"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">
-                        <strong>Phone:</strong> {request.user.phoneNumber}
+                        <strong>Phone:</strong>{" "}
+                        {currentRequest.user?.phoneNumber || "N/A"}
                       </span>
                     </div>
                   </CardContent>
@@ -274,25 +421,30 @@ export function RequestDetail({
                   <CardContent className="space-y-3">
                     <div>
                       <p className="text-sm font-medium">
-                        {request.service.name}
+                        {currentRequest.service?.name || "N/A"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {request.service.description}
+                        {currentRequest.service?.description || ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        <strong>Office:</strong> {request.service.office.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {request.service.office.address}, Room{" "}
-                        {request.service.office.roomNumber}
-                      </span>
-                    </div>
+                    {currentRequest.service?.office && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <strong>Office:</strong>{" "}
+                            {currentRequest.service.office.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            {currentRequest.service.office.address}, Room{" "}
+                            {currentRequest.service.office.roomNumber}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -306,30 +458,30 @@ export function RequestDetail({
                       <Calendar className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">
                         <strong>Requested Date:</strong>{" "}
-                        {format(new Date(request.date), "PPP")}
+                        {format(new Date(currentRequest.date), "PPP")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">
                         <strong>Current Address:</strong>{" "}
-                        {request.currentAddress}
+                        {currentRequest.currentAddress}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">
                         <strong>Created:</strong>{" "}
-                        {format(new Date(request.createdAt), "PPP p")}
+                        {format(new Date(currentRequest.createdAt), "PPP p")}
                       </span>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Approval Information */}
-                {(request.approveStaff ||
-                  request.approveManager ||
-                  request.approveNote) && (
+                {(currentRequest.approveStaff ||
+                  currentRequest.approveManager ||
+                  currentRequest.approveNote) && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base">
@@ -337,7 +489,7 @@ export function RequestDetail({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {request.approveStaff && (
+                      {currentRequest.approveStaff && (
                         <div className="flex items-start gap-3">
                           <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-green-600" />
                           <div>
@@ -345,15 +497,19 @@ export function RequestDetail({
                               Approved by Staff
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {request.approveStaff.user.username}
+                              {currentRequest.approveStaff.user?.username ||
+                                "N/A"}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              Phone: {request.approveStaff.user.phoneNumber}
-                            </p>
+                            {currentRequest.approveStaff.user?.phoneNumber && (
+                              <p className="text-xs text-muted-foreground">
+                                Phone:{" "}
+                                {currentRequest.approveStaff.user.phoneNumber}
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}
-                      {request.approveManager && (
+                      {currentRequest.approveManager && (
                         <div className="flex items-start gap-3">
                           <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
                           <div>
@@ -361,21 +517,26 @@ export function RequestDetail({
                               Approved by Manager
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {request.approveManager.user.username}
+                              {currentRequest.approveManager.user?.username ||
+                                "N/A"}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              Phone: {request.approveManager.user.phoneNumber}
-                            </p>
+                            {currentRequest.approveManager.user
+                              ?.phoneNumber && (
+                              <p className="text-xs text-muted-foreground">
+                                Phone:{" "}
+                                {currentRequest.approveManager.user.phoneNumber}
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}
-                      {request.approveNote && (
+                      {currentRequest.approveNote && (
                         <div className="flex items-start gap-3 pt-2 border-t">
                           <FileText className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
                           <div>
                             <p className="text-sm font-medium">Approval Note</p>
                             <p className="text-sm text-muted-foreground">
-                              {request.approveNote}
+                              {currentRequest.approveNote}
                             </p>
                           </div>
                         </div>
@@ -386,7 +547,8 @@ export function RequestDetail({
               </TabsContent>
 
               <TabsContent value="files" className="space-y-4 mt-4">
-                {request.fileData.length === 0 ? (
+                {!currentRequest.fileData ||
+                currentRequest.fileData.length === 0 ? (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
                       No files uploaded
@@ -394,7 +556,7 @@ export function RequestDetail({
                   </Card>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {request.fileData.map((file) => {
+                    {currentRequest.fileData?.map((file) => {
                       const fileUrl = getFileUrl(file.filepath, false);
                       const isImage = isImageFile(file.filepath);
                       const isPdf = isPdfFile(file.filepath);
@@ -442,7 +604,8 @@ export function RequestDetail({
               </TabsContent>
 
               <TabsContent value="appointments" className="space-y-4 mt-4">
-                {request.appointments.length === 0 ? (
+                {!currentRequest.appointments ||
+                currentRequest.appointments.length === 0 ? (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
                       No appointments scheduled
@@ -450,7 +613,7 @@ export function RequestDetail({
                   </Card>
                 ) : (
                   <div className="space-y-3">
-                    {request.appointments.map((apt) => (
+                    {currentRequest.appointments?.map((apt) => (
                       <Card key={apt.id}>
                         <CardContent className="pt-6">
                           <div className="space-y-2">
@@ -568,6 +731,87 @@ export function RequestDetail({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Approve Confirmation Dialog */}
+      <AlertDialog
+        open={isApproveDialogOpen}
+        onOpenChange={setIsApproveDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to approve this request? You can add an
+              optional note.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="approve-note">Approval Note (Optional)</Label>
+              <Textarea
+                id="approve-note"
+                placeholder="Add a note about this approval..."
+                value={approveNote}
+                onChange={(e) => setApproveNote(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApprove}
+              disabled={isSubmitting}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isSubmitting ? "Approving..." : "Approve"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Confirmation Dialog */}
+      <AlertDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject this request? Please provide a
+              reason.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reject-note">Rejection Reason (Required)</Label>
+              <Textarea
+                id="reject-note"
+                placeholder="Please provide a reason for rejection..."
+                value={approveNote}
+                onChange={(e) => setApproveNote(e.target.value)}
+                rows={3}
+                required
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReject}
+              disabled={isSubmitting || !approveNote.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isSubmitting ? "Rejecting..." : "Reject"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

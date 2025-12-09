@@ -24,24 +24,27 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/"
+                  href="#"
                   className="text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={(e) => e.preventDefault()}
                 >
                   Home
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/services"
+                  href="#"
                   className="text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={(e) => e.preventDefault()}
                 >
                   Services
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/dashboard/request"
+                  href="#"
                   className="text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={(e) => e.preventDefault()}
                 >
                   Request Form
                 </Link>
@@ -55,24 +58,27 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/contact"
+                  href="#"
                   className="text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={(e) => e.preventDefault()}
                 >
                   Contact Us
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/help"
+                  href="#"
                   className="text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={(e) => e.preventDefault()}
                 >
                   Help Center
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/faq"
+                  href="#"
                   className="text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={(e) => e.preventDefault()}
                 >
                   FAQ
                 </Link>

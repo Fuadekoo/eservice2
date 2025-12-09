@@ -7,36 +7,40 @@ import {
   User,
   Calendar,
   Briefcase,
+  FileText,
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
-import useTranslation from "@/hooks/useTranslation";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
   const menu = [
     [
       {
-        key: t("navigation.overview"),
+        key: "overview",
         url: "",
         Icon: <LayoutDashboard className="size-6" />,
       },
     ],
     [
       {
-        key: t("navigation.requestManagement"),
+        key: "requestManagement",
         url: "requestManagement",
         Icon: <ClipboardList className="size-6" />,
       },
       {
-        key: t("navigation.appointment"),
+        key: "appointment",
         url: "appointment",
         Icon: <Calendar className="size-6" />,
       },
       {
-        key: t("navigation.serviceManagement"),
+        key: "serviceManagement",
         url: "serviceManagement",
         Icon: <Briefcase className="size-6" />,
+      },
+      {
+        key: "report",
+        url: "report",
+        Icon: <FileText className="size-6" />,
       },
       // {
       //   key: "profile",

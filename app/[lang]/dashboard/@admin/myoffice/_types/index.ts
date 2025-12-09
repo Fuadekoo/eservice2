@@ -48,6 +48,17 @@ export interface ServiceFor {
   description?: string | null;
 }
 
+export type RequestStatus = "pending" | "approved" | "rejected";
+
+export interface FileData {
+  id: string;
+  name: string;
+  filepath: string;
+  description?: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
 export interface Request {
   id: string;
   userId: string;
@@ -76,6 +87,24 @@ export interface Request {
       address: string;
     };
   };
+  fileData?: FileData[];
+  appointments?: Appointment[];
+  approveStaff?: {
+    id: string;
+    user?: {
+      id: string;
+      username: string;
+      phoneNumber: string;
+    };
+  } | null;
+  approveManager?: {
+    id: string;
+    user?: {
+      id: string;
+      username: string;
+      phoneNumber: string;
+    };
+  } | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

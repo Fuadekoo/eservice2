@@ -61,71 +61,118 @@ export default function Service() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/service", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-store",
+      // Fetch both services and offices in parallel
+      const [servicesResponse, officesResponse] = await Promise.all([
+        fetch("/api/service", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        }),
+        fetch("/api/office?limit=1000", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        }),
+      ]);
+
+      // Check if responses are JSON before parsing
+      const servicesContentType = servicesResponse.headers.get("content-type");
+      const officesContentType = officesResponse.headers.get("content-type");
+
+      if (
+        !servicesContentType ||
+        !servicesContentType.includes("application/json")
+      ) {
+        const text = await servicesResponse.text();
+        throw new Error(
+          `Server returned non-JSON response: ${servicesResponse.status} ${servicesResponse.statusText}`
+        );
+      }
+
+      if (
+        !officesContentType ||
+        !officesContentType.includes("application/json")
+      ) {
+        const text = await officesResponse.text();
+        throw new Error(
+          `Server returned non-JSON response: ${officesResponse.status} ${officesResponse.statusText}`
+        );
+      }
+
+      const servicesResult = await servicesResponse.json();
+      const officesResult = await officesResponse.json();
+
+      if (!servicesResponse.ok) {
+        throw new Error(
+          servicesResult.error ||
+            `Failed to fetch services: ${servicesResponse.status} ${servicesResponse.statusText}`
+        );
+      }
+
+      if (!officesResponse.ok) {
+        throw new Error(
+          officesResult.error ||
+            `Failed to fetch offices: ${officesResponse.status} ${officesResponse.statusText}`
+        );
+      }
+
+      // Get all active offices
+      const allActiveOffices =
+        officesResult.success && Array.isArray(officesResult.data)
+          ? officesResult.data.filter((office: any) => office.status === true)
+          : [];
+
+      // Group services by office
+      const groupedByOffice: Record<string, OfficeWithServices> = {};
+
+      if (servicesResult.success && Array.isArray(servicesResult.data)) {
+        servicesResult.data.forEach((service: Service) => {
+          if (!service.office || !service.office.status) {
+            return; // Skip services from inactive offices
+          }
+
+          const officeId = service.officeId;
+          const officeName = service.office.name;
+          const officeLogo = service.office.logo;
+          const officeSlogan = service.office.slogan;
+
+          if (!groupedByOffice[officeId]) {
+            groupedByOffice[officeId] = {
+              officeId,
+              officeName,
+              officeLogo,
+              officeSlogan,
+              services: [],
+            };
+          }
+
+          groupedByOffice[officeId].services.push(service);
+        });
+      }
+
+      // Add offices with no services
+      allActiveOffices.forEach((office: any) => {
+        if (!groupedByOffice[office.id]) {
+          groupedByOffice[office.id] = {
+            officeId: office.id,
+            officeName: office.name,
+            officeLogo: office.logo,
+            officeSlogan: office.slogan,
+            services: [],
+          };
+        }
       });
 
-      // Check if response is JSON before parsing
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        throw new Error(
-          `Server returned non-JSON response: ${response.status} ${response.statusText}`
-        );
-      }
+      // Convert to array and sort by office name
+      const officesArray = (
+        Object.values(groupedByOffice) as OfficeWithServices[]
+      ).sort((a, b) => a.officeName.localeCompare(b.officeName));
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error ||
-            `Failed to fetch services: ${response.status} ${response.statusText}`
-        );
-      }
-
-      if (result.success && Array.isArray(result.data)) {
-        // Group services by office
-        const groupedByOffice: Record<string, OfficeWithServices> =
-          result.data.reduce(
-            (acc: Record<string, OfficeWithServices>, service: Service) => {
-              if (!service.office || !service.office.status) {
-                return acc; // Skip services from inactive offices
-              }
-
-              const officeId = service.officeId;
-              const officeName = service.office.name;
-              const officeLogo = service.office.logo;
-              const officeSlogan = service.office.slogan;
-
-              if (!acc[officeId]) {
-                acc[officeId] = {
-                  officeId,
-                  officeName,
-                  officeLogo,
-                  officeSlogan,
-                  services: [],
-                };
-              }
-
-              acc[officeId].services.push(service);
-              return acc;
-            },
-            {} as Record<string, OfficeWithServices>
-          );
-
-        // Convert to array and sort by office name
-        const officesArray = (
-          Object.values(groupedByOffice) as OfficeWithServices[]
-        ).sort((a, b) => a.officeName.localeCompare(b.officeName));
-
-        setOfficesWithServices(officesArray);
-      } else {
-        setOfficesWithServices([]);
-      }
+      setOfficesWithServices(officesArray);
     } catch (err: any) {
       console.error("Error fetching services:", err);
       setError(err.message || "Failed to load services");
@@ -230,8 +277,8 @@ export default function Service() {
                       <Building2 className="w-6 h-6 text-primary" />
                     </div>
                   )}
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <h4 className="font-semibold text-primary text-lg truncate">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-primary text-base sm:text-lg break-words hyphens-auto">
                       {officeGroup.officeName}
                     </h4>
                     {officeGroup.officeSlogan && (
@@ -270,13 +317,13 @@ export default function Service() {
 
       {/* Services Modal/Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden flex flex-col p-0 w-[95vw] sm:w-full">
           {/* Header with dark blue background */}
-          <DialogHeader className="bg-primary text-primary-foreground p-6">
-            <div className="flex flex-row items-center justify-between mb-2">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+          <DialogHeader className="bg-primary text-primary-foreground p-4 sm:p-6 shrink-0">
+            <div className="flex flex-row items-start justify-between gap-2 mb-2">
+              <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
                 {selectedOffice?.officeLogo ? (
-                  <div className="relative w-12 h-12 shrink-0">
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
                     <Image
                       src={`/api/filedata/${selectedOffice.officeLogo}`}
                       alt={selectedOffice.officeName}
@@ -286,63 +333,80 @@ export default function Service() {
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-white/10 rounded">
-                    <Building2 className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center bg-white/10 rounded">
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                 )}
-                <DialogTitle className="text-xl font-bold text-white truncate">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-white break-words hyphens-auto flex-1">
                   {selectedOffice?.officeName}
                 </DialogTitle>
               </div>
               <button
                 onClick={handleCloseDialog}
-                className="text-white hover:text-white/80 transition-colors shrink-0 ml-2"
+                className="text-white hover:text-white/80 transition-colors shrink-0"
                 aria-label="Close"
               >
-                <X size={24} />
+                <X size={20} className="sm:w-6 sm:h-6" />
               </button>
             </div>
             {selectedOffice?.officeSlogan && (
-              <p className="text-sm text-white/90 mt-2 line-clamp-2">
+              <p className="text-xs sm:text-sm text-white/90 mt-2 line-clamp-2">
                 {selectedOffice.officeSlogan}
               </p>
             )}
           </DialogHeader>
 
           {/* Services List */}
-          <div className="p-6 space-y-4">
-            {selectedOffice?.services.map((service) => (
-              <Card
-                key={service.id}
-                className="p-4 hover:shadow-md transition-shadow border rounded-lg cursor-pointer"
-                onClick={() => handleServiceClick(service.id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-1 text-foreground">
-                      {service.name}
-                    </h3>
-                    {service.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {service.description}
-                      </p>
-                    )}
+          <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 overflow-y-auto flex-1">
+            {selectedOffice && selectedOffice.services.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Building2 className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">
+                  {t("guest.noServicesAvailable") || "No Services Available"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("guest.noServicesForThisOffice") ||
+                    "This office currently has no services available."}
+                </p>
+              </div>
+            ) : (
+              selectedOffice?.services.map((service) => (
+                <Card
+                  key={service.id}
+                  className="p-3 sm:p-4 hover:shadow-md transition-shadow border rounded-lg cursor-pointer"
+                  onClick={() => handleServiceClick(service.id)}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base sm:text-lg mb-1 text-foreground break-words hyphens-auto">
+                        {service.name}
+                      </h3>
+                      {service.description && (
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                          {service.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 sm:ml-4 shrink-0">
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApplyNow(service.id);
+                        }}
+                        className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base px-3 sm:px-4 py-2"
+                        size="sm"
+                      >
+                        {t("guest.applyNow")}
+                      </Button>
+                      <ChevronRight
+                        size={18}
+                        className="text-muted-foreground hidden sm:block"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 ml-4">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleApplyNow(service.id);
-                      }}
-                      className="bg-primary hover:bg-primary/90 text-white"
-                    >
-                      {t("guest.applyNow")}
-                    </Button>
-                    <ChevronRight size={20} className="text-muted-foreground" />
-                  </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </DialogContent>
       </Dialog>

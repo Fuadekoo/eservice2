@@ -35,7 +35,8 @@ import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { calculateOverallStatus } from "@/lib/request-status";
-import { RequestStatus } from "@/app/[lang]/dashboard/@customer/request/_types";
+import { Request } from "../_types";
+import { RequestDetail } from "./request-detail";
 
 export function RequestsSection() {
   const {
@@ -55,6 +56,8 @@ export function RequestsSection() {
     setStatusFilter,
   } = useMyOfficeStore();
   const [localSearch, setLocalSearch] = useState("");
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
     if (office) {
@@ -69,20 +72,20 @@ export function RequestsSection() {
     return () => clearTimeout(timer);
   }, [localSearch, setSearch]);
 
-  const getStatusBadge = (request: any) => {
+  const getStatusBadge = (request: Request) => {
     const status = calculateOverallStatus(
       request.statusbystaff,
       request.statusbyadmin
     );
     switch (status) {
-      case RequestStatus.APPROVED:
+      case "approved":
         return (
           <Badge variant="default" className="bg-green-600">
             <CheckCircle2 className="w-3 h-3 mr-1" />
             Approved
           </Badge>
         );
-      case RequestStatus.REJECTED:
+      case "rejected":
         return (
           <Badge variant="destructive">
             <XCircle className="w-3 h-3 mr-1" />
@@ -127,7 +130,9 @@ export function RequestsSection() {
           disabled={isLoadingRequests}
         >
           <RefreshCw
-            className={`w-4 h-4 mr-2 ${isLoadingRequests ? "animate-spin" : ""}`}
+            className={`w-4 h-4 mr-2 ${
+              isLoadingRequests ? "animate-spin" : ""
+            }`}
           />
           Refresh
         </Button>
@@ -193,6 +198,7 @@ export function RequestsSection() {
                     <TableHead>Status</TableHead>
                     <TableHead>Staff Approval</TableHead>
                     <TableHead>Admin Approval</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -238,6 +244,19 @@ export function RequestsSection() {
                           {request.statusbyadmin}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setIsDetailOpen(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -275,6 +294,13 @@ export function RequestsSection() {
           )}
         </>
       )}
+
+      {/* Request Detail Dialog */}
+      <RequestDetail
+        request={selectedRequest}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+      />
     </div>
   );
 }
