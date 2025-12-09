@@ -552,12 +552,12 @@ export default function UserManagementPage() {
                                   {user.isActive ? (
                                     <>
                                       <XCircle className="mr-2 h-4 w-4" />
-                                      {t("dashboard.deactivate")}
+                                      {t("dashboard.inactive")}
                                     </>
                                   ) : (
                                     <>
                                       <CheckCircle className="mr-2 h-4 w-4" />
-                                      {t("dashboard.activate")}
+                                      {t("dashboard.active")}
                                     </>
                                   )}
                                 </DropdownMenuItem>
@@ -722,8 +722,8 @@ export default function UserManagementPage() {
                     ? t("dashboard.deactivating")
                     : t("dashboard.activating")
                   : selectedUser?.isActive
-                  ? t("dashboard.deactivate")
-                  : t("dashboard.activate")}
+                  ? t("dashboard.inactive")
+                  : t("dashboard.active")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -86,6 +86,21 @@ const authConfig = {
         return false; // NextAuth will redirect to pages.signIn
       }
 
+      // Check if authenticated user is still active (for protected routes)
+      if (auth?.user?.id) {
+        const user = await prisma.user.findUnique({
+          where: { id: auth.user.id },
+          select: { isActive: true },
+        });
+
+        // If user is inactive, deny access and redirect to login
+        if (user && !user.isActive) {
+          return Response.redirect(
+            new URL(`/${lang}/login?error=inactive`, nextUrl)
+          );
+        }
+      }
+
       return true;
     },
 
@@ -122,7 +137,7 @@ const authConfig = {
         if (!user.password) throw new CustomError("Password Not Set");
         if (!user.isActive)
           throw new CustomError(
-            "Account Blocked - Your account has been blocked. Please contact administrator."
+            "Account Inactive - Your account is inactive. Please contact administrator to activate your account."
           );
         if (!(await bcryptjs.compare(password, user.password)))
           throw new CustomError("Invalid Password");
