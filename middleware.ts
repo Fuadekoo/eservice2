@@ -22,16 +22,13 @@ export default function middleware(req: NextRequest) {
 
   // Get language from cookie
   const cookieLang = req.cookies.get("eservice-language")?.value;
-  const preferredLang =
-    (cookieLang && SUPPORTED_LANGUAGES.includes(cookieLang)
-      ? cookieLang
-      : "en") as "en" | "am" | "or";
+  const preferredLang = (
+    cookieLang && SUPPORTED_LANGUAGES.includes(cookieLang) ? cookieLang : "en"
+  ) as "en" | "am" | "or";
 
   // If root path, redirect to preferred language
   if (pathname === "/") {
-    return NextResponse.redirect(
-      new URL(`/${preferredLang}`, req.url)
-    );
+    return NextResponse.redirect(new URL(`/${preferredLang}`, req.url));
   }
 
   // If no language in URL but we have a cookie, redirect to include language
@@ -44,7 +41,11 @@ export default function middleware(req: NextRequest) {
   }
 
   // If URL has language but it doesn't match cookie, update cookie
-  if (urlLang && urlLang !== preferredLang && SUPPORTED_LANGUAGES.includes(urlLang)) {
+  if (
+    urlLang &&
+    urlLang !== preferredLang &&
+    SUPPORTED_LANGUAGES.includes(urlLang)
+  ) {
     const response = NextResponse.next();
     response.cookies.set("eservice-language", urlLang, {
       path: "/",
@@ -55,7 +56,7 @@ export default function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
