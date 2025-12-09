@@ -350,12 +350,10 @@ export default function UserManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("dashboard.allRoles")}</SelectItem>
-              {roles.map((role) => (
-                <SelectItem key={role.id} value={role.id}>
-                  {role.name}
-                  {role.office && ` (${role.office.name})`}
-                </SelectItem>
-              ))}
+              <SelectItem value="manager">All Managers</SelectItem>
+              <SelectItem value="staff">All Staff</SelectItem>
+              <SelectItem value="admin">All Admins</SelectItem>
+              <SelectItem value="customer">All Customers</SelectItem>
             </SelectContent>
           </Select>
           <div className="flex items-center gap-2">

@@ -185,7 +185,7 @@ export default function OfficePage() {
     const end = Math.min(page * pageSize, total);
 
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 mt-6 border-t">
         <div className="text-sm text-muted-foreground">
           {t("dashboard.showing")} {start}-{end} {t("dashboard.of")} {total} {t("dashboard.offices")}
         </div>
@@ -194,12 +194,17 @@ export default function OfficePage() {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => page > 1 && setPage(page - 1)}
+                  onClick={() => {
+                    if (page > 1) {
+                      setPage(page - 1);
+                    }
+                  }}
                   className={
                     page === 1
                       ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
+                      : "cursor-pointer hover:bg-accent"
                   }
+                  aria-disabled={page === 1}
                 />
               </PaginationItem>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -237,12 +242,17 @@ export default function OfficePage() {
               )}
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => page < totalPages && setPage(page + 1)}
+                  onClick={() => {
+                    if (page < totalPages) {
+                      setPage(page + 1);
+                    }
+                  }}
                   className={
                     page === totalPages
                       ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
+                      : "cursor-pointer hover:bg-accent"
                   }
+                  aria-disabled={page === totalPages}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -336,8 +346,10 @@ export default function OfficePage() {
               />
             ))}
           </div>
-          <PaginationComponent />
         </div>
+
+        {/* Pagination at bottom */}
+        {data.length > 0 && <PaginationComponent />}
         </div>
       </div>
 

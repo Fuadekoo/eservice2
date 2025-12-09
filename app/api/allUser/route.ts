@@ -58,16 +58,25 @@ export async function GET(request: NextRequest) {
     // We'll fetch all users and filter case-insensitively in the application layer
     let where: any = {};
 
-    // Add role filter if provided
-    if (roleId && roleId.trim()) {
-      where.roleId = roleId.trim();
+    // Determine if we're filtering by role group or specific role ID
+    const isRoleGroup =
+      roleId &&
+      roleId.trim() &&
+      ["manager", "staff", "admin", "customer"].includes(
+        roleId.trim().toLowerCase()
+      );
+    const roleGroupName = isRoleGroup ? roleId.trim().toLowerCase() : null;
+    const specificRoleId =
+      !isRoleGroup && roleId && roleId.trim() ? roleId.trim() : null;
+
+    // Add specific role ID filter if provided (not a role group)
+    if (specificRoleId) {
+      where.roleId = specificRoleId;
     }
 
-    // Fetch all users first if search is provided (for case-insensitive filtering)
+    // Fetch all users first if search is provided OR role group filter is used (for case-insensitive filtering)
     let allUsersForSearch: any[] = [];
-    if (search && search.trim()) {
-      const searchTerm = search.trim().toLowerCase();
-
+    if ((search && search.trim()) || roleGroupName) {
       // Fetch all users with relations for case-insensitive filtering
       allUsersForSearch = await prisma.user.findMany({
         include: {
@@ -100,17 +109,43 @@ export async function GET(request: NextRequest) {
       // Filter case-insensitively in application layer
       const filteredUserIds = allUsersForSearch
         .filter((user) => {
-          const usernameMatch = user.username
-            ?.toLowerCase()
-            .includes(searchTerm);
-          const phoneMatch = user.phoneNumber
-            ?.toLowerCase()
-            .includes(searchTerm);
-          const roleMatch = user.role?.name?.toLowerCase().includes(searchTerm);
-          const officeMatch = user.staffs?.some((staff: any) =>
-            staff.office?.name?.toLowerCase().includes(searchTerm)
-          );
-          return usernameMatch || phoneMatch || roleMatch || officeMatch;
+          // Apply role group filter if specified
+          if (roleGroupName) {
+            const userRoleName = user.role?.name?.toLowerCase() || "";
+            // Match role name containing the group name (case-insensitive)
+            // Examples: "manager" matches "manager", "MANAGER", "office_manager", "Manager", etc.
+            // Normalize by removing underscores, spaces, and hyphens for better matching
+            const normalizedRoleName = userRoleName.replace(/[_\s-]/g, "");
+            const normalizedGroupName = roleGroupName.replace(/[_\s-]/g, "");
+
+            // Check if normalized role name contains the normalized group name
+            // This ensures "manager", "MANAGER", "office_manager" all match "manager" group
+            if (!normalizedRoleName.includes(normalizedGroupName)) {
+              return false;
+            }
+          }
+
+          // Apply search filter if specified
+          if (search && search.trim()) {
+            const searchTerm = search.trim().toLowerCase();
+            const usernameMatch = user.username
+              ?.toLowerCase()
+              .includes(searchTerm);
+            const phoneMatch = user.phoneNumber
+              ?.toLowerCase()
+              .includes(searchTerm);
+            const roleMatch = user.role?.name
+              ?.toLowerCase()
+              .includes(searchTerm);
+            const officeMatch = user.staffs?.some((staff: any) =>
+              staff.office?.name?.toLowerCase().includes(searchTerm)
+            );
+            if (!(usernameMatch || phoneMatch || roleMatch || officeMatch)) {
+              return false;
+            }
+          }
+
+          return true;
         })
         .map((user) => user.id);
 
@@ -124,9 +159,12 @@ export async function GET(request: NextRequest) {
 
     // Get total count for pagination
     let total: number;
-    if (search && search.trim() && where.id?.in) {
+    if (((search && search.trim()) || roleGroupName) && where.id?.in) {
       // Use the count of filtered IDs
       total = where.id.in.length;
+    } else if (specificRoleId) {
+      // Count users with specific role ID
+      total = await prisma.user.count({ where });
     } else {
       // No search or empty search - count all users
       total = await prisma.user.count();
@@ -134,7 +172,10 @@ export async function GET(request: NextRequest) {
 
     // Fetch users with pagination
     let users;
-    if (search && search.trim() && allUsersForSearch.length > 0) {
+    if (
+      ((search && search.trim()) || roleGroupName) &&
+      allUsersForSearch.length > 0
+    ) {
       // Use pre-filtered results and apply pagination
       const filteredUsers = allUsersForSearch
         .filter((user) => {
