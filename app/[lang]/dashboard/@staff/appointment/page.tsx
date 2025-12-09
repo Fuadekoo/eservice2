@@ -249,21 +249,21 @@ export default function StaffAppointmentPage() {
 
   return (
     <div className="h-dvh overflow-y-auto">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             {t("navigation.appointment")}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {t("dashboard.viewAndManageAppointmentsForAssignedServices")}
           </p>
         </div>
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -273,11 +273,11 @@ export default function StaffAppointmentPage() {
                     )}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 text-sm sm:text-base"
                   />
                 </div>
               </div>
-              <div className="w-full md:w-48">
+              <div className="w-full sm:w-48">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
                     <Filter className="w-4 h-4 mr-2" />
@@ -327,80 +327,93 @@ export default function StaffAppointmentPage() {
             ) : (
               <>
                 <div className="rounded-md border overflow-hidden">
-                  <div className="h-dvh overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("dashboard.service")}</TableHead>
-                          <TableHead>{t("dashboard.customer")}</TableHead>
-                          <TableHead>{t("dashboard.date")}</TableHead>
-                          <TableHead>{t("dashboard.time")}</TableHead>
-                          <TableHead>{t("common.status")}</TableHead>
-                          <TableHead className="text-right">
-                            {t("common.actions")}
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredAppointments.map((appointment) => (
-                          <TableRow key={appointment.id}>
-                            <TableCell className="font-medium">
-                              <div>
-                                <p className="font-medium">
-                                  {appointment.request.service.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground line-clamp-1">
-                                  {appointment.request.service.description}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">
-                                  {appointment.request.user.username}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {appointment.request.user.phoneNumber}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-muted-foreground" />
-                                {format(
-                                  new Date(appointment.date),
-                                  "MMM dd, yyyy"
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {appointment.time ? (
-                                <div className="flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-muted-foreground" />
-                                  {appointment.time}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">
-                                  {t("dashboard.notSpecified")}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(appointment.status)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewDetails(appointment)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
+                  <div className="overflow-x-auto">
+                    <div className="min-w-full inline-block align-middle">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs sm:text-sm">
+                              {t("dashboard.service")}
+                            </TableHead>
+                            <TableHead className="text-xs sm:text-sm">
+                              {t("dashboard.customer")}
+                            </TableHead>
+                            <TableHead className="text-xs sm:text-sm hidden sm:table-cell">
+                              {t("dashboard.date")}
+                            </TableHead>
+                            <TableHead className="text-xs sm:text-sm hidden md:table-cell">
+                              {t("dashboard.time")}
+                            </TableHead>
+                            <TableHead className="text-xs sm:text-sm">
+                              {t("common.status")}
+                            </TableHead>
+                            <TableHead className="text-right text-xs sm:text-sm">
+                              {t("common.actions")}
+                            </TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredAppointments.map((appointment) => (
+                            <TableRow key={appointment.id}>
+                              <TableCell className="font-medium text-xs sm:text-sm">
+                                <div>
+                                  <p className="font-medium line-clamp-1">
+                                    {appointment.request.service.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground line-clamp-1 hidden sm:block">
+                                    {appointment.request.service.description}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm">
+                                <div>
+                                  <p className="font-medium line-clamp-1">
+                                    {appointment.request.user.username}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground hidden sm:block">
+                                    {appointment.request.user.phoneNumber}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+                                  {format(
+                                    new Date(appointment.date),
+                                    "MMM dd, yyyy"
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm hidden md:table-cell">
+                                {appointment.time ? (
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+                                    {appointment.time}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    {t("dashboard.notSpecified")}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm">
+                                {getStatusBadge(appointment.status)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 sm:h-10 sm:w-10"
+                                  onClick={() => handleViewDetails(appointment)}
+                                >
+                                  <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
 

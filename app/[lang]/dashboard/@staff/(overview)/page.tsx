@@ -126,14 +126,14 @@ export default function StaffOverviewPage() {
 
   return (
     <div className="h-dvh overflow-y-auto">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
         {/* Office Logo and Slogan */}
         {stats?.office && (
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-6">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 {stats.office.logo ? (
-                  <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0">
+                  <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted shrink-0">
                     <Image
                       src={getLogoUrl(stats.office.logo) || ""}
                       alt={stats.office.name}
@@ -143,19 +143,21 @@ export default function StaffOverviewPage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <Building2 className="w-12 h-12 text-muted-foreground" />
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Building2 className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground" />
                   </div>
                 )}
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold">{stats.office.name}</h2>
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-xl sm:text-2xl font-bold">
+                    {stats.office.name}
+                  </h2>
                   {stats.office.slogan && (
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-sm sm:text-base text-muted-foreground mt-1">
                       {stats.office.slogan}
                     </p>
                   )}
                   {stats.role && (
-                    <p className="text-sm text-muted-foreground mt-2 font-medium">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
                       {t("dashboard.youAreTheRoleOfOffice")
                         .replace("{role}", stats.role)
                         .replace("{office}", stats.office.name)}
@@ -169,7 +171,7 @@ export default function StaffOverviewPage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             {stats?.username
               ? t("dashboard.welcomeBackUsername").replace(
                   "{username}",
@@ -177,27 +179,27 @@ export default function StaffOverviewPage() {
                 )
               : t("dashboard.welcomeBack")}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {t("dashboard.yourAssignedTasksAndRequests")}
           </p>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {/* My Pending Requests */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                     {t("dashboard.myPendingRequests")}
                   </p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                     {stats?.myPendingRequests?.toLocaleString() || 0}
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center shrink-0 ml-2">
+                  <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
             </CardContent>
@@ -205,18 +207,18 @@ export default function StaffOverviewPage() {
 
           {/* My Assigned Requests */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                     {t("dashboard.myAssignedRequests")}
                   </p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                     {stats?.myAssignedRequests || 0}
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 ml-2">
+                  <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
             </CardContent>
@@ -224,18 +226,18 @@ export default function StaffOverviewPage() {
 
           {/* Scheduled Appointments */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                     {t("dashboard.scheduledAppointments")}
                   </p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                     {stats?.scheduledAppointments || 0}
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0 ml-2">
+                  <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </CardContent>
@@ -243,18 +245,18 @@ export default function StaffOverviewPage() {
 
           {/* Assigned Services */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                     {t("dashboard.assignedServices")}
                   </p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
                     {stats?.totalServices || 0}
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <Briefcase className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0 ml-2">
+                  <Briefcase className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
             </CardContent>
@@ -262,43 +264,64 @@ export default function StaffOverviewPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
           {/* Recent Requests */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>{t("dashboard.recentAssignedRequests")}</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">
+                  {t("dashboard.recentAssignedRequests")}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {stats?.recentRequests && stats.recentRequests.length > 0 ? (
                   <>
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t("dashboard.applicant")}</TableHead>
-                            <TableHead>{t("dashboard.service")}</TableHead>
-                            <TableHead>{t("dashboard.date")}</TableHead>
-                            <TableHead>{t("common.status")}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {stats.recentRequests.map((req) => (
-                            <TableRow key={req.id}>
-                              <TableCell className="font-medium">
-                                {req.applicant}
-                              </TableCell>
-                              <TableCell>{req.service}</TableCell>
-                              <TableCell>
-                                {format(new Date(req.date), "yyyy-MM-dd")}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(req.status)}
-                              </TableCell>
+                    <div className="rounded-md border overflow-x-auto">
+                      <div className="min-w-full inline-block align-middle">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-xs sm:text-sm">
+                                {t("dashboard.applicant")}
+                              </TableHead>
+                              <TableHead className="text-xs sm:text-sm hidden sm:table-cell">
+                                {t("dashboard.service")}
+                              </TableHead>
+                              <TableHead className="text-xs sm:text-sm hidden md:table-cell">
+                                {t("dashboard.date")}
+                              </TableHead>
+                              <TableHead className="text-xs sm:text-sm">
+                                {t("common.status")}
+                              </TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {stats.recentRequests.map((req) => (
+                              <TableRow key={req.id}>
+                                <TableCell className="font-medium text-xs sm:text-sm">
+                                  <div>
+                                    <p className="font-medium line-clamp-1">
+                                      {req.applicant}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground sm:hidden mt-1">
+                                      {req.service}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                                  {req.service}
+                                </TableCell>
+                                <TableCell className="text-xs sm:text-sm hidden md:table-cell">
+                                  {format(new Date(req.date), "yyyy-MM-dd")}
+                                </TableCell>
+                                <TableCell className="text-xs sm:text-sm">
+                                  {getStatusBadge(req.status)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                     <div className="mt-4">
                       <Link href={`/${lang}/dashboard/requestmanagement`}>

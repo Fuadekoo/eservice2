@@ -158,42 +158,42 @@ export default function StaffServiceManagementPage() {
 
   return (
     <div className="h-dvh overflow-y-auto">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             {t("navigation.serviceManagement")}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {t("dashboard.viewServicesAssignedToYou")}
           </p>
         </div>
 
         {/* Search and Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
           <Card className="lg:col-span-2">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
                 <Input
                   placeholder={t(
                     "dashboard.searchByServiceNameDescriptionOffice"
                   )}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-11 h-11"
+                  className="pl-9 sm:pl-11 h-9 sm:h-11 text-sm sm:text-base"
                 />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Briefcase className="w-5 h-5 text-primary" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                  <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{total}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{total}</p>
                   <p className="text-xs text-muted-foreground">
                     {t("dashboard.servicesAssigned").replace(
                       "{count}",
@@ -229,7 +229,7 @@ export default function StaffServiceManagementPage() {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {services.map((service) => (
                 <Card
                   key={service.id}
@@ -392,41 +392,42 @@ export default function StaffServiceManagementPage() {
                             }
                           />
                         </PaginationItem>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                          (pageNum) => {
-                            if (
-                              pageNum === 1 ||
-                              pageNum === totalPages ||
-                              (pageNum >= page - 1 && pageNum <= page + 1)
-                            ) {
-                              return (
-                                <PaginationItem key={pageNum}>
-                                  <PaginationLink
-                                    onClick={() => !isLoading && setPage(pageNum)}
-                                    isActive={pageNum === page}
-                                    className={
-                                      isLoading
-                                        ? "pointer-events-none opacity-50"
-                                        : "cursor-pointer"
-                                    }
-                                  >
-                                    {pageNum}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            } else if (
-                              pageNum === page - 2 ||
-                              pageNum === page + 2
-                            ) {
-                              return (
-                                <PaginationItem key={`ellipsis-${pageNum}`}>
-                                  <PaginationEllipsis />
-                                </PaginationItem>
-                              );
-                            }
-                            return null;
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1
+                        ).map((pageNum) => {
+                          if (
+                            pageNum === 1 ||
+                            pageNum === totalPages ||
+                            (pageNum >= page - 1 && pageNum <= page + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNum}>
+                                <PaginationLink
+                                  onClick={() => !isLoading && setPage(pageNum)}
+                                  isActive={pageNum === page}
+                                  className={
+                                    isLoading
+                                      ? "pointer-events-none opacity-50"
+                                      : "cursor-pointer"
+                                  }
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          } else if (
+                            pageNum === page - 2 ||
+                            pageNum === page + 2
+                          ) {
+                            return (
+                              <PaginationItem key={`ellipsis-${pageNum}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
                           }
-                        )}
+                          return null;
+                        })}
                         <PaginationItem>
                           <PaginationNext
                             onClick={() =>

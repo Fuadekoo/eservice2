@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
+import { OfficeCombobox } from "./_components/office-combobox";
+import { ServiceCombobox } from "./_components/service-combobox";
 import {
   Card,
   CardContent,
@@ -24,11 +26,19 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { Loader2, Upload, X, FileText, Calendar, MapPin, CheckCircle2, Building2, List, FileCheck } from "lucide-react";
+  Loader2,
+  Upload,
+  X,
+  FileText,
+  Calendar,
+  MapPin,
+  CheckCircle2,
+  Building2,
+  List,
+  FileCheck,
+} from "lucide-react";
 import Image from "next/image";
 import { applyServiceSchema, ApplyServiceFormValues } from "./_schema";
 import { useApplyServiceStore } from "./_store/apply-service-store";
@@ -91,11 +101,36 @@ export default function ApplyServicePage() {
 
   // Steps definition
   const STEPS = [
-    { id: 1, title: t("dashboard.selectOffice"), icon: Building2, completed: !!watchedOfficeId },
-    { id: 2, title: t("dashboard.selectService"), icon: FileText, completed: !!watchedServiceId },
-    { id: 3, title: t("dashboard.viewInformation"), icon: List, completed: !!selectedService },
-    { id: 4, title: t("dashboard.applicationDetails"), icon: FileCheck, completed: !!(form.watch("currentAddress") && form.watch("date")) },
-    { id: 5, title: t("dashboard.uploadFiles"), icon: Upload, completed: files.length > 0 },
+    {
+      id: 1,
+      title: t("dashboard.selectOffice"),
+      icon: Building2,
+      completed: !!watchedOfficeId,
+    },
+    {
+      id: 2,
+      title: t("dashboard.selectService"),
+      icon: FileText,
+      completed: !!watchedServiceId,
+    },
+    {
+      id: 3,
+      title: t("dashboard.viewInformation"),
+      icon: List,
+      completed: !!selectedService,
+    },
+    {
+      id: 4,
+      title: t("dashboard.applicationDetails"),
+      icon: FileCheck,
+      completed: !!(form.watch("currentAddress") && form.watch("date")),
+    },
+    {
+      id: 5,
+      title: t("dashboard.uploadFiles"),
+      icon: Upload,
+      completed: files.length > 0,
+    },
   ];
 
   // Fetch offices on mount
@@ -162,30 +197,35 @@ export default function ApplyServicePage() {
   ];
 
   return (
-    <div className="w-full h-dvh overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full h-dvh overflow-y-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.applyForService")}</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          {t("dashboard.applyForService")}
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           {t("dashboard.fillDetailsToApply")}
         </p>
       </div>
 
       {/* Progress Indicator */}
-      <Card className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <CardContent className="pt-6">
-          <div className="space-y-4">
+      <Card className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium">{t("dashboard.progress")}</span>
-                <span className="text-muted-foreground">{currentStep} {t("dashboard.of")} {totalSteps} {t("dashboard.steps")}</span>
+                <span className="text-muted-foreground">
+                  {currentStep} {t("dashboard.of")} {totalSteps}{" "}
+                  {t("dashboard.steps")}
+                </span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
 
             {/* Steps Indicator */}
-            <div className="flex items-center justify-between">
+            <div className="hidden sm:flex items-center justify-between">
               {STEPS.map((step, index) => {
                 const StepIcon = step.icon;
                 const isActive = currentStep === step.id;
@@ -195,7 +235,7 @@ export default function ApplyServicePage() {
                   <div key={step.id} className="flex items-center flex-1">
                     <div className="flex flex-col items-center flex-1">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
                           isActive
                             ? "bg-primary text-primary-foreground scale-110 shadow-lg"
                             : isCompleted
@@ -204,14 +244,16 @@ export default function ApplyServicePage() {
                         }`}
                       >
                         {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5" />
+                          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                          <StepIcon className="w-5 h-5" />
+                          <StepIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                       </div>
                       <p
                         className={`text-xs mt-2 text-center max-w-[80px] ${
-                          isActive ? "font-medium text-foreground" : "text-muted-foreground"
+                          isActive
+                            ? "font-medium text-foreground"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {step.title}
@@ -228,6 +270,36 @@ export default function ApplyServicePage() {
                 );
               })}
             </div>
+            {/* Mobile Steps Indicator - Show only current step */}
+            <div className="sm:hidden flex items-center justify-center gap-2">
+              <div className="flex items-center gap-2">
+                {STEPS.map((step) => {
+                  const StepIcon = step.icon;
+                  const isActive = currentStep === step.id;
+                  const isCompleted = step.completed || currentStep > step.id;
+                  if (!isActive && !isCompleted) return null;
+
+                  return (
+                    <div key={step.id} className="flex items-center gap-2">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-primary/20 text-primary"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                          <StepIcon className="w-4 h-4" />
+                        )}
+                      </div>
+                      <span className="text-xs font-medium">{step.title}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -240,7 +312,9 @@ export default function ApplyServicePage() {
         <Card className="transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Building2 className={`w-5 h-5 ${watchedOfficeId ? 'text-primary' : ''}`} />
+              <Building2
+                className={`w-5 h-5 ${watchedOfficeId ? "text-primary" : ""}`}
+              />
               {t("dashboard.step1")}: {t("dashboard.selectOffice")}
             </CardTitle>
             <CardDescription>
@@ -252,42 +326,25 @@ export default function ApplyServicePage() {
               control={form.control}
               name="officeId"
               render={({ field, fieldState }) => (
-                  <Field>
+                <Field>
                   <FieldLabel>{t("navigation.office")} *</FieldLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      form.setValue("serviceId", "");
-                    }}
-                    value={field.value}
-                    disabled={isLoadingOffices || isSubmitting}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("dashboard.selectAnOffice")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingOffices ? (
-                        <div className="flex items-center justify-center p-4">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        </div>
-                      ) : offices.length === 0 ? (
-                        <div className="p-4 text-sm text-muted-foreground">
-                          {t("dashboard.noOfficesAvailable")}
-                        </div>
-                      ) : (
-                        offices.map((office) => (
-                          <SelectItem key={office.id} value={office.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{office.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {t("dashboard.room")} {office.roomNumber} - {office.address}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  {isLoadingOffices ? (
+                    <div className="flex items-center justify-center p-4 border rounded-md">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <OfficeCombobox
+                      offices={offices}
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("serviceId", "");
+                      }}
+                      placeholder={t("dashboard.selectAnOffice")}
+                      disabled={isSubmitting}
+                      error={!!fieldState.error}
+                    />
+                  )}
                   {fieldState.error && (
                     <FieldDescription className="text-destructive">
                       {fieldState.error.message}
@@ -304,7 +361,11 @@ export default function ApplyServicePage() {
           <Card className="transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className={`w-5 h-5 ${watchedServiceId ? 'text-primary' : ''}`} />
+                <FileText
+                  className={`w-5 h-5 ${
+                    watchedServiceId ? "text-primary" : ""
+                  }`}
+                />
                 {t("dashboard.step2")}: {t("dashboard.selectService")}
               </CardTitle>
               <CardDescription>
@@ -318,39 +379,24 @@ export default function ApplyServicePage() {
                 render={({ field, fieldState }) => (
                   <Field>
                     <FieldLabel>{t("dashboard.service")} *</FieldLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoadingServices || isSubmitting}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("dashboard.selectAService")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoadingServices ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          </div>
-                        ) : services.length === 0 ? (
-                          <div className="p-4 text-sm text-muted-foreground">
-                            {t("dashboard.noServicesAvailableForOffice")}
-                          </div>
-                        ) : (
-                          services.map((service) => (
-                            <SelectItem key={service.id} value={service.id}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">
-                                  {service.name}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {service.description}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                    {isLoadingServices ? (
+                      <div className="flex items-center justify-center p-4 border rounded-md">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      </div>
+                    ) : services.length === 0 ? (
+                      <div className="p-4 text-sm text-muted-foreground border rounded-md">
+                        {t("dashboard.noServicesAvailableForOffice")}
+                      </div>
+                    ) : (
+                      <ServiceCombobox
+                        services={services}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder={t("dashboard.selectAService")}
+                        disabled={isSubmitting}
+                        error={!!fieldState.error}
+                      />
+                    )}
                     {fieldState.error && (
                       <FieldDescription className="text-destructive">
                         {fieldState.error.message}
@@ -391,7 +437,8 @@ export default function ApplyServicePage() {
                     })}
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {t("dashboard.slotDuration")}: {officeAvailability.slotDuration} {t("dashboard.minutes")}
+                    {t("dashboard.slotDuration")}:{" "}
+                    {officeAvailability.slotDuration} {t("dashboard.minutes")}
                   </p>
                 </div>
               )}
@@ -405,14 +452,17 @@ export default function ApplyServicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <List className="w-5 h-5 text-primary" />
-                {t("dashboard.step3")}: {t("dashboard.requirementsAndServiceInfo")}
+                {t("dashboard.step3")}:{" "}
+                {t("dashboard.requirementsAndServiceInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedService.requirements &&
                 selectedService.requirements.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">{t("dashboard.requirements")}:</h4>
+                    <h4 className="font-medium mb-2">
+                      {t("dashboard.requirements")}:
+                    </h4>
                     <ul className="list-disc list-inside space-y-1 text-sm">
                       {selectedService.requirements.map((req) => (
                         <li key={req.id}>
@@ -432,7 +482,9 @@ export default function ApplyServicePage() {
               {selectedService.serviceFors &&
                 selectedService.serviceFors.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">{t("dashboard.serviceFor")}:</h4>
+                    <h4 className="font-medium mb-2">
+                      {t("dashboard.serviceFor")}:
+                    </h4>
                     <ul className="list-disc list-inside space-y-1 text-sm">
                       {selectedService.serviceFors.map((sf) => (
                         <li key={sf.id}>
@@ -672,7 +724,9 @@ export default function ApplyServicePage() {
             <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
               <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">{t("dashboard.requestSubmittedSuccessfully")}</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              {t("dashboard.requestSubmittedSuccessfully")}
+            </h2>
             <p className="text-muted-foreground">
               {t("dashboard.requestSubmittedMessage")}
             </p>

@@ -151,7 +151,9 @@ export default function CustomerRequestPage() {
   };
 
   // Handle multi-step form submit (for new requests)
-  const handleMultiStepSubmit = async (data: CustomerRequestFormValues & { files: File[] }) => {
+  const handleMultiStepSubmit = async (
+    data: CustomerRequestFormValues & { files: File[] }
+  ) => {
     if (!currentUserId) {
       toast.error(t("dashboard.pleaseLoginToCreateRequest"));
       return;
@@ -214,28 +216,40 @@ export default function CustomerRequestPage() {
   const filteredRequests =
     statusFilter === "all"
       ? requests
-      : requests.filter((req) => calculateOverallStatus(req.statusbystaff, req.statusbyadmin) === statusFilter);
+      : requests.filter(
+          (req) =>
+            calculateOverallStatus(req.statusbystaff, req.statusbyadmin) ===
+            statusFilter
+        );
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 h-dvh overflow-y-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.myRequests")}</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            {t("dashboard.myRequests")}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {t("dashboard.createAndManageRequests")}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t("dashboard.filterByStatus")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("dashboard.allRequests")}</SelectItem>
-              <SelectItem value={RequestStatus.PENDING}>{t("dashboard.pending")}</SelectItem>
-              <SelectItem value={RequestStatus.APPROVED}>{t("dashboard.approved")}</SelectItem>
-              <SelectItem value={RequestStatus.REJECTED}>{t("dashboard.rejected")}</SelectItem>
+              <SelectItem value={RequestStatus.PENDING}>
+                {t("dashboard.pending")}
+              </SelectItem>
+              <SelectItem value={RequestStatus.APPROVED}>
+                {t("dashboard.approved")}
+              </SelectItem>
+              <SelectItem value={RequestStatus.REJECTED}>
+                {t("dashboard.rejected")}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -260,7 +274,9 @@ export default function CustomerRequestPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">{t("dashboard.loadingRequests")}</p>
+          <p className="text-muted-foreground">
+            {t("dashboard.loadingRequests")}
+          </p>
         </div>
       )}
 
@@ -268,10 +284,15 @@ export default function CustomerRequestPage() {
       {!isLoading && filteredRequests.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <FileText className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">{t("dashboard.noRequestsFound")}</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            {t("dashboard.noRequestsFound")}
+          </h3>
           <p className="text-muted-foreground mb-6">
             {statusFilter !== "all"
-              ? t("dashboard.noRequestsForStatus").replace("{status}", statusFilter)
+              ? t("dashboard.noRequestsForStatus").replace(
+                  "{status}",
+                  statusFilter
+                )
               : t("dashboard.noRequestsCreatedYet")}
           </p>
         </div>
@@ -279,7 +300,7 @@ export default function CustomerRequestPage() {
 
       {/* Requests Grid */}
       {!isLoading && filteredRequests.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredRequests.map((request) => (
             <RequestCard
               key={request.id}

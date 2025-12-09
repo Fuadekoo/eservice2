@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Loader2, RefreshCw, Clock, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Plus,
+  Calendar,
+  Loader2,
+  RefreshCw,
+  Clock,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAppointmentStore } from "./_store/appointment-store";
 import { AppointmentCard } from "./_components/appointment-card";
@@ -123,26 +131,36 @@ export default function AppointmentPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 h-dvh overflow-y-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.myAppointments")}</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            {t("dashboard.myAppointments")}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {t("dashboard.manageScheduledAppointments")}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t("dashboard.filterByStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t("dashboard.allAppointments")}</SelectItem>
+              <SelectItem value="all">
+                {t("dashboard.allAppointments")}
+              </SelectItem>
               <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
-              <SelectItem value="approved">{t("dashboard.approved")}</SelectItem>
-              <SelectItem value="completed">{t("dashboard.completed")}</SelectItem>
-              <SelectItem value="cancelled">{t("dashboard.cancelled")}</SelectItem>
+              <SelectItem value="approved">
+                {t("dashboard.approved")}
+              </SelectItem>
+              <SelectItem value="completed">
+                {t("dashboard.completed")}
+              </SelectItem>
+              <SelectItem value="cancelled">
+                {t("dashboard.cancelled")}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -159,7 +177,10 @@ export default function AppointmentPage() {
             />
             {t("common.refresh")}
           </Button>
-          <Button onClick={handleCreate} disabled={approvedRequests.length === 0}>
+          <Button
+            onClick={handleCreate}
+            disabled={approvedRequests.length === 0}
+          >
             <Plus className="w-4 h-4 mr-2" />
             {t("dashboard.newAppointment")}
           </Button>
@@ -168,7 +189,7 @@ export default function AppointmentPage() {
 
       {/* Statistics Cards */}
       {appointments.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           {/* Scheduled Appointments Card */}
           <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 p-6 relative overflow-hidden">
             <div className="relative z-10">
@@ -214,7 +235,9 @@ export default function AppointmentPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">{t("dashboard.loadingAppointments")}</p>
+          <p className="text-muted-foreground">
+            {t("dashboard.loadingAppointments")}
+          </p>
         </div>
       )}
 
@@ -222,10 +245,15 @@ export default function AppointmentPage() {
       {!isLoading && filteredAppointments.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Calendar className="w-20 h-20 text-muted-foreground mb-6" />
-          <h3 className="text-xl font-semibold mb-2">{t("dashboard.noAppointmentsFound")}</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            {t("dashboard.noAppointmentsFound")}
+          </h3>
           <p className="text-muted-foreground mb-6">
             {statusFilter !== "all"
-              ? t("dashboard.noAppointmentsForStatus").replace("{status}", statusFilter)
+              ? t("dashboard.noAppointmentsForStatus").replace(
+                  "{status}",
+                  statusFilter
+                )
               : approvedRequests.length === 0
               ? t("dashboard.needApprovedRequestForAppointment")
               : t("dashboard.noAppointmentsCreatedYet")}
@@ -241,7 +269,7 @@ export default function AppointmentPage() {
 
       {/* Appointments Grid */}
       {!isLoading && filteredAppointments.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredAppointments.map((appointment) => (
             <AppointmentCard
               key={appointment.id}
@@ -276,4 +304,3 @@ export default function AppointmentPage() {
     </div>
   );
 }
-

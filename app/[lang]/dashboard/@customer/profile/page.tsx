@@ -118,13 +118,15 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-4xl">
+    <div className="container mx-auto py-4 sm:py-6 max-w-4xl h-dvh overflow-y-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           {t("profile.title")}
         </h1>
-        <p className="text-muted-foreground mt-1">{t("profile.manageInfo")}</p>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
+          {t("profile.manageInfo")}
+        </p>
       </div>
 
       {isLoading ? (
@@ -133,7 +135,7 @@ export default function ProfilePage() {
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-4 sm:mb-6">
             <TabsTrigger value="profile" className="gap-2">
               <User className="w-4 h-4" />
               {t("profile.updateProfile")}

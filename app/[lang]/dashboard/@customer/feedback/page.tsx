@@ -25,7 +25,9 @@ export default function FeedbackPage() {
     updateFeedback,
   } = useFeedbackStore();
 
-  const [filter, setFilter] = useState<"all" | "with-feedback" | "without-feedback">("all");
+  const [filter, setFilter] = useState<
+    "all" | "with-feedback" | "without-feedback"
+  >("all");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -65,43 +67,47 @@ export default function FeedbackPage() {
     total: approvedRequests.length,
     withFeedback: approvedRequests.filter((req) => req.customerSatisfaction)
       .length,
-    withoutFeedback: approvedRequests.filter(
-      (req) => !req.customerSatisfaction
-    ).length,
+    withoutFeedback: approvedRequests.filter((req) => !req.customerSatisfaction)
+      .length,
     averageRating:
       approvedRequests
         .filter((req) => req.customerSatisfaction)
         .reduce(
-          (sum, req) =>
-            sum + (req.customerSatisfaction?.rating || 0),
+          (sum, req) => sum + (req.customerSatisfaction?.rating || 0),
           0
         ) /
-        (approvedRequests.filter((req) => req.customerSatisfaction).length ||
-          1),
+      (approvedRequests.filter((req) => req.customerSatisfaction).length || 1),
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 h-dvh overflow-y-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Star className="w-8 h-8 text-yellow-500" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
             {t("navigation.feedback")}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {t("dashboard.shareExperienceAndRate")}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-            <SelectTrigger className="w-[180px]">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <Select
+            value={filter}
+            onValueChange={(value: any) => setFilter(value)}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder={t("dashboard.filterFeedback")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("dashboard.allRequests")}</SelectItem>
-              <SelectItem value="with-feedback">{t("dashboard.withFeedback")}</SelectItem>
-              <SelectItem value="without-feedback">{t("dashboard.withoutFeedback")}</SelectItem>
+              <SelectItem value="with-feedback">
+                {t("dashboard.withFeedback")}
+              </SelectItem>
+              <SelectItem value="without-feedback">
+                {t("dashboard.withoutFeedback")}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -120,57 +126,59 @@ export default function FeedbackPage() {
 
       {/* Statistics Cards */}
       {approvedRequests.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border bg-card p-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border bg-card p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
                   {t("dashboard.totalRequests")}
                 </p>
-                <p className="text-2xl font-bold mt-1">{stats.total}</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">
+                  {stats.total}
+                </p>
               </div>
-              <MessageSquare className="w-8 h-8 text-muted-foreground/50" />
+              <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground/50 shrink-0 ml-2" />
             </div>
           </div>
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-lg border bg-card p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
                   {t("dashboard.withFeedback")}
                 </p>
-                <p className="text-2xl font-bold mt-1 text-green-600">
+                <p className="text-xl sm:text-2xl font-bold mt-1 text-green-600">
                   {stats.withFeedback}
                 </p>
               </div>
-              <Star className="w-8 h-8 text-green-600/50" />
+              <Star className="w-6 h-6 sm:w-8 sm:h-8 text-green-600/50 shrink-0 ml-2" />
             </div>
           </div>
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-lg border bg-card p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
                   {t("dashboard.pendingFeedback")}
                 </p>
-                <p className="text-2xl font-bold mt-1 text-orange-600">
+                <p className="text-xl sm:text-2xl font-bold mt-1 text-orange-600">
                   {stats.withoutFeedback}
                 </p>
               </div>
-              <MessageSquare className="w-8 h-8 text-orange-600/50" />
+              <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600/50 shrink-0 ml-2" />
             </div>
           </div>
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-lg border bg-card p-3 sm:p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-1">
                   {t("dashboard.averageRating")}
                 </p>
-                <p className="text-2xl font-bold mt-1 text-yellow-600">
+                <p className="text-xl sm:text-2xl font-bold mt-1 text-yellow-600">
                   {stats.averageRating > 0
                     ? stats.averageRating.toFixed(1)
                     : "—"}
                 </p>
               </div>
-              <Star className="w-8 h-8 text-yellow-600/50 fill-yellow-600/50" />
+              <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600/50 fill-yellow-600/50 shrink-0 ml-2" />
             </div>
           </div>
         </div>
@@ -180,7 +188,9 @@ export default function FeedbackPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">{t("dashboard.loadingApprovedRequests")}</p>
+          <p className="text-muted-foreground">
+            {t("dashboard.loadingApprovedRequests")}
+          </p>
         </div>
       )}
 
@@ -216,7 +226,7 @@ export default function FeedbackPage() {
 
       {/* Feedback Cards Grid */}
       {!isLoading && filteredRequests.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredRequests.map((request) => (
             <FeedbackCard
               key={request.id}
@@ -230,4 +240,3 @@ export default function FeedbackPage() {
     </div>
   );
 }
-

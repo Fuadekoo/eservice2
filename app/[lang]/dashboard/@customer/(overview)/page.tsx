@@ -149,40 +149,47 @@ export default function CustomerOverviewPage() {
       <div className="container mx-auto py-6">
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">{t("dashboard.loadingDashboard")}</p>
+          <p className="text-muted-foreground">
+            {t("dashboard.loadingDashboard")}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6 overflow-y-auto h-dvh">
+    <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 overflow-y-auto h-dvh px-4 sm:px-6 lg:px-8">
       {/* Welcome Header */}
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {user?.username 
-            ? t("dashboard.welcomeBackUser").replace("{username}", user.username)
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          {user?.username
+            ? t("dashboard.welcomeBackUser").replace(
+                "{username}",
+                user.username
+              )
             : t("dashboard.welcomeBack")}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           {t("dashboard.hereIsYourDashboard")}
         </p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {/* Total Applications */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                   {t("dashboard.totalApplications")}
                 </p>
-                <p className="text-3xl font-bold">{stats.total}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
+                  {stats.total}
+                </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 ml-2">
+                <FileText className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardContent>
@@ -190,18 +197,18 @@ export default function CustomerOverviewPage() {
 
         {/* Pending */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                   {t("dashboard.pending")}
                 </p>
-                <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
                   {stats.pending}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center shrink-0 ml-2">
+                <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </CardContent>
@@ -209,18 +216,18 @@ export default function CustomerOverviewPage() {
 
         {/* Approved */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                   {t("dashboard.approved")}
                 </p>
-                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400">
                   {stats.approved}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0 ml-2">
+                <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
@@ -228,18 +235,18 @@ export default function CustomerOverviewPage() {
 
         {/* Appointments */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 line-clamp-1">
                   {t("dashboard.appointments")}
                 </p>
-                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600 dark:text-purple-400">
                   {stats.appointments}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0 ml-2">
+                <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </CardContent>
@@ -247,12 +254,14 @@ export default function CustomerOverviewPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Recent Applications */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">{t("dashboard.recentApplications")}</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">
+                {t("dashboard.recentApplications")}
+              </h2>
             </div>
             <div className="space-y-4">
               {recentApplications.length > 0 ? (
@@ -297,9 +306,11 @@ export default function CustomerOverviewPage() {
 
         {/* Your Appointments */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">{t("dashboard.yourAppointments")}</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">
+                {t("dashboard.yourAppointments")}
+              </h2>
             </div>
             <div className="space-y-4">
               {upcomingAppointments.length > 0 ? (
@@ -325,7 +336,9 @@ export default function CustomerOverviewPage() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">{t("dashboard.noUpcomingAppointments")}</p>
+                  <p className="text-sm">
+                    {t("dashboard.noUpcomingAppointments")}
+                  </p>
                 </div>
               )}
             </div>
@@ -343,8 +356,10 @@ export default function CustomerOverviewPage() {
 
       {/* Quick Actions */}
       <Card>
-        <CardContent className="p-6">
-          <h2 className="text-xl font-semibold mb-4">{t("dashboard.quickActions")}</h2>
+        <CardContent className="p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">
+            {t("dashboard.quickActions")}
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Button
               variant="default"

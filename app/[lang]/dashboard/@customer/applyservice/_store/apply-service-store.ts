@@ -56,7 +56,7 @@ export const useApplyServiceStore = create<ApplyServiceStore>((set, get) => ({
   fetchOffices: async () => {
     try {
       set({ isLoadingOffices: true });
-      const response = await fetch("/api/office?page=1&limit=100");
+      const response = await fetch("/api/office?page=1&limit=1000");
       const result = await response.json();
 
       if (result.success) {

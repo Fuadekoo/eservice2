@@ -141,21 +141,22 @@ export default function RequestManagementPage() {
   };
 
   return (
-    <div className="w-full h-dvh overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
-      <div className="container mx-auto space-y-6">
+    <div className="w-full h-dvh overflow-y-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold">
               {t("navigation.requestManagement")}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               {t("dashboard.manageServiceRequestsForAssignedServices")}
             </p>
           </div>
           <Button
             variant="outline"
             size="icon"
+            className="shrink-0"
             onClick={() => fetchRequests()}
             disabled={isLoading}
           >
@@ -242,54 +243,82 @@ export default function RequestManagementPage() {
             </div>
           ) : (
             <>
-              <div className="h-dvh overflow-auto">
-                <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("dashboard.service")}</TableHead>
-                    <TableHead>{t("dashboard.customer")}</TableHead>
-                    <TableHead>{t("dashboard.date")}</TableHead>
-                    <TableHead>{t("common.status")}</TableHead>
-                    <TableHead>{t("dashboard.staffApproval")}</TableHead>
-                    <TableHead>{t("dashboard.managerApproval")}</TableHead>
-                    <TableHead className="text-right">
-                      {t("common.actions")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell className="font-medium">
-                        {request.service.name}
-                      </TableCell>
-                      <TableCell>{request.user.username}</TableCell>
-                      <TableCell>
-                        {format(new Date(request.date), "MMM dd, yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(
-                          calculateOverallStatus(
-                            request.statusbystaff,
-                            request.statusbyadmin
-                          )
-                        )}
-                      </TableCell>
-                      <TableCell>{getStaffApproval(request)}</TableCell>
-                      <TableCell>{getManagerApproval(request)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewDetails(request)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <div className="min-w-full inline-block align-middle">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs sm:text-sm">
+                          {t("dashboard.service")}
+                        </TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden sm:table-cell">
+                          {t("dashboard.customer")}
+                        </TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden md:table-cell">
+                          {t("dashboard.date")}
+                        </TableHead>
+                        <TableHead className="text-xs sm:text-sm">
+                          {t("common.status")}
+                        </TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden lg:table-cell">
+                          {t("dashboard.staffApproval")}
+                        </TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden lg:table-cell">
+                          {t("dashboard.managerApproval")}
+                        </TableHead>
+                        <TableHead className="text-right text-xs sm:text-sm">
+                          {t("common.actions")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.map((request) => (
+                        <TableRow key={request.id}>
+                          <TableCell className="font-medium text-xs sm:text-sm">
+                            <div>
+                              <p className="font-medium line-clamp-1">
+                                {request.service.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground sm:hidden mt-1">
+                                {request.user.username}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                            {request.user.username}
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm hidden md:table-cell">
+                            {format(new Date(request.date), "MMM dd, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm">
+                            {getStatusBadge(
+                              calculateOverallStatus(
+                                request.statusbystaff,
+                                request.statusbyadmin
+                              )
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                            {getStaffApproval(request)}
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                            {getManagerApproval(request)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 sm:h-10 sm:w-10"
+                              onClick={() => handleViewDetails(request)}
+                            >
+                              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
               {/* Pagination */}

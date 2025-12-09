@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Building2, Clock, FileText, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,38 +11,7 @@ import useTranslation from "@/hooks/useTranslation";
 import Image from "next/image";
 import { Navbar } from "@/components/guest/navbar";
 import { Footer } from "@/components/guest/footer";
-
-interface ServiceDetail {
-  id: string;
-  name: string;
-  description: string;
-  timeToTake: string;
-  officeId: string;
-  office?: {
-    id: string;
-    name: string;
-    roomNumber: string;
-    address: string;
-    status: boolean;
-    logo?: string | null;
-    slogan?: string | null;
-  };
-  requirements?: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-  }>;
-  serviceFors?: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-  }>;
-  assignedStaff?: Array<{
-    id: string;
-    name: string;
-    phoneNumber: string;
-  }>;
-}
+import { useServiceDetailStore } from "./_store/service-detail-store";
 
 export default function ServiceDetailPage() {
   const params = useParams<{ lang: string; serviceId: string }>();
@@ -51,44 +20,21 @@ export default function ServiceDetailPage() {
   const { t } = useTranslation();
   const { serviceId } = params;
 
-  const [service, setService] = useState<ServiceDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use Zustand store instead of local state
+  const { service, isLoading, error, fetchServiceDetail, reset } =
+    useServiceDetailStore();
 
   useEffect(() => {
     if (serviceId) {
-      fetchServiceDetail();
+      fetchServiceDetail(serviceId);
     }
+
+    // Cleanup: reset store when component unmounts
+    return () => {
+      reset();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serviceId]);
-
-  const fetchServiceDetail = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(`/api/service/${serviceId}`, {
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch service");
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        setService(result.data);
-      } else {
-        throw new Error(result.error || "Failed to load service");
-      }
-    } catch (err: any) {
-      console.error("Error fetching service detail:", err);
-      setError(err.message || "Failed to load service details");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleApplyNow = () => {
     // Redirect to login page with callback to apply for service
@@ -176,7 +122,9 @@ export default function ServiceDetailPage() {
                   </div>
                 )}
                 <div className="flex-1">
-                  <CardTitle className="text-2xl mb-2">{service.name}</CardTitle>
+                  <CardTitle className="text-2xl mb-2">
+                    {service.name}
+                  </CardTitle>
                   {service.office && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Building2 className="w-4 h-4" />
@@ -239,9 +187,7 @@ export default function ServiceDetailPage() {
           {service.requirements && service.requirements.length > 0 && (
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>
-                  {t("guest.requirements")}
-                </CardTitle>
+                <CardTitle>{t("guest.requirements")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -267,9 +213,7 @@ export default function ServiceDetailPage() {
           {service.serviceFors && service.serviceFors.length > 0 && (
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>
-                  {t("guest.thisServiceIsFor")}
-                </CardTitle>
+                <CardTitle>{t("guest.thisServiceIsFor")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -325,4 +269,3 @@ export default function ServiceDetailPage() {
     </div>
   );
 }
-

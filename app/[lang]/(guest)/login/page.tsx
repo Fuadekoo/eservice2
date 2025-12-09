@@ -1,6 +1,5 @@
 "use client";
 
-import { authenticate } from "@/actions/common/authentication";
 import Logo from "@/components/layout/logo";
 import Theme from "@/components/layout/theme";
 import { Button } from "@/components/ui/button";
@@ -12,14 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useRegistration } from "@/hooks/useRegistration";
 import useTranslation from "@/hooks/useTranslation";
-import { loginSchema } from "@/lib/zodSchema";
-import { Eye, EyeOff, KeyRound, Phone } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Phone, ArrowLeft, Home } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useLoginStore } from "./_store/login-store";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "./_schema";
 
 export default function Page() {
   const { lang, credentials } = useParams<{
@@ -28,48 +29,123 @@ export default function Page() {
   }>();
   const router = useRouter();
   const { t } = useTranslation();
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
 
-  const { onSubmit, validationErrors, register, setValue, isLoading } =
-    useRegistration(authenticate, loginSchema, (state) => {
-      if (state.status) {
-        setAuthError(null);
-        // Use stored callback URL or default to dashboard
-        if (callbackUrl) {
-          router.push(decodeURIComponent(callbackUrl));
-        } else {
-          router.push(`/${lang}/dashboard`);
-        }
-      } else {
-        // Set authentication error message
-        setAuthError(state.message || "Authentication failed");
-      }
-    });
-  const [hidden, setHidden] = useState(true);
+  // Use Zustand store
+  const {
+    formData,
+    isLoading,
+    error: authError,
+    callbackUrl,
+    isPasswordVisible,
+    setPhoneNumber,
+    setPassword,
+    setError,
+    setCallbackUrl,
+    togglePasswordVisibility,
+    login,
+    reset,
+  } = useLoginStore();
+
+  // React Hook Form setup
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      phoneNumber: formData.phoneNumber,
+      password: formData.password,
+    },
+  });
+
+  // Sync form values with store
+  const phoneNumberValue = watch("phoneNumber") || "";
+  const passwordValue = watch("password") || "";
 
   useEffect(() => {
-    // Get callback URL from query params
+    if (phoneNumberValue && phoneNumberValue !== formData.phoneNumber) {
+      setPhoneNumber(phoneNumberValue);
+    }
+  }, [phoneNumberValue, formData.phoneNumber, setPhoneNumber]);
+
+  useEffect(() => {
+    if (passwordValue !== formData.password) {
+      setPassword(passwordValue);
+    }
+  }, [passwordValue, formData.password, setPassword]);
+
+  // Get callback URL from query params
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const url = searchParams.get("callbackUrl");
       if (url) {
         setCallbackUrl(url);
       }
-    }
-  }, []);
 
+      // Check for error in URL params
+      const errorParam = searchParams.get("error");
+      if (errorParam) {
+        try {
+          const decodedError = decodeURIComponent(errorParam);
+          setError(decodedError);
+        } catch {
+          setError(errorParam);
+        }
+      }
+    }
+  }, [setCallbackUrl, setError]);
+
+  // Handle credentials from URL params (if provided)
   useEffect(() => {
     const [phoneNumber, password] = credentials ?? ["", ""];
     if (phoneNumber && password) {
       setValue("phoneNumber", phoneNumber);
       setValue("password", password);
-      onSubmit();
+      setPhoneNumber(phoneNumber);
+      setPassword(password);
+      // Auto-submit if credentials are provided
+      handleSubmit(onSubmit)();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Form submission handler
+  const onSubmit = async (data: { phoneNumber: string; password: string }) => {
+    setPhoneNumber(data.phoneNumber);
+    setPassword(data.password);
+    setError(null);
+
+    const result = await login(data);
+
+    if (result.status) {
+      // Use stored callback URL or default to dashboard
+      if (callbackUrl) {
+        router.push(decodeURIComponent(callbackUrl));
+      } else {
+        router.push(`/${lang}/dashboard`);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Back to Home Button - Top Left Corner */}
+      <div className="absolute top-4 left-4 z-50">
+        <Link href={`/${lang}`}>
+          <Button variant="ghost" size="sm" className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            <Home className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {t("guest.back") || "Back to Home"}
+            </span>
+          </Button>
+        </Link>
+      </div>
+
       {/* Theme Toggle - Top Right Corner */}
       <div className="absolute top-4 right-4 z-50">
         <Theme />
@@ -111,7 +187,7 @@ export default function Page() {
               </div>
             )}
 
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   {t("guest.phoneNumber")}
@@ -122,16 +198,17 @@ export default function Page() {
                     placeholder={t("guest.phonePlaceholder")}
                     className="pl-10 w-full"
                     type="tel"
-                    {...register("phoneNumber")}
-                    onChange={(e) => {
-                      register("phoneNumber").onChange(e);
-                      setAuthError(null);
-                    }}
+                    {...register("phoneNumber", {
+                      onChange: (e) => {
+                        setPhoneNumber(e.target.value);
+                        setError(null);
+                      },
+                    })}
                   />
                 </div>
-                {validationErrors.phoneNumber && (
+                {errors.phoneNumber && (
                   <p className="text-xs text-red-500">
-                    {validationErrors.phoneNumber}
+                    {errors.phoneNumber.message}
                   </p>
                 )}
               </div>
@@ -145,24 +222,29 @@ export default function Page() {
                   <Input
                     placeholder={t("auth.password")}
                     className="pl-10 pr-10 w-full"
-                    type={hidden ? "password" : "text"}
-                    {...register("password")}
+                    type={isPasswordVisible ? "text" : "password"}
+                    {...register("password", {
+                      onChange: (e) => {
+                        setPassword(e.target.value);
+                        setError(null);
+                      },
+                    })}
                   />
                   <button
                     type="button"
-                    onClick={() => setHidden((prev) => !prev)}
+                    onClick={togglePasswordVisibility}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2"
                   >
-                    {hidden ? (
-                      <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                    ) : (
+                    {isPasswordVisible ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
                     )}
                   </button>
                 </div>
-                {validationErrors.password && (
+                {errors.password && (
                   <p className="text-xs text-red-500">
-                    {validationErrors.password}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
