@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/auth";
 
 const SUPPORTED_LANGUAGES = ["en", "am", "or"];
 
-export default auth((req) => {
+export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Skip middleware for API routes, static files, and Next.js internals
