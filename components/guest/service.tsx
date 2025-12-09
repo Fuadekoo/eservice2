@@ -14,6 +14,7 @@ import {
 import { useLocale } from "@/lib/use-locale";
 import useTranslation from "@/hooks/useTranslation";
 import Image from "next/image";
+import { getLogoUrl } from "@/lib/utils/logo-url";
 
 interface Service {
   id: string;
@@ -39,11 +40,18 @@ interface OfficeWithServices {
   services: Service[];
 }
 
-export default function Service() {
+interface ServiceProps {
+  searchQuery?: string;
+}
+
+export default function Service({ searchQuery = "" }: ServiceProps) {
   const router = useRouter();
   const { locale } = useLocale();
   const { t } = useTranslation();
   const [officesWithServices, setOfficesWithServices] = useState<
+    OfficeWithServices[]
+  >([]);
+  const [allOfficesWithServices, setAllOfficesWithServices] = useState<
     OfficeWithServices[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -172,6 +180,7 @@ export default function Service() {
         Object.values(groupedByOffice) as OfficeWithServices[]
       ).sort((a, b) => a.officeName.localeCompare(b.officeName));
 
+      setAllOfficesWithServices(officesArray);
       setOfficesWithServices(officesArray);
     } catch (err: any) {
       console.error("Error fetching services:", err);
@@ -204,6 +213,23 @@ export default function Service() {
     // Redirect to service detail page
     router.push(`/${locale}/service/${serviceId}`);
   };
+
+  // Filter offices based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setOfficesWithServices(allOfficesWithServices);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = allOfficesWithServices.filter((office) => {
+      const officeName = office.officeName.toLowerCase();
+      const officeSlogan = (office.officeSlogan || "").toLowerCase();
+      return officeName.includes(query) || officeSlogan.includes(query);
+    });
+
+    setOfficesWithServices(filtered);
+  }, [searchQuery, allOfficesWithServices]);
 
   if (isLoading) {
     return (
@@ -265,11 +291,16 @@ export default function Service() {
                   {officeGroup.officeLogo ? (
                     <div className="relative w-12 h-12 shrink-0">
                       <Image
-                        src={`/api/filedata/${officeGroup.officeLogo}`}
+                        src={getLogoUrl(officeGroup.officeLogo) || ""}
                         alt={officeGroup.officeName}
                         fill
                         className="object-contain rounded"
                         sizes="48px"
+                        onError={(e) => {
+                          // Fallback to icon if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                        }}
                       />
                     </div>
                   ) : (
@@ -325,11 +356,16 @@ export default function Service() {
                 {selectedOffice?.officeLogo ? (
                   <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
                     <Image
-                      src={`/api/filedata/${selectedOffice.officeLogo}`}
+                      src={getLogoUrl(selectedOffice.officeLogo) || ""}
                       alt={selectedOffice.officeName}
                       fill
                       className="object-contain rounded bg-white/10"
                       sizes="48px"
+                      onError={(e) => {
+                        // Fallback to icon if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                      }}
                     />
                   </div>
                 ) : (

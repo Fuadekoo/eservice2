@@ -38,9 +38,10 @@ export function Navbar() {
     setLanguage(langCode);
     // Update URL to reflect language change
     const currentPath = pathname?.replace(/^\/(en|am|or)/, "") || "";
-    const newPath = currentPath === "" || currentPath === "/" 
-      ? `/${langCode}` 
-      : `/${langCode}${currentPath}`;
+    const newPath =
+      currentPath === "" || currentPath === "/"
+        ? `/${langCode}`
+        : `/${langCode}${currentPath}`;
     router.replace(newPath);
   };
 
@@ -73,13 +74,6 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="hover:opacity-90 transition">
-              Home
-            </Link>
-            <Link href="/services" className="hover:opacity-90 transition">
-              Services
-            </Link>
-
             {/* Language Toggle */}
             {isMounted && (
               <DropdownMenu>
@@ -130,7 +124,7 @@ export function Navbar() {
             </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu */}
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -169,43 +163,18 @@ export function Navbar() {
               </DropdownMenu>
             )}
 
-            <button
-              className="p-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden pb-4 flex flex-col gap-3">
-            <Link
-              href="/"
-              className="hover:opacity-90 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/services"
-              className="hover:opacity-90 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Services
-            </Link>
-            <Link
-              href={`/${language}/login`}
-              className="w-full"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Button variant="secondary" size="sm" className="w-full">
+            {/* Login Button */}
+            <Link href={`/${language}/login`}>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-white text-primary hover:bg-white/90 font-semibold"
+              >
                 Sign In
               </Button>
             </Link>
-          </nav>
-        )}
+          </div>
+        </div>
       </div>
     </header>
   );

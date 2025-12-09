@@ -106,7 +106,7 @@ export function Body() {
       </section>
 
       {/* Services Section - Fetched from Database */}
-      <Service />
+      <Service searchQuery={searchQuery} />
 
       {/* Administrator Section - Fetched from Database */}
       <Administrator />

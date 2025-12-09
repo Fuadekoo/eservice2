@@ -12,6 +12,7 @@ import Image from "next/image";
 import { Navbar } from "@/components/guest/navbar";
 import { Footer } from "@/components/guest/footer";
 import { useServiceDetailStore } from "./_store/service-detail-store";
+import { getLogoUrl } from "@/lib/utils/logo-url";
 
 export default function ServiceDetailPage() {
   const params = useParams<{ lang: string; serviceId: string }>();
@@ -109,11 +110,16 @@ export default function ServiceDetailPage() {
                 {service.office?.logo ? (
                   <div className="relative w-16 h-16 shrink-0">
                     <Image
-                      src={`/api/filedata/${service.office.logo}`}
+                      src={getLogoUrl(service.office.logo) || ""}
                       alt={service.office.name}
                       fill
                       className="object-contain rounded"
                       sizes="64px"
+                      onError={(e) => {
+                        // Fallback to icon if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                      }}
                     />
                   </div>
                 ) : (
