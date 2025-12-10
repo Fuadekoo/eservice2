@@ -69,155 +69,66 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
       setIsLoading(true);
       setError(null);
 
-      // Fetch both services and offices in parallel
-      // Request all services by setting a very high pageSize
-      const [servicesResponse, officesResponse] = await Promise.all([
-        fetch("/api/service?pageSize=10000&page=1", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-        }),
-        fetch("/api/office?limit=1000", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-        }),
-      ]);
-
-      // Check if responses are JSON before parsing
-      const servicesContentType = servicesResponse.headers.get("content-type");
-      const officesContentType = officesResponse.headers.get("content-type");
-
-      if (
-        !servicesContentType ||
-        !servicesContentType.includes("application/json")
-      ) {
-        const text = await servicesResponse.text();
-        throw new Error(
-          `Server returned non-JSON response: ${servicesResponse.status} ${servicesResponse.statusText}`
-        );
-      }
-
-      if (
-        !officesContentType ||
-        !officesContentType.includes("application/json")
-      ) {
-        const text = await officesResponse.text();
-        throw new Error(
-          `Server returned non-JSON response: ${officesResponse.status} ${officesResponse.statusText}`
-        );
-      }
-
-      const servicesResult = await servicesResponse.json();
-      const officesResult = await officesResponse.json();
-
-      if (!servicesResponse.ok) {
-        throw new Error(
-          servicesResult.error ||
-            `Failed to fetch services: ${servicesResponse.status} ${servicesResponse.statusText}`
-        );
-      }
-
-      if (!officesResponse.ok) {
-        throw new Error(
-          officesResult.error ||
-            `Failed to fetch offices: ${officesResponse.status} ${officesResponse.statusText}`
-        );
-      }
-
-      // Get all active offices and create a map for quick lookup
-      const allActiveOffices =
-        officesResult.success && Array.isArray(officesResult.data)
-          ? officesResult.data.filter((office: any) => office.status === true)
-          : [];
-
-      // Create a map of officeId -> office for efficient lookup
-      const officeMap = new Map<string, any>();
-      allActiveOffices.forEach((office: any) => {
-        officeMap.set(office.id, {
-          id: office.id,
-          name: office.name,
-          logo: office.logo,
-          slogan: office.slogan,
-          status: office.status,
-        });
+      // Fetch offices with services from a single optimized API endpoint
+      const response = await fetch("/api/guest/data", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
       });
 
-      // Initialize groupedByOffice with all active offices (even if they have no services)
-      const groupedByOffice: Record<string, OfficeWithServices> = {};
-      allActiveOffices.forEach((office: any) => {
-        groupedByOffice[office.id] = {
-          officeId: office.id,
-          officeName: office.name,
-          officeLogo: office.logo,
-          officeSlogan: office.slogan,
-          services: [],
-        };
-      });
-
-      // Group services by office - improved algorithm
-      if (servicesResult.success && Array.isArray(servicesResult.data)) {
-        servicesResult.data.forEach((service: Service) => {
-          const officeId = service.officeId;
-
-          // Skip if officeId is missing
-          if (!officeId) {
-            console.warn("Service missing officeId:", service.id);
-            return;
-          }
-
-          // Get office info - prefer from service.office, fallback to officeMap
-          let officeInfo: any = null;
-          if (service.office && service.office.status) {
-            // Use office data from service relation if available and active
-            officeInfo = {
-              id: service.office.id,
-              name: service.office.name,
-              logo: service.office.logo,
-              slogan: service.office.slogan,
-              status: service.office.status,
-            };
-          } else {
-            // Fallback to officeMap lookup
-            officeInfo = officeMap.get(officeId);
-          }
-
-          // Skip if office is not found or inactive
-          if (!officeInfo || !officeInfo.status) {
-            console.warn(
-              `Service ${service.id} has invalid or inactive office: ${officeId}`
-            );
-            return;
-          }
-
-          // Ensure office group exists (should already exist, but double-check)
-          if (!groupedByOffice[officeId]) {
-            groupedByOffice[officeId] = {
-              officeId: officeInfo.id,
-              officeName: officeInfo.name,
-              officeLogo: officeInfo.logo,
-              officeSlogan: officeInfo.slogan,
-              services: [],
-            };
-          }
-
-          // Add service to the office group
-          groupedByOffice[officeId].services.push(service);
-        });
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(
+          `Server returned non-JSON response: ${response.status} ${response.statusText}`
+        );
       }
 
-      // Convert to array and sort by office name
-      const officesArray = (
-        Object.values(groupedByOffice) as OfficeWithServices[]
-      ).sort((a, b) => a.officeName.localeCompare(b.officeName));
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            `Failed to fetch guest data: ${response.status} ${response.statusText}`
+        );
+      }
+
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error("Invalid response format from server");
+      }
+
+      // The API already returns offices with services grouped
+      // Just need to map to our interface format
+      const officesArray: OfficeWithServices[] = result.data.map(
+        (item: any) => ({
+          officeId: item.officeId,
+          officeName: item.officeName,
+          officeLogo: item.officeLogo,
+          officeSlogan: item.officeSlogan,
+          services: (item.services || []).map((service: any) => ({
+            id: service.id,
+            name: service.name,
+            description: service.description,
+            officeId: service.officeId,
+            office: {
+              id: item.officeId,
+              name: item.officeName,
+              roomNumber: item.officeRoomNumber,
+              address: item.officeAddress,
+              status: true,
+              logo: item.officeLogo,
+              slogan: item.officeSlogan,
+            },
+          })),
+        })
+      );
 
       console.log(
         `✅ Loaded ${officesArray.length} offices with ${
-          servicesResult.data?.length || 0
+          result.meta?.totalServices || 0
         } total services`
       );
 
