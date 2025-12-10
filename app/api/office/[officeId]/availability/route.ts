@@ -152,24 +152,29 @@ export async function PUT(
       );
     }
 
-    // Check if user is admin or manager of this office
-    const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
-      include: {
-        user: {
-          include: {
-            role: true,
-          },
-        },
-      },
+    // Check user's role directly from user table (admins might not have staff records)
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { role: true },
     });
 
-    const isAdmin =
-      userStaff?.user?.role?.name?.toLowerCase() === "admin" ||
-      userStaff?.user?.role?.name?.toLowerCase() === "administrator";
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
 
     // If not admin, verify user is manager of this office
     if (!isAdmin) {
+      // Get staff record to check office assignment
+      const userStaff = await prisma.staff.findFirst({
+        where: { userId: session.user.id },
+      });
+
       if (!userStaff || userStaff.officeId !== officeId) {
         return NextResponse.json(
           {
@@ -181,7 +186,6 @@ export async function PUT(
       }
 
       // Verify user has manager role
-      const roleName = userStaff.user?.role?.name?.toLowerCase() || "";
       if (roleName !== "manager" && roleName !== "office_manager") {
         return NextResponse.json(
           {

@@ -289,13 +289,13 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                 {/* Logo or Icon */}
                 <div className="flex items-center gap-3 mb-3">
                   {officeGroup.officeLogo ? (
-                    <div className="relative w-12 h-12 shrink-0">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
                       <Image
                         src={getLogoUrl(officeGroup.officeLogo) || ""}
                         alt={officeGroup.officeName}
                         fill
                         className="object-contain rounded"
-                        sizes="48px"
+                        sizes="96px"
                         onError={(e) => {
                           // Fallback to icon if image fails to load
                           const target = e.target as HTMLImageElement;
@@ -304,8 +304,8 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-primary/10 rounded">
-                      <Building2 className="w-6 h-6 text-primary" />
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center bg-primary/10 rounded">
+                      <Building2 className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -354,13 +354,13 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
             <div className="flex flex-row items-start justify-between gap-2 mb-2">
               <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
                 {selectedOffice?.officeLogo ? (
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 shrink-0">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0">
                     <Image
                       src={getLogoUrl(selectedOffice.officeLogo) || ""}
                       alt={selectedOffice.officeName}
                       fill
                       className="object-contain rounded bg-white/10"
-                      sizes="48px"
+                      sizes="96px"
                       onError={(e) => {
                         // Fallback to icon if image fails to load
                         const target = e.target as HTMLImageElement;
@@ -369,8 +369,8 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center bg-white/10 rounded">
-                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center bg-white/10 rounded">
+                    <Building2 className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                   </div>
                 )}
                 <DialogTitle className="text-lg sm:text-xl font-bold text-white break-words hyphens-auto flex-1">
