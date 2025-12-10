@@ -70,8 +70,9 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
       setError(null);
 
       // Fetch both services and offices in parallel
+      // Request all services by setting a very high pageSize
       const [servicesResponse, officesResponse] = await Promise.all([
-        fetch("/api/service", {
+        fetch("/api/service?pageSize=10000&page=1", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -128,57 +129,97 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
         );
       }
 
-      // Get all active offices
+      // Get all active offices and create a map for quick lookup
       const allActiveOffices =
         officesResult.success && Array.isArray(officesResult.data)
           ? officesResult.data.filter((office: any) => office.status === true)
           : [];
 
-      // Group services by office
-      const groupedByOffice: Record<string, OfficeWithServices> = {};
+      // Create a map of officeId -> office for efficient lookup
+      const officeMap = new Map<string, any>();
+      allActiveOffices.forEach((office: any) => {
+        officeMap.set(office.id, {
+          id: office.id,
+          name: office.name,
+          logo: office.logo,
+          slogan: office.slogan,
+          status: office.status,
+        });
+      });
 
+      // Initialize groupedByOffice with all active offices (even if they have no services)
+      const groupedByOffice: Record<string, OfficeWithServices> = {};
+      allActiveOffices.forEach((office: any) => {
+        groupedByOffice[office.id] = {
+          officeId: office.id,
+          officeName: office.name,
+          officeLogo: office.logo,
+          officeSlogan: office.slogan,
+          services: [],
+        };
+      });
+
+      // Group services by office - improved algorithm
       if (servicesResult.success && Array.isArray(servicesResult.data)) {
         servicesResult.data.forEach((service: Service) => {
-          if (!service.office || !service.office.status) {
-            return; // Skip services from inactive offices
+          const officeId = service.officeId;
+
+          // Skip if officeId is missing
+          if (!officeId) {
+            console.warn("Service missing officeId:", service.id);
+            return;
           }
 
-          const officeId = service.officeId;
-          const officeName = service.office.name;
-          const officeLogo = service.office.logo;
-          const officeSlogan = service.office.slogan;
+          // Get office info - prefer from service.office, fallback to officeMap
+          let officeInfo: any = null;
+          if (service.office && service.office.status) {
+            // Use office data from service relation if available and active
+            officeInfo = {
+              id: service.office.id,
+              name: service.office.name,
+              logo: service.office.logo,
+              slogan: service.office.slogan,
+              status: service.office.status,
+            };
+          } else {
+            // Fallback to officeMap lookup
+            officeInfo = officeMap.get(officeId);
+          }
 
+          // Skip if office is not found or inactive
+          if (!officeInfo || !officeInfo.status) {
+            console.warn(
+              `Service ${service.id} has invalid or inactive office: ${officeId}`
+            );
+            return;
+          }
+
+          // Ensure office group exists (should already exist, but double-check)
           if (!groupedByOffice[officeId]) {
             groupedByOffice[officeId] = {
-              officeId,
-              officeName,
-              officeLogo,
-              officeSlogan,
+              officeId: officeInfo.id,
+              officeName: officeInfo.name,
+              officeLogo: officeInfo.logo,
+              officeSlogan: officeInfo.slogan,
               services: [],
             };
           }
 
+          // Add service to the office group
           groupedByOffice[officeId].services.push(service);
         });
       }
-
-      // Add offices with no services
-      allActiveOffices.forEach((office: any) => {
-        if (!groupedByOffice[office.id]) {
-          groupedByOffice[office.id] = {
-            officeId: office.id,
-            officeName: office.name,
-            officeLogo: office.logo,
-            officeSlogan: office.slogan,
-            services: [],
-          };
-        }
-      });
 
       // Convert to array and sort by office name
       const officesArray = (
         Object.values(groupedByOffice) as OfficeWithServices[]
       ).sort((a, b) => a.officeName.localeCompare(b.officeName));
+
+      console.log(
+        `✅ Loaded ${officesArray.length} offices with ${
+          servicesResult.data?.length || 0
+        } total services`
+      );
 
       setAllOfficesWithServices(officesArray);
       setOfficesWithServices(officesArray);
