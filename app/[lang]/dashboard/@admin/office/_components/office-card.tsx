@@ -77,12 +77,12 @@ export function OfficeCard({
   }, [office.logo]);
 
   return (
-    <Card className="relative overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/20">
+    <Card className="relative overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/20 h-full flex flex-col">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
             {hasValidLogo ? (
-              <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted flex-shrink-0 ring-2 ring-border">
+              <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 ring-2 ring-border">
                 <Image
                   src={office.logo!}
                   alt={office.name}
@@ -93,16 +93,16 @@ export function OfficeCard({
                 />
               </div>
             ) : (
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0 ring-2 ring-border">
-                <Building2 className="w-7 h-7 text-primary" />
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0 ring-2 ring-border">
+                <Building2 className="w-8 h-8 text-primary" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg font-bold truncate mb-1">
+              <CardTitle className="text-xl font-bold leading-snug mb-1.5 break-words">
                 {office.name}
               </CardTitle>
               {office.slogan && (
-                <CardDescription className="text-xs line-clamp-2 mt-0.5">
+                <CardDescription className="text-sm line-clamp-2 mt-1">
                   {office.slogan}
                 </CardDescription>
               )}
@@ -110,11 +110,7 @@ export function OfficeCard({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-8 w-8"
-              >
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -134,7 +130,7 @@ export function OfficeCard({
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pb-4">
+      <CardContent className="space-y-3 pb-4 flex-1">
         <div className="flex items-start gap-2 text-sm">
           <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
           <span className="line-clamp-2 text-muted-foreground flex-1">

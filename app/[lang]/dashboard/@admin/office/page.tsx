@@ -179,7 +179,7 @@ export default function OfficePage() {
   };
 
   const PaginationComponent = () => {
-    if (total === 0 || totalPages <= 1) return null;
+    if (total === 0) return null;
 
     const start = (page - 1) * pageSize + 1;
     const end = Math.min(page * pageSize, total);
@@ -313,8 +313,12 @@ export default function OfficePage() {
                 <Select
                   value={String(pageSize)}
                   onValueChange={(v) => {
-                    setPageSize(Number(v));
-                    setPage(1);
+                    const newPageSize = Number(v);
+                    setPageSize(newPageSize);
+                    // Reset to page 1 when changing page size
+                    if (page !== 1) {
+                      setPage(1);
+                    }
                   }}
                 >
                   <SelectTrigger className="w-[110px] h-8">
@@ -334,7 +338,7 @@ export default function OfficePage() {
 
         {/* Cards grid */}
         <div className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {data.map((office) => (
               <OfficeCard
                 key={office.id}
