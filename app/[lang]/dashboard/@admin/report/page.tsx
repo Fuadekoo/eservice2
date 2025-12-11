@@ -198,7 +198,7 @@ export default function ReportManagementPage() {
   };
 
   return (
-    <div className="w-full h-dvh overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full min-h-screen py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="container mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -292,7 +292,14 @@ export default function ReportManagementPage() {
                 </span>
                 <Select
                   value={pageSize.toString()}
-                  onValueChange={(value) => setPageSize(parseInt(value))}
+                  onValueChange={(value) => {
+                    const newPageSize = parseInt(value);
+                    setPageSize(newPageSize);
+                    // Reset to page 1 when changing page size
+                    if (page !== 1) {
+                      setPage(1);
+                    }
+                  }}
                 >
                   <SelectTrigger className="w-[80px] h-8">
                     <SelectValue />
@@ -333,7 +340,10 @@ export default function ReportManagementPage() {
               </div>
             ) : (
               <>
-                <div className="h-dvh overflow-auto">
+                <div
+                  className="overflow-x-auto"
+                  style={{ maxHeight: "calc(100vh - 450px)" }}
+                >
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -471,7 +481,7 @@ export default function ReportManagementPage() {
 
                 {/* Pagination */}
                 {total > 0 && (
-                  <div className="border-t p-4">
+                  <div className="border-t p-4 bg-background">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="text-sm text-muted-foreground">
                         {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
@@ -483,12 +493,17 @@ export default function ReportManagementPage() {
                           <PaginationContent>
                             <PaginationItem>
                               <PaginationPrevious
-                                onClick={() => page > 1 && setPage(page - 1)}
+                                onClick={() => {
+                                  if (page > 1) {
+                                    setPage(page - 1);
+                                  }
+                                }}
                                 className={
                                   page === 1
                                     ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
+                                    : "cursor-pointer hover:bg-accent"
                                 }
+                                aria-disabled={page === 1}
                               />
                             </PaginationItem>
                             {Array.from(
@@ -516,7 +531,7 @@ export default function ReportManagementPage() {
                                 pageNum === page + 2
                               ) {
                                 return (
-                                  <PaginationItem key={pageNum}>
+                                  <PaginationItem key={`ellipsis-${pageNum}`}>
                                     <PaginationEllipsis />
                                   </PaginationItem>
                                 );
@@ -525,14 +540,17 @@ export default function ReportManagementPage() {
                             })}
                             <PaginationItem>
                               <PaginationNext
-                                onClick={() =>
-                                  page < totalPages && setPage(page + 1)
-                                }
+                                onClick={() => {
+                                  if (page < totalPages) {
+                                    setPage(page + 1);
+                                  }
+                                }}
                                 className={
                                   page === totalPages
                                     ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
+                                    : "cursor-pointer hover:bg-accent"
                                 }
+                                aria-disabled={page === totalPages}
                               />
                             </PaginationItem>
                           </PaginationContent>
