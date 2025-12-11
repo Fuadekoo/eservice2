@@ -84,22 +84,22 @@ export const useSignUpStore = create<SignUpStore>((set, get) => ({
       const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
       // NEW: Using Hahu SMS OTP API
-      const response = await fetch("/api/hahusms/send-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phoneNumber: normalizedPhone }),
-      });
-
-      // OLD: Using old OTP API (commented out)
-      // const response = await fetch("/api/otp/send", {
+      // const response = await fetch("/api/hahusms/send-otp", {
       //   method: "POST",
       //   headers: {
       //     "Content-Type": "application/json",
       //   },
       //   body: JSON.stringify({ phoneNumber: normalizedPhone }),
       // });
+
+      // OLD: Using old OTP API (commented out)
+      const response = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phoneNumber: normalizedPhone }),
+      });
 
       const result: OTPResponse = await response.json();
 
@@ -141,27 +141,27 @@ export const useSignUpStore = create<SignUpStore>((set, get) => ({
       const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
       // NEW: Using Hahu SMS OTP Verification API
-      const response = await fetch("/api/hahusms/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: otpCode,
-        }),
-      });
-
-      // OLD: Using old OTP verification API (commented out)
-      // const response = await fetch("/api/otp/verify", {
+      // const response = await fetch("/api/hahusms/verify-otp", {
       //   method: "POST",
       //   headers: {
       //     "Content-Type": "application/json",
       //   },
       //   body: JSON.stringify({
-      //     phoneNumber: normalizedPhone,
       //     code: otpCode,
       //   }),
       // });
+
+      // OLD: Using old OTP verification API (commented out)
+      const response = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: normalizedPhone,
+          code: otpCode,
+        }),
+      });
 
       const result: OTPResponse = await response.json();
 
