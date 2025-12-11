@@ -181,83 +181,78 @@ export default function OfficePage() {
   const PaginationComponent = () => {
     if (total === 0) return null;
 
-    const start = (page - 1) * pageSize + 1;
-    const end = Math.min(page * pageSize, total);
-
     return (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 mt-6 border-t">
-        <div className="text-sm text-muted-foreground">
-          {t("dashboard.showing")} {start}-{end} {t("dashboard.of")} {total} {t("dashboard.offices")}
+        <div className="text-sm text-muted-foreground font-medium">
+          {page} {t("dashboard.of")} {totalPages} {totalPages === 1 ? t("dashboard.office") : t("dashboard.offices")}
         </div>
-        {totalPages > 1 && (
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => {
-                    if (page > 1) {
-                      setPage(page - 1);
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (page > 1) {
+                setPage(page - 1);
+              }
+            }}
+            disabled={page === 1}
+            className="min-w-[90px]"
+          >
+            {t("dashboard.previous") || "Previous"}
+          </Button>
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      pageNum === 1 ||
+                      pageNum === totalPages ||
+                      (pageNum >= page - 1 && pageNum <= page + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            onClick={() => setPage(pageNum)}
+                            isActive={pageNum === page}
+                            className="cursor-pointer"
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      pageNum === page - 2 ||
+                      pageNum === page + 2
+                    ) {
+                      // Show ellipsis
+                      return (
+                        <PaginationItem key={`ellipsis-${pageNum}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
                     }
-                  }}
-                  className={
-                    page === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer hover:bg-accent"
+                    return null;
                   }
-                  aria-disabled={page === 1}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => {
-                  // Show first page, last page, current page, and pages around current
-                  if (
-                    pageNum === 1 ||
-                    pageNum === totalPages ||
-                    (pageNum >= page - 1 && pageNum <= page + 1)
-                  ) {
-                    return (
-                      <PaginationItem key={pageNum}>
-                        <PaginationLink
-                          onClick={() => setPage(pageNum)}
-                          isActive={pageNum === page}
-                          className="cursor-pointer"
-                        >
-                          {pageNum}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  } else if (
-                    pageNum === page - 2 ||
-                    pageNum === page + 2
-                  ) {
-                    // Show ellipsis
-                    return (
-                      <PaginationItem key={`ellipsis-${pageNum}`}>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    );
-                  }
-                  return null;
-                }
-              )}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => {
-                    if (page < totalPages) {
-                      setPage(page + 1);
-                    }
-                  }}
-                  className={
-                    page === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer hover:bg-accent"
-                  }
-                  aria-disabled={page === totalPages}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+                )}
+              </PaginationContent>
+            </Pagination>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (page < totalPages) {
+                setPage(page + 1);
+              }
+            }}
+            disabled={page === totalPages}
+            className="min-w-[90px]"
+          >
+            {t("dashboard.next") || "Next"}
+          </Button>
+        </div>
       </div>
     );
   };
