@@ -158,34 +158,50 @@ export default function Page() {
           </div>
           <div className="flex-1 flex flex-col gap-5 justify-center">
             {/* Authentication Error Display */}
-            {authError && (
-              <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1">
-                      {authError.includes("Account Blocked") ||
-                      authError.includes("blocked")
-                        ? t("guest.accountBlocked")
-                        : t("guest.authenticationError")}
-                    </h3>
-                    <p className="text-sm text-red-700 dark:text-red-300">
-                      {authError}
-                    </p>
+            {authError && (() => {
+              // Determine error type and message
+              let errorTitle = t("guest.authenticationError");
+              let errorMessage = authError;
+
+              if (authError.includes("Invalid Phone Number") || authError.includes("Invalid phone number")) {
+                errorTitle = t("guest.userNotFound") || "User Not Found";
+                errorMessage = t("guest.userNotFoundMessage") || "The phone number you entered is not registered. Please check your phone number or create a new account.";
+              } else if (authError.includes("Invalid Password") || authError.includes("Invalid password")) {
+                errorTitle = t("guest.wrongPassword") || "Wrong Password";
+                errorMessage = t("guest.wrongPasswordMessage") || "The password you entered is incorrect. Please try again or reset your password.";
+              } else if (authError.includes("Account Blocked") || authError.includes("blocked") || authError.includes("Account Inactive")) {
+                errorTitle = t("guest.accountBlocked") || "Account Blocked";
+                errorMessage = authError;
+              } else {
+                errorMessage = authError;
+              }
+
+              return (
+                <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1">
+                        {errorTitle}
+                      </h3>
+                      <p className="text-sm text-red-700 dark:text-red-300">
+                        {errorMessage}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
