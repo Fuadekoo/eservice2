@@ -429,16 +429,7 @@ export function ReportDetail({
                                     className="flex-1"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // Extract filename from filepath
-                                      let filename = file.filepath;
-                                      if (filename.includes("/")) {
-                                        filename =
-                                          filename.split("/").pop() || filename;
-                                      }
-                                      window.open(
-                                        `/api/filedata/${filename}`,
-                                        "_blank"
-                                      );
+                                      handleViewFile(file);
                                     }}
                                   >
                                     <FileText className="w-4 h-4 mr-2" />
@@ -451,7 +442,12 @@ export function ReportDetail({
                                   className={isPdf ? "flex-1" : "w-full"}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    window.open(fileUrl, "_blank");
+                                    const link = document.createElement("a");
+                                    link.href = fileUrl;
+                                    link.download = file.name;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
                                   }}
                                 >
                                   <Download className="w-4 h-4 mr-2" />
@@ -471,90 +467,100 @@ export function ReportDetail({
         </DialogContent>
       </Dialog>
 
-      {/* File Viewer Dialog */}
+      {/* File Viewer Dialog - Full Screen Modal */}
       {selectedFile && (
         <Dialog open={fileViewerOpen} onOpenChange={setFileViewerOpen}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <DialogTitle className="flex items-center gap-2">
-                <File className="w-5 h-5" />
-                {selectedFile.name}
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setFileViewerOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {isImageFile(selectedFile.filepath) ? (
-                <div className="flex-1 overflow-auto bg-muted p-4">
-                  <div className="relative w-full min-h-[400px] rounded-lg overflow-hidden bg-background">
-                    <Image
-                      src={getFileUrl(selectedFile.filepath)}
-                      alt={selectedFile.name}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
+          <DialogContent
+            className="!w-screen !h-screen !max-w-none !max-h-none !m-0 !p-0 !rounded-none !top-0 !left-0 !translate-x-0 !translate-y-0 !sm:max-w-none"
+          >
+            <DialogHeader className="px-6 py-4 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle className="text-2xl">{selectedFile.name}</DialogTitle>
+                  <DialogDescription>
+                    {selectedFile.description || "File Preview"}
+                  </DialogDescription>
                 </div>
-              ) : isPdfFile(selectedFile.filepath) ? (
-                <div className="flex-1 overflow-hidden bg-muted flex flex-col">
-                  {/* Open PDF Link */}
-                  <div className="px-6 py-3 border-b bg-background flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      PDF Document
-                    </p>
-                    <a
-                      href={getFileUrl(selectedFile.filepath)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Open PDF
-                    </a>
-                  </div>
-                  {/* PDF Preview */}
-                  <div className="flex-1 overflow-hidden">
-                    <iframe
-                      src={`${getFileUrl(
-                        selectedFile.filepath
-                      )}#toolbar=1&navpanes=1&scrollbar=1`}
-                      className="w-full h-dvh border-0"
-                      title={selectedFile.name}
-                      style={{ minHeight: "100%" }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-dvh bg-muted">
-                  <FileText className="w-16 h-16 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    Preview not available for this file type
-                  </p>
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    onClick={() =>
-                      window.open(getFileUrl(selectedFile.filepath), "_blank")
-                    }
+                    size="sm"
+                    onClick={() => {
+                      const fileUrl = getFileUrl(selectedFile.filepath);
+                      const link = document.createElement("a");
+                      link.href = fileUrl;
+                      link.download = selectedFile.name;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download File
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFileViewerOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
-              )}
-              {selectedFile.description && (
-                <div className="px-6 py-4 border-t bg-background">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedFile.description}
-                  </p>
-                </div>
-              )}
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-auto p-6 bg-muted/30">
+              {(() => {
+                const fileUrl = getFileUrl(selectedFile.filepath);
+                const isPdf = isPdfFile(selectedFile.filepath);
+                const isImage = isImageFile(selectedFile.filepath);
+
+                if (isPdf || fileUrl.includes(".pdf")) {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <iframe
+                        src={fileUrl}
+                        className="w-full h-full min-h-[600px] border border-border rounded-lg bg-white"
+                        title={selectedFile.name}
+                      />
+                    </div>
+                  );
+                } else if (isImage || fileUrl.startsWith("data:image/")) {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img
+                        src={fileUrl}
+                        alt={selectedFile.name}
+                        className="max-w-full max-h-full object-contain border border-border rounded-lg shadow-lg bg-white"
+                      />
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="text-center p-8">
+                      <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">
+                        Unable to preview this file type
+                      </p>
+                      <Button
+                        onClick={() => {
+                          const fileUrl = getFileUrl(selectedFile.filepath);
+                          const link = document.createElement("a");
+                          link.href = fileUrl;
+                          link.download = selectedFile.name;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        variant="outline"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download to View
+                      </Button>
+                    </div>
+                  );
+                }
+              })()}
             </div>
           </DialogContent>
         </Dialog>
