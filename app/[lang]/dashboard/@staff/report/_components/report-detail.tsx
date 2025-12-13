@@ -23,6 +23,10 @@ import {
   User,
   X,
   File,
+  FileSpreadsheet,
+  Presentation,
+  FileImage,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useStaffReportStore } from "../_store/report-store";
@@ -109,6 +113,52 @@ export function ReportDetail({
 
   const isPdfFile = (filepath: string) => {
     return filepath.toLowerCase().endsWith(".pdf");
+  };
+
+  const getFileType = (filepath: string): string => {
+    const ext = filepath.split(".").pop()?.toLowerCase() || "";
+    return ext;
+  };
+
+  const getFileIcon = (filepath: string) => {
+    const type = getFileType(filepath);
+    switch (type) {
+      case "pdf":
+        return <FileText className="w-5 h-5 text-red-500" />;
+      case "ppt":
+      case "pptx":
+        return <Presentation className="w-5 h-5 text-orange-500" />;
+      case "doc":
+      case "docx":
+        return <FileText className="w-5 h-5 text-blue-500" />;
+      case "xls":
+      case "xlsx":
+        return <FileSpreadsheet className="w-5 h-5 text-green-500" />;
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+      case "webp":
+        return <FileImage className="w-5 h-5 text-purple-500" />;
+      default:
+        return <File className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const getFileTypeLabel = (filepath: string) => {
+    const type = getFileType(filepath);
+    return type.toUpperCase();
+  };
+
+  const officeViewerUrl = (url: string) => {
+    const absolute = url.startsWith("http")
+      ? url
+      : typeof window !== "undefined"
+      ? `${window.location.origin}${url}`
+      : url;
+    return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+      absolute
+    )}`;
   };
 
   const getFileUrl = (filepath: string) => {
@@ -315,59 +365,63 @@ export function ReportDetail({
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {report.fileData?.map((file) => {
                       const fileUrl = getFileUrl(file.filepath);
-                      const isImage = isImageFile(file.filepath);
+                      const filepath = file.filepath;
 
                       return (
-                        <Card
+                        <div
                           key={file.id}
-                          className="cursor-pointer hover:shadow-lg transition-all"
-                          onClick={() => handleViewFile(file)}
+                          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
                         >
-                          <CardContent className="p-4">
-                            <div className="flex flex-col items-center text-center space-y-2">
-                              {isImage ? (
-                                <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted">
-                                  <Image
-                                    src={fileUrl}
-                                    alt={file.name}
-                                    fill
-                                    className="object-cover"
-                                    unoptimized
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-full h-32 rounded-lg bg-muted flex items-center justify-center">
-                                  <File className="w-12 h-12 text-muted-foreground" />
-                                </div>
-                              )}
-                              <div className="w-full">
-                                <p className="text-sm font-medium truncate">
-                                  {file.name}
-                                </p>
-                                {file.description && (
-                                  <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                                    {file.description}
-                                  </p>
-                                )}
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(fileUrl, "_blank");
-                                }}
-                              >
-                                <Download className="w-4 h-4 mr-2" />
-                                {t("common.download") || "Download"}
-                              </Button>
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-1">
+                              {getFileIcon(filepath)}
                             </div>
-                          </CardContent>
-                        </Card>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                {file.name}
+                              </h3>
+                              {file.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                                  {file.description}
+                                </p>
+                              )}
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded">
+                                  {getFileTypeLabel(filepath)}
+                                </span>
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => handleViewFile(file)}
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                                    title={t("common.view") || "View"}
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    {t("common.view") || "View"}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const link = document.createElement("a");
+                                      link.href = fileUrl;
+                                      link.download = file.name;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                    }}
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                    title={t("common.download") || "Download"}
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    {t("common.download") || "Download"}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -378,68 +432,102 @@ export function ReportDetail({
         </DialogContent>
       </Dialog>
 
+      {/* File Viewer Dialog - Full Screen Modal */}
       {selectedFile && (
         <Dialog open={fileViewerOpen} onOpenChange={setFileViewerOpen}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <DialogTitle className="flex items-center gap-2">
-                <File className="w-5 h-5" />
-                {selectedFile.name}
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setFileViewerOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {isImageFile(selectedFile.filepath) ? (
-                <div className="flex-1 overflow-auto bg-muted p-4">
-                  <div className="relative w-full min-h-[400px] rounded-lg overflow-hidden bg-background">
-                    <Image
-                      src={getFileUrl(selectedFile.filepath)}
-                      alt={selectedFile.name}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              ) : isPdfFile(selectedFile.filepath) ? (
-                <div className="flex-1 overflow-hidden bg-muted">
-                  <iframe
-                    src={`${getFileUrl(
-                      selectedFile.filepath
-                    )}#toolbar=1&navpanes=1&scrollbar=1`}
-                    className="w-full h-dvh border-0"
-                    title={selectedFile.name}
-                    style={{ minHeight: "100%" }}
-                  />
+          <DialogContent className="!w-screen !h-screen !max-w-none !max-h-none !m-0 !p-0 !rounded-none !top-0 !left-0 !translate-x-0 !translate-y-0 !sm:max-w-none">
+            {/* Close Button - Red X Icon */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setFileViewerOpen(false)}
+              className="absolute top-4 right-4 z-50 bg-white/90 hover:bg-white text-red-500 hover:text-red-700 rounded-full shadow-lg"
+              aria-label={t("common.close") || "Close"}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+
+            <div className="flex-1 overflow-auto bg-muted/30 !p-0 !m-0">
+              {selectedFile ? (
+                <div className="w-full h-full flex items-center justify-center p-0 m-0">
+                  {(() => {
+                    const fileType = getFileType(selectedFile.filepath);
+                    const fileUrl = getFileUrl(selectedFile.filepath);
+
+                    // PDF files
+                    if (isPdfFile(selectedFile.filepath)) {
+                      return (
+                        <iframe
+                          src={fileUrl}
+                          className="w-full h-full border-0"
+                          title={selectedFile.name}
+                          style={{ minHeight: "100%" }}
+                        />
+                      );
+                    }
+
+                    // Image files
+                    if (
+                      isImageFile(selectedFile.filepath) ||
+                      fileUrl.startsWith("data:image/")
+                    ) {
+                      return (
+                        <img
+                          src={fileUrl}
+                          alt={selectedFile.name}
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      );
+                    }
+
+                    // Office documents (Word, Excel, PowerPoint)
+                    if (
+                      ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(
+                        fileType
+                      )
+                    ) {
+                      return (
+                        <iframe
+                          src={officeViewerUrl(fileUrl)}
+                          className="w-full h-full border-0"
+                          title={selectedFile.name}
+                          style={{ minHeight: "100%" }}
+                        />
+                      );
+                    }
+
+                    // Fallback for other file types
+                    return (
+                      <div className="text-center p-8">
+                        <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground mb-4">
+                          {t("dashboard.previewNotAvailable") ||
+                            "Unable to preview this file type"}
+                        </p>
+                        <Button
+                          onClick={() => {
+                            const fileUrl = getFileUrl(selectedFile.filepath);
+                            const link = document.createElement("a");
+                            link.href = fileUrl;
+                            link.download = selectedFile.name;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          variant="outline"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          {t("common.downloadToView") || "Download to View"}
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-dvh bg-muted">
-                  <FileText className="w-16 h-16 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    {t("dashboard.previewNotAvailable") ||
-                      "Preview not available for this file type"}
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      window.open(getFileUrl(selectedFile.filepath), "_blank")
-                    }
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    {t("common.downloadFile") || "Download File"}
-                  </Button>
-                </div>
-              )}
-              {selectedFile.description && (
-                <div className="px-6 py-4 border-t bg-background">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedFile.description}
+                <div className="text-center p-8">
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    {t("dashboard.noFileAvailable") || "No file available"}
                   </p>
                 </div>
               )}
