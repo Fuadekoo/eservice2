@@ -502,6 +502,11 @@ export function ReportDetail({
       {selectedFile && (
         <Dialog open={fileViewerOpen} onOpenChange={setFileViewerOpen}>
           <DialogContent className="!w-screen !h-screen !max-w-none !max-h-none !m-0 !p-0 !rounded-none !top-0 !left-0 !translate-x-0 !translate-y-0 !sm:max-w-none">
+            {/* Visually Hidden DialogTitle for accessibility */}
+            <DialogTitle className="sr-only">
+              {selectedFile.name} - File Preview
+            </DialogTitle>
+
             {/* Close Button - Red X Icon */}
             <Button
               variant="ghost"
