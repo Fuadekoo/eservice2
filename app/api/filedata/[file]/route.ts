@@ -71,8 +71,12 @@ export async function GET(
     };
 
     // For PDFs, set Content-Disposition to inline so they open in browser
+    // Also add headers to allow iframe embedding
     if (isPdf) {
       headers["Content-Disposition"] = `inline; filename="${filename}"`;
+      headers["X-Content-Type-Options"] = "nosniff";
+      // Allow iframe embedding from same origin
+      headers["X-Frame-Options"] = "SAMEORIGIN";
     }
 
     return new NextResponse(fileBuffer, {
