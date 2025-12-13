@@ -84,7 +84,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="fixed inset-0 h-dvh grid overflow-hidden bg-background text-foreground font-mono">
+          <div className="fixed inset-0 h-dvh bg-background text-foreground grid overflow-hidden font-sans">
             {children}
           </div>
           <Toaster richColors />
