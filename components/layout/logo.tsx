@@ -20,7 +20,7 @@ export default function Logo() {
       </Link>
       <Link
         href={"/"}
-        className="text-lg tracking-wide font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate"
+        className="text-lg tracking-wide font-bold text-black dark:text-white truncate"
       >
         {lang == "am" ? "E-service" : "East shoa E-service"}
       </Link>

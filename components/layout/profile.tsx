@@ -15,11 +15,11 @@ export default function Profile() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-sm px-3 h-9"
+          className="w-full justify-start gap-2 text-sm px-3 h-9 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10"
           onClick={() => setIsProfileOpen(true)}
         >
-          <User className="h-4 w-4" />
-          Profile
+          <User className="h-4 w-4 text-black dark:text-white" />
+          <span className="text-black dark:text-white">Profile</span>
         </Button>
         {/* Desktop logout button - hidden on mobile since we have it in header */}
         <div className="hidden lg:block">

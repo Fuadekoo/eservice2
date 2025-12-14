@@ -41,17 +41,17 @@ export default function SideBar({
   return (
     <nav
       className={
-        "z-50 lg:grid overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden "
+        "z-[60] lg:z-50 lg:grid overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden "
       }
     >
-      <div className="overflow-hidden max-lg:w-64 lg:w-56 bg-background/50 backdrop-blur-3xl grid grid-rows-[auto_1fr_auto] min-h-screen">
-        <div className="relative">
+      <div className="overflow-hidden max-lg:w-64 lg:w-56 bg-blue-500 dark:bg-blue-700 grid grid-rows-[auto_1fr_auto] min-h-screen">
+        <div className="relative border-b border-blue-400/30 dark:border-blue-600/30">
           <Logo />
           {/* Close button for mobile */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 lg:hidden"
+            className="absolute top-2 right-2 lg:hidden text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10"
             asChild
           >
             <label htmlFor="sidebar">
@@ -63,7 +63,9 @@ export default function SideBar({
           <div className="flex flex-col">
             {menu.map((item, i) => (
               <React.Fragment key={i + ""}>
-                {i !== 0 && <hr className="border-primary" />}
+                {i !== 0 && (
+                  <hr className="border-sky-400/30 dark:border-sky-600/30 my-1" />
+                )}
                 <div key={i + ""} className="py-2 flex flex-col gap-1.5">
                   {item.map(({ key, url, Icon }, i) => {
                     const href = url
@@ -75,13 +77,19 @@ export default function SideBar({
                       <Button
                         key={i + ""}
                         size="lg"
-                        variant={isSelected ? "default" : "ghost"}
-                        className="shrink-0 justify-start capitalize text-sm px-3 h-10"
+                        variant="ghost"
+                        className={`shrink-0 justify-start capitalize text-sm px-3 h-10 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 ${
+                          isSelected ? "bg-black/20 dark:bg-white/20" : ""
+                        }`}
                         asChild
                       >
                         <Link href={href}>
-                          {Icon}
-                          <span className="truncate">{t(`navigation.${key}`)}</span>
+                          <span className="text-black dark:text-white">
+                            {Icon}
+                          </span>
+                          <span className="truncate text-black dark:text-white">
+                            {t(`navigation.${key}`)}
+                          </span>
                         </Link>
                       </Button>
                     );
@@ -91,7 +99,7 @@ export default function SideBar({
             ))}
           </div>
         </ScrollArea>
-        <div className="p-3 border-t border-primary/20 bg-background/30">
+        <div className="p-3 border-t border-sky-400/30 dark:border-sky-600/30 bg-sky-600/30 dark:bg-sky-800/30">
           <Profile />
         </div>
       </div>
