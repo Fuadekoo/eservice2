@@ -8,19 +8,19 @@ export default function Logo() {
   const { lang } = useParams<{ lang: string }>();
 
   return (
-    <div className="shrink-0 px-5 py-3 flex gap-2 items-center  ">
-      <Link href={"/"} className=" ">
+    <div className="shrink-0 px-3 py-2.5 flex gap-2 items-center">
+      <Link href={"/"} className="shrink-0">
         <Image
           alt=""
           src={"/logo.png"}
           width={100}
           height={100}
-          className="size-10 "
+          className="size-8"
         />
       </Link>
       <Link
         href={"/"}
-        className=" text-2xl tracking-wider font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+        className="text-lg tracking-wide font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate"
       >
         {lang == "am" ? "E-service" : "East shoa E-service"}
       </Link>

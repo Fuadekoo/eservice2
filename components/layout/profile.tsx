@@ -11,11 +11,11 @@ export default function Profile() {
 
   return (
     <>
-      <div className="flex flex-col gap-2 w-full">
+      <div className="flex flex-col gap-1.5 w-full">
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-sm px-3 h-9"
           onClick={() => setIsProfileOpen(true)}
         >
           <User className="h-4 w-4" />
