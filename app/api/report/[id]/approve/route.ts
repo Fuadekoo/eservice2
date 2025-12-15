@@ -102,8 +102,6 @@ export async function PATCH(
             id: true,
             username: true,
             phoneNumber: true,
-          },
-          include: {
             staffs: {
               select: {
                 office: {
