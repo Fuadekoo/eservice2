@@ -160,19 +160,46 @@ export default function Page() {
             {/* Authentication Error Display */}
             {authError && (() => {
               // Determine error type and message
-              let errorTitle = t("guest.authenticationError");
+              let errorTitle = t("guest.authenticationError") || "Authentication Error";
               let errorMessage = authError;
 
-              if (authError.includes("Invalid Phone Number") || authError.includes("Invalid phone number")) {
-                errorTitle = t("guest.userNotFound") || "User Not Found";
+              // Clean up error message if it contains server action error
+              if (authError.includes("Server Action") || authError.includes("was not found")) {
+                // Try to extract meaningful error from server action error
+                // If we can't, show a generic message
+                errorMessage = "An error occurred during authentication. Please try again.";
+              }
+
+              // Check for specific error types
+              const errorLower = authError.toLowerCase();
+              
+              if (
+                errorLower.includes("phone number is not found") ||
+                errorLower.includes("invalid phone number") ||
+                errorLower.includes("phone number") && errorLower.includes("not found")
+              ) {
+                errorTitle = t("guest.userNotFound") || "Phone Number Not Found";
                 errorMessage = t("guest.userNotFoundMessage") || "The phone number you entered is not registered. Please check your phone number or create a new account.";
-              } else if (authError.includes("Invalid Password") || authError.includes("Invalid password")) {
-                errorTitle = t("guest.wrongPassword") || "Wrong Password";
+              } else if (
+                errorLower.includes("password is incorrect") ||
+                errorLower.includes("invalid password") ||
+                (errorLower.includes("password") && errorLower.includes("incorrect"))
+              ) {
+                errorTitle = t("guest.wrongPassword") || "Password Incorrect";
                 errorMessage = t("guest.wrongPasswordMessage") || "The password you entered is incorrect. Please try again or reset your password.";
-              } else if (authError.includes("Account Blocked") || authError.includes("blocked") || authError.includes("Account Inactive")) {
-                errorTitle = t("guest.accountBlocked") || "Account Blocked";
-                errorMessage = authError;
-              } else {
+              } else if (
+                errorLower.includes("user is blocked") ||
+                errorLower.includes("account blocked") ||
+                errorLower.includes("blocked") ||
+                errorLower.includes("account inactive") ||
+                errorLower.includes("inactive")
+              ) {
+                errorTitle = t("guest.accountBlocked") || "User is Blocked";
+                errorMessage = authError.includes("User is blocked") 
+                  ? authError 
+                  : (t("guest.accountBlockedMessage") || "Your account is inactive. Please contact administrator to activate your account.");
+              } else if (!errorMessage.includes("Server Action") && !errorMessage.includes("was not found")) {
+                // Use the error message as-is if it's not a server action error
                 errorMessage = authError;
               }
 

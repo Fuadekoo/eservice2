@@ -10,11 +10,57 @@ export async function authenticate(data: LoginSchema): Promise<MutationState> {
   try {
     await signIn("credentials", { ...data, redirect: false });
     return { status: true, message: "successfully login" };
-  } catch (error) {
+  } catch (error: any) {
+    // Extract error message from CustomError or NextAuth error
+    let errorMessage = "Invalid credentials. Please try again.";
+    
+    // Log error for debugging
+    console.error("Authentication error:", error);
+    
+    // Check if it's a CustomError instance
+    if (error instanceof CustomError) {
+      errorMessage = error.message;
+    } 
+    // Check error message and cause
+    else if (error?.message || error?.cause?.message) {
+      const message = error.message || error.cause?.message || "";
+      const errorString = String(message).toLowerCase();
+      
+      // Check for phone number errors
+      if (
+        errorString.includes("phone number is not found") ||
+        errorString.includes("invalid phone number") ||
+        errorString.includes("credentialsSignin") ||
+        errorString.includes("phone number")
+      ) {
+        errorMessage = "Phone number is not found";
+      } 
+      // Check for password errors
+      else if (
+        errorString.includes("password is incorrect") ||
+        errorString.includes("invalid password") ||
+        errorString.includes("password")
+      ) {
+        errorMessage = "Password is incorrect";
+      } 
+      // Check for blocked/inactive account errors
+      else if (
+        errorString.includes("user is blocked") ||
+        errorString.includes("account inactive") ||
+        errorString.includes("blocked") ||
+        errorString.includes("inactive")
+      ) {
+        errorMessage = "User is blocked - Your account is inactive. Please contact administrator to activate your account.";
+      } 
+      // Use the error message as-is if it's already user-friendly
+      else if (message && message.length > 0 && !message.includes("Server Action")) {
+        errorMessage = message;
+      }
+    }
+    
     return {
       status: false,
-      message:
-        error instanceof CustomError ? error.message : "invalid credentials",
+      message: errorMessage,
     };
   }
 }

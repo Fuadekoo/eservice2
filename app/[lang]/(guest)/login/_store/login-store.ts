@@ -86,19 +86,37 @@ export const useLoginStore = create<LoginStore>((set, get) => ({
           message: result.message || "Login successful",
         };
       } else {
+        // Set user-friendly error message
+        const errorMessage = result.message || "Authentication failed";
         set({
           isLoading: false,
-          error: result.message || "Authentication failed",
+          error: errorMessage,
         });
         return {
           status: false,
-          error: result.message || "Authentication failed",
+          error: errorMessage,
         };
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      const errorMessage =
-        error.errors?.[0]?.message || error.message || "Invalid credentials";
+      // Extract error message from validation errors or other errors
+      let errorMessage = "Invalid credentials. Please try again.";
+      
+      if (error.errors?.[0]?.message) {
+        errorMessage = error.errors[0].message;
+      } else if (error.message) {
+        // Map common error messages to user-friendly ones
+        if (error.message.includes("Phone number") || error.message.includes("not found")) {
+          errorMessage = "Phone number is not found";
+        } else if (error.message.includes("Password") || error.message.includes("incorrect")) {
+          errorMessage = "Password is incorrect";
+        } else if (error.message.includes("blocked") || error.message.includes("inactive")) {
+          errorMessage = "User is blocked - Your account is inactive. Please contact administrator to activate your account.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       set({ isLoading: false, error: errorMessage });
       return {
         status: false,

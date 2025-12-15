@@ -22,9 +22,11 @@ declare module "next-auth/jwt" {
 }
 
 export class CustomError extends CredentialsSignin {
-  constructor(code: string) {
+  message: string;
+  constructor(message: string) {
     super();
-    this.code = code;
+    this.message = message;
+    this.code = "credentials_error";
   }
 }
 
@@ -133,14 +135,14 @@ const authConfig = {
             isActive: true,
           },
         });
-        if (!user) throw new CustomError("Invalid Phone Number");
+        if (!user) throw new CustomError("Phone number is not found");
         if (!user.password) throw new CustomError("Password Not Set");
         if (!user.isActive)
           throw new CustomError(
-            "Account Inactive - Your account is inactive. Please contact administrator to activate your account."
+            "User is blocked - Your account is inactive. Please contact administrator to activate your account."
           );
         if (!(await bcryptjs.compare(password, user.password)))
-          throw new CustomError("Invalid Password");
+          throw new CustomError("Password is incorrect");
         return { id: user.id, role: user.role?.name || "" };
       },
     }),
