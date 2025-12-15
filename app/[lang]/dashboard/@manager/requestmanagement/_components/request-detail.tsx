@@ -87,11 +87,12 @@ export function RequestDetail({
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [approveNote, setApproveNote] = useState("");
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [serviceStaff, setServiceStaff] = useState<any[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
   const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
 
-  const { fetchRequestById, approveRequest, isSubmitting } =
+  const { fetchRequestById, approveRequest, rejectRequest, isSubmitting } =
     useRequestManagementStore();
 
   // Refresh request data when dialog opens
@@ -138,6 +139,20 @@ export function RequestDetail({
       onOpenChange(false);
     } catch (error: any) {
       toast.error(error.message || "Failed to approve request");
+    }
+  };
+
+  const handleReject = async () => {
+    if (!request) return;
+
+    try {
+      await rejectRequest(request.id, approveNote || undefined);
+      toast.success("Request rejected successfully");
+      setIsRejectDialogOpen(false);
+      setApproveNote("");
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reject request");
     }
   };
 
@@ -275,33 +290,53 @@ export function RequestDetail({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="approveNote">Approval Note (Optional)</Label>
+                  <Label htmlFor="approveNote">Note (Optional)</Label>
                   <Textarea
                     id="approveNote"
-                    placeholder="Add a note about this approval..."
+                    placeholder="Add a note about this decision..."
                     value={approveNote}
                     onChange={(e) => setApproveNote(e.target.value)}
                     className="mt-2"
                     rows={3}
                   />
                 </div>
-                <Button
-                  onClick={() => setIsApproveDialogOpen(true)}
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Approving...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Approve Request
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setIsApproveDialogOpen(true)}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Approve Request
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setIsRejectDialogOpen(true)}
+                    variant="destructive"
+                    className="flex-1"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Rejecting...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject Request
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -701,6 +736,28 @@ export function RequestDetail({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleApprove}>
               Approve
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Confirmation Dialog */}
+      <AlertDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject this request? This action will
+              mark the request as rejected by the manager.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReject} className="bg-red-600 hover:bg-red-700">
+              Reject
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

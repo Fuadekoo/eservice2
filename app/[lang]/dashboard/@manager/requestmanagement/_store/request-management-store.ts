@@ -19,6 +19,7 @@ interface RequestManagementState {
   fetchRequests: () => Promise<void>;
   fetchRequestById: (id: string) => Promise<void>;
   approveRequest: (id: string, note?: string) => Promise<void>;
+  rejectRequest: (id: string, note?: string) => Promise<void>;
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
   setSearch: (search: string) => void;
@@ -109,7 +110,7 @@ export const useRequestManagementStore = create<RequestManagementState>(
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ note }),
+          body: JSON.stringify({ note, action: "approve" }),
         });
 
         const result = await response.json();
@@ -130,6 +131,40 @@ export const useRequestManagementStore = create<RequestManagementState>(
         }
       } catch (error: any) {
         console.error("Error approving request:", error);
+        set({ isSubmitting: false });
+        throw error;
+      }
+    },
+
+    rejectRequest: async (id: string, note?: string) => {
+      set({ isSubmitting: true });
+      try {
+        const response = await fetch(`/api/request/${id}/approve`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ note, action: "reject" }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update the request in the list
+          const requests = get().requests;
+          const updatedRequests = requests.map((req) =>
+            req.id === id ? result.data : req
+          );
+          set({
+            requests: updatedRequests,
+            selectedRequest: result.data,
+            isSubmitting: false,
+          });
+        } else {
+          throw new Error(result.error || "Failed to reject request");
+        }
+      } catch (error: any) {
+        console.error("Error rejecting request:", error);
         set({ isSubmitting: false });
         throw error;
       }

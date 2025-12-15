@@ -107,12 +107,19 @@ export default function RequestManagementPage() {
   };
 
   const getStaffApproval = (request: any) => {
-    const hasStaffApproval = !!request.approveStaff;
+    const staffStatus = request.statusbystaff || "pending";
 
-    if (hasStaffApproval) {
+    if (staffStatus === "approved") {
       return (
         <Badge variant="default" className="text-xs bg-green-600">
           {t("dashboard.done")}
+        </Badge>
+      );
+    }
+    if (staffStatus === "rejected") {
+      return (
+        <Badge variant="destructive" className="text-xs">
+          {t("dashboard.rejected")}
         </Badge>
       );
     }
@@ -124,12 +131,19 @@ export default function RequestManagementPage() {
   };
 
   const getManagerApproval = (request: any) => {
-    const hasManagerApproval = !!request.approveManager;
+    const managerStatus = request.statusbyadmin || "pending";
 
-    if (hasManagerApproval) {
+    if (managerStatus === "approved") {
       return (
         <Badge variant="default" className="text-xs bg-blue-600">
           {t("dashboard.done")}
+        </Badge>
+      );
+    }
+    if (managerStatus === "rejected") {
+      return (
+        <Badge variant="destructive" className="text-xs">
+          {t("dashboard.rejected")}
         </Badge>
       );
     }
