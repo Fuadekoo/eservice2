@@ -1,0 +1,125 @@
+import { PrismaClient } from "@prisma/client";
+import bcryptjs from "bcryptjs";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log("🌱 Starting admin seed...");
+  console.log(
+    "ℹ️  This script will only create or update admin2 and admin3 users."
+  );
+  console.log("ℹ️  It will NOT delete any existing data.\n");
+
+  // Check if database tables exist first
+  try {
+    await prisma.$queryRaw`SELECT 1 FROM role LIMIT 1`;
+  } catch (error: any) {
+    if (error.code === "P2021" || error.code === "42S02") {
+      console.error("\n❌ ERROR: Database tables don't exist yet!");
+      console.error("📋 Please run database migrations first:\n");
+      console.error("   npx prisma migrate dev");
+      console.error("\n   OR\n");
+      console.error("   npx prisma db push\n");
+      throw new Error(
+        "Database tables don't exist. Please run migrations first: npx prisma migrate dev"
+      );
+    }
+    throw error;
+  }
+
+  // Find or create Admin Role
+  console.log("📝 Finding/creating admin role...");
+  let adminRole;
+  try {
+    adminRole = await prisma.role.findFirst({
+      where: { name: "admin" },
+    });
+    if (!adminRole) {
+      adminRole = await prisma.role.create({
+        data: { name: "admin" },
+      });
+      console.log("✅ Admin role created");
+    } else {
+      console.log("✅ Admin role found");
+    }
+  } catch (error: any) {
+    if (error.code === "P2021") {
+      console.error("\n❌ ERROR: Database tables don't exist yet!");
+      console.error("📋 Please run migrations first:\n");
+      console.error("   npx prisma migrate dev");
+      throw new Error(
+        "Database tables don't exist. Please run migrations first."
+      );
+    }
+    throw error;
+  }
+
+  // Hash password (using same method as seed.ts)
+  const hashedPassword = await bcryptjs.hash("password123", 12);
+
+  // Create or update Admin User 2
+  // Note: Using upsert ensures we only create/update these specific users
+  // without affecting any other existing users or data
+  console.log("👤 Creating/updating admin user 2...");
+  await prisma.user.upsert({
+    where: { username: "admin2" },
+    update: {
+      password: hashedPassword,
+      roleId: adminRole.id,
+      isActive: true,
+    },
+    create: {
+      username: "admin2",
+      phoneNumber: "+251900112238",
+      password: hashedPassword,
+      roleId: adminRole.id,
+      isActive: true,
+      phoneVerified: false,
+    },
+  });
+  console.log(
+    "✅ Admin user 2 ready (username: admin2, password: password123)"
+  );
+
+  // Create or update Admin User 3
+  // Note: Using upsert ensures we only create/update these specific users
+  // without affecting any other existing users or data
+  console.log("👤 Creating/updating admin user 3...");
+  await prisma.user.upsert({
+    where: { username: "admin3" },
+    update: {
+      password: hashedPassword,
+      roleId: adminRole.id,
+      isActive: true,
+    },
+    create: {
+      username: "admin3",
+      phoneNumber: "+251900112239",
+      password: hashedPassword,
+      roleId: adminRole.id,
+      isActive: true,
+      phoneVerified: false,
+    },
+  });
+  console.log(
+    "✅ Admin user 3 ready (username: admin3, password: password123)"
+  );
+
+  console.log("\n🎉 Admin seed completed successfully!");
+  console.log("\n📋 Admin credentials:");
+  console.log(
+    "   Admin 2: username=admin2  password=password123  phone=+251900112238"
+  );
+  console.log(
+    "   Admin 3: username=admin3  password=password123  phone=+251900112239"
+  );
+}
+
+main()
+  .catch((e) => {
+    console.error("❌ Admin seed failed:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

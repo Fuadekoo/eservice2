@@ -77,6 +77,22 @@ export default function Page() {
     }
   }, [passwordValue, formData.password, setPassword]);
 
+  // Check if user is already authenticated and redirect to dashboard
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      try {
+        const response = await fetch("/api/user/me");
+        if (response.ok) {
+          // User is already logged in, redirect to dashboard
+          router.push(`/${lang}/dashboard`);
+        }
+      } catch (error) {
+        // User is not authenticated, continue with login page
+      }
+    };
+    checkAuthAndRedirect();
+  }, [lang, router]);
+
   // Get callback URL from query params
   useEffect(() => {
     if (typeof window !== "undefined") {

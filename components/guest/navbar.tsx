@@ -29,9 +29,27 @@ export function Navbar() {
   const pathname = usePathname();
   const { language, setLanguage } = useLanguageStore();
   const [isMounted, setIsMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/user/me");
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   const handleLanguageChange = (langCode: Language) => {
@@ -116,12 +134,14 @@ export function Navbar() {
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            {/* Sign In Button */}
-            <Link href={`/${language}/login`}>
-              <Button variant="secondary" size="sm">
-                Sign In
-              </Button>
-            </Link>
+            {/* Sign In / Dashboard Button */}
+            {!isCheckingAuth && (
+              <Link href={isAuthenticated ? `/${language}/dashboard` : `/${language}/login`}>
+                <Button variant="secondary" size="sm">
+                  {isAuthenticated ? "Dashboard" : "Sign In"}
+                </Button>
+              </Link>
+            )}
           </nav>
 
           {/* Mobile Menu */}
@@ -163,16 +183,18 @@ export function Navbar() {
               </DropdownMenu>
             )}
 
-            {/* Login Button */}
-            <Link href={`/${language}/login`}>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="bg-white text-primary hover:bg-white/90 font-semibold"
-              >
-                Sign In
-              </Button>
-            </Link>
+            {/* Login / Dashboard Button */}
+            {!isCheckingAuth && (
+              <Link href={isAuthenticated ? `/${language}/dashboard` : `/${language}/login`}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white text-primary hover:bg-white/90 font-semibold"
+                >
+                  {isAuthenticated ? "Dashboard" : "Sign In"}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
