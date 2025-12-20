@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { authenticate } from "@/actions/common/authentication";
 import { LoginFormData, LoginResponse, LoginStoreState } from "../_types";
 import { loginSchema } from "../_schema";
+import { normalizePhoneNumber } from "@/lib/utils/phone-number";
 
 interface LoginStore extends LoginStoreState {
   // Actions
@@ -77,9 +77,21 @@ export const useLoginStore = create<LoginStore>((set, get) => ({
 
       set({ isLoading: true, error: null });
 
-      const result = await authenticate(validatedData);
+      // Call API endpoint
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: normalizePhoneNumber(validatedData.phoneNumber),
+          password: validatedData.password,
+        }),
+      });
 
-      if (result.status) {
+      const result = await response.json();
+
+      if (result.success && result.status) {
         set({ isLoading: false, error: null });
         return {
           status: true,
@@ -87,7 +99,7 @@ export const useLoginStore = create<LoginStore>((set, get) => ({
         };
       } else {
         // Set user-friendly error message
-        const errorMessage = result.message || "Authentication failed";
+        const errorMessage = result.message || result.error || "Authentication failed";
         set({
           isLoading: false,
           error: errorMessage,

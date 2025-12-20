@@ -13,8 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { logout } from "@/actions/common/authentication";
-import useMutation from "@/hooks/useMutation";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -22,32 +20,47 @@ export default function MobileLogoutButton() {
   const router = useRouter();
   const { lang } = useParams<{ lang: string }>();
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [action, isLoading] = useMutation(logout, (state) => {
-    if (state.status) {
-      // Clear all cookies
-      document.cookie.split(";").forEach((c) => {
-        const eqPos = c.indexOf("=");
-        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${
-          window.location.hostname
-        }`;
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
-      // Clear localStorage and sessionStorage
-      localStorage.clear();
-      sessionStorage.clear();
+      const result = await response.json();
 
-      // Close dialog and redirect
-      setOpen(false);
-      router.push(`/${lang}/login`);
-      router.refresh();
+      if (result.success && result.status) {
+        // Clear all cookies
+        document.cookie.split(";").forEach((c) => {
+          const eqPos = c.indexOf("=");
+          const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+          document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${
+            window.location.hostname
+          }`;
+        });
+
+        // Clear localStorage and sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Close dialog and redirect
+        setOpen(false);
+        router.push(`/${lang}/login`);
+        router.refresh();
+      } else {
+        console.error("Logout failed:", result.message);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoading(false);
     }
-  });
-
-  const handleLogout = () => {
-    action();
   };
 
   return (

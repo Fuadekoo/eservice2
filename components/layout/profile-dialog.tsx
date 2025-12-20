@@ -14,11 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import {
-  getUserProfile,
-  updateUserProfile,
-  changePassword,
-} from "@/actions/common/profile";
 import useTranslation from "@/hooks/useTranslation";
 
 interface ProfileDialogProps {
@@ -57,7 +52,14 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const loadProfile = async () => {
     setIsLoading(true);
     try {
-      const result = await getUserProfile();
+      const response = await fetch("/api/user/profile", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
       if (result.success && result.user) {
         setUsername(result.user.username || "");
         setPhoneNumber(result.user.phoneNumber || "");
@@ -82,9 +84,17 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
     setIsUpdating(true);
     try {
-      const result = await updateUserProfile({
-        username: username.trim(),
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+        }),
       });
+
+      const result = await response.json();
 
       if (result.success) {
         toast.success(result.message || t("profile.updateSuccess"));
@@ -121,10 +131,18 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
     setIsChangingPassword(true);
     try {
-      const result = await changePassword({
-        currentPassword,
-        newPassword,
+      const response = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
       });
+
+      const result = await response.json();
 
       if (result.success) {
         toast.success(result.message || t("profile.changePasswordSuccess"));

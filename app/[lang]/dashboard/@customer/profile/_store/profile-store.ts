@@ -1,10 +1,5 @@
 import { create } from "zustand";
 import { UserProfile, ProfileUpdateData, PasswordChangeData } from "../_types";
-import {
-  getUserProfile,
-  updateUserProfile,
-  changePassword,
-} from "@/actions/common/profile";
 import { toast } from "sonner";
 
 interface ProfileStore {
@@ -32,7 +27,14 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
   fetchProfile: async () => {
     set({ isLoading: true });
     try {
-      const result = await getUserProfile();
+      const response = await fetch("/api/user/profile", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
 
       if (result.success && result.user) {
         set({
@@ -58,9 +60,17 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
   updateProfile: async (data: ProfileUpdateData) => {
     set({ isUpdating: true });
     try {
-      const result = await updateUserProfile({
-        username: data.username.trim(),
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: data.username.trim(),
+        }),
       });
+
+      const result = await response.json();
 
       if (result.success) {
         // Refresh profile data
@@ -83,10 +93,18 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
   changeUserPassword: async (data: PasswordChangeData) => {
     set({ isChangingPassword: true });
     try {
-      const result = await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
+      const response = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
       });
+
+      const result = await response.json();
 
       if (result.success) {
         set({ isChangingPassword: false });

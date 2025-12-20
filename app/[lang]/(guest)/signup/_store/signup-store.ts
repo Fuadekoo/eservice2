@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
-import { authenticate } from "@/actions/common/authentication";
 import {
   SignUpFormData,
   SignUpResponse,
@@ -227,12 +226,20 @@ export const useSignUpStore = create<SignUpStore>((set, get) => ({
       if (result.success && result.data) {
         // Automatically log in the user after successful registration
         try {
-          const loginResult = await authenticate({
-            phoneNumber: normalizePhoneNumber(data.phoneNumber),
-            password: data.password,
+          const loginResponse = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              phoneNumber: normalizePhoneNumber(data.phoneNumber),
+              password: data.password,
+            }),
           });
 
-          if (loginResult.status) {
+          const loginResult = await loginResponse.json();
+
+          if (loginResult.success && loginResult.status) {
             set({ isRegistering: false });
             toast.success("Success", {
               description: "Account created and logged in successfully",
