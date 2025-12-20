@@ -662,11 +662,6 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                                   className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                                 >
                                   <p className="font-medium">{staff.name}</p>
-                                  {staff.phoneNumber && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {staff.phoneNumber}
-                                    </p>
-                                  )}
                                 </div>
                               ))}
                             </div>
