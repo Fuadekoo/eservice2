@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Globe, Moon, Sun } from "lucide-react";
+import { Menu, X, Globe, Moon, Sun, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useLanguageStore } from "@/store/language-store";
@@ -67,7 +67,7 @@ export function Navbar() {
     languages.find((lang) => lang.code === language) || languages[0];
 
   return (
-    <header className="sticky top-0 z-50 bg-primary text-primary-foreground shadow-lg">
+    <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -75,7 +75,7 @@ export function Navbar() {
             href="/"
             className="flex items-center gap-2 hover:opacity-90 transition"
           >
-            <div className="relative w-8 h-8 bg-primary-foreground rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="relative w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
               <Image
                 src="/oromia.png"
                 alt="East Shoa Government"
@@ -85,29 +85,30 @@ export function Navbar() {
                 priority
               />
             </div>
-            <h1 className="text-xl font-bold hidden sm:block">
+            <h1 className="text-xl font-bold hidden sm:block text-foreground">
               East Shoa Government
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4">
             {/* Language Toggle */}
             {isMounted && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex items-center gap-2 hover:opacity-90 hover:bg-primary-foreground/10 text-primary-foreground"
+                    className="flex items-center gap-2 bg-background border-gray-300 hover:bg-gray-50 text-foreground font-semibold rounded-md px-3 py-2"
                   >
-                    <Globe size={18} />
-                    <span className="uppercase font-semibold">
-                      {currentLanguage.nativeName}
+                    <span className="font-bold">{currentLanguage.name}</span>
+                    <span className="text-muted-foreground text-sm font-normal">
+                      ({currentLanguage.name})
                     </span>
+                    <ChevronDown size={16} className="text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuContent align="end" className="w-48">
                   {languages.map((lang) => (
                     <DropdownMenuItem
                       key={lang.code}
@@ -115,7 +116,7 @@ export function Navbar() {
                       className={language === lang.code ? "bg-accent" : ""}
                     >
                       <div className="flex items-center gap-2 w-full">
-                        <span className="font-medium">{lang.nativeName}</span>
+                        <span className="font-medium">{lang.name}</span>
                         <span className="text-muted-foreground text-xs ml-auto">
                           ({lang.name})
                         </span>
@@ -127,17 +128,27 @@ export function Navbar() {
             )}
 
             {/* Theme Toggle */}
-            <button
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="p-2 hover:bg-primary-foreground/10 rounded-lg transition"
-            >
-              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
+            {isMounted && (
+              <button
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                className="w-10 h-10 rounded-full border border-gray-300 bg-background hover:bg-gray-50 flex items-center justify-center transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === "light" ? (
+                  <Moon size={18} className="text-foreground" />
+                ) : (
+                  <Sun size={18} className="text-foreground" />
+                )}
+              </button>
+            )}
 
             {/* Sign In / Dashboard Button */}
             {!isCheckingAuth && (
               <Link href={isAuthenticated ? `/${language}/dashboard` : `/${language}/login`}>
-                <Button variant="secondary" size="sm">
+                <Button 
+                  size="sm" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2"
+                >
                   {isAuthenticated ? "Dashboard" : "Sign In"}
                 </Button>
               </Link>
@@ -146,22 +157,16 @@ export function Navbar() {
 
           {/* Mobile Menu */}
           <div className="md:hidden flex items-center gap-2">
-            <button
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="p-2 hover:bg-primary-foreground/10 rounded-lg transition"
-            >
-              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
-
             {isMounted && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-primary-foreground/10 text-primary-foreground"
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 bg-background border-gray-300 hover:bg-gray-50 text-foreground font-semibold rounded-md px-2 py-2"
                   >
-                    <Globe size={18} />
+                    <span className="font-bold text-sm">{currentLanguage.name}</span>
+                    <ChevronDown size={14} className="text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -172,7 +177,7 @@ export function Navbar() {
                       className={language === lang.code ? "bg-accent" : ""}
                     >
                       <div className="flex items-center gap-2 w-full">
-                        <span className="font-medium">{lang.nativeName}</span>
+                        <span className="font-medium">{lang.name}</span>
                         <span className="text-muted-foreground text-xs ml-auto">
                           ({lang.name})
                         </span>
@@ -183,13 +188,26 @@ export function Navbar() {
               </DropdownMenu>
             )}
 
+            {isMounted && (
+              <button
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                className="w-9 h-9 rounded-full border border-gray-300 bg-background hover:bg-gray-50 flex items-center justify-center transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === "light" ? (
+                  <Moon size={16} className="text-foreground" />
+                ) : (
+                  <Sun size={16} className="text-foreground" />
+                )}
+              </button>
+            )}
+
             {/* Login / Dashboard Button */}
             {!isCheckingAuth && (
               <Link href={isAuthenticated ? `/${language}/dashboard` : `/${language}/login`}>
                 <Button
-                  variant="secondary"
                   size="sm"
-                  className="bg-white text-primary hover:bg-white/90 font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-3 py-2"
                 >
                   {isAuthenticated ? "Dashboard" : "Sign In"}
                 </Button>

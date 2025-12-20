@@ -1,7 +1,6 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Button } from "../ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,36 +19,27 @@ export default function Theme() {
 
   if (!mounted) {
     return (
-      <div className="">
-        <Button
-          variant="outline"
-          size="icon"
-          className="border border-amber-700 bg-amber-500/10"
-        >
-          <Sun className="h-6 w-6 stroke-amber-700 fill-amber-700" />
-        </Button>
-      </div>
+      <button
+        className="w-10 h-10 rounded-full border border-gray-300 bg-background hover:bg-gray-50 flex items-center justify-center transition-colors"
+        aria-label="Toggle theme"
+      >
+        <Sun size={18} className="text-foreground" />
+      </button>
     );
   }
 
   return (
-    <div className="">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={toggleTheme}
-        className="border border-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
-        title={`Switch to ${resolvedTheme === "light" ? "dark" : "light"} mode`}
-      >
-        {resolvedTheme === "light" ? (
-          <Moon className="h-6 w-6 stroke-amber-700 fill-amber-700 transition-transform hover:rotate-12" />
-        ) : (
-          <Sun className="h-6 w-6 stroke-amber-700 fill-amber-700 transition-transform hover:rotate-45" />
-        )}
-        <span className="sr-only">
-          Toggle theme (currently {resolvedTheme})
-        </span>
-      </Button>
-    </div>
+    <button
+      onClick={toggleTheme}
+      className="w-10 h-10 rounded-full border border-gray-300 bg-background hover:bg-gray-50 flex items-center justify-center transition-colors"
+      aria-label={`Switch to ${resolvedTheme === "light" ? "dark" : "light"} mode`}
+      title={`Switch to ${resolvedTheme === "light" ? "dark" : "light"} mode`}
+    >
+      {resolvedTheme === "light" ? (
+        <Moon size={18} className="text-foreground" />
+      ) : (
+        <Sun size={18} className="text-foreground" />
+      )}
+    </button>
   );
 }

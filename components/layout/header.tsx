@@ -10,7 +10,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 h-16 lg:h-20 bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm">
+    <header className="sticky top-0 z-50 h-16 lg:h-20 bg-background border-b shadow-sm">
       <div className="h-full px-3 sm:px-4 lg:px-6 xl:px-10 flex items-center gap-2 sm:gap-3">
         {/* Mobile hamburger menu */}
         <Button
@@ -28,13 +28,13 @@ export default function Header() {
         <div className="flex-1 min-w-0"></div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
           <Lang />
           <Button
             variant="outline"
             size="icon"
             onClick={handleRefresh}
-            className="h-9 w-9 sm:h-10 sm:w-10 bg-background/50 border border-primary/20 hover:bg-primary/10"
+            className="h-9 w-9 sm:h-10 sm:w-10 bg-background border border-gray-300 hover:bg-gray-50"
             title="Refresh page"
           >
             <RefreshCw className="h-4 w-4" />
