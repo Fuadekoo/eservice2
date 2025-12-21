@@ -2,7 +2,7 @@ import { AlignLeft, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import Lang from "./lang";
 import Theme from "./theme";
-import MobileLogoutButton from "./mobile-logout-button";
+import UserMenu from "./user-menu";
 
 export default function Header() {
   const handleRefresh = () => {
@@ -40,10 +40,8 @@ export default function Header() {
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Theme />
-          {/* Mobile logout button - only visible on small screens */}
-          <div className="lg:hidden">
-            <MobileLogoutButton />
-          </div>
+          {/* User menu - visible on all devices */}
+          <UserMenu />
         </div>
       </div>
     </header>

@@ -1,7 +1,6 @@
 "use client";
 
 import Logo from "./logo";
-import Profile from "./profile";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import Link from "next/link";
@@ -99,9 +98,6 @@ export default function SideBar({
             ))}
           </div>
         </ScrollArea>
-        <div className="p-3 border-t border-sky-400/30 dark:border-sky-600/30 bg-sky-600/30 dark:bg-sky-800/30">
-          <Profile />
-        </div>
       </div>
       <label
         htmlFor="sidebar"
