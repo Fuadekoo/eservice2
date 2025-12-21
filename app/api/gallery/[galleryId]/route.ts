@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { gallerySchema } from "@/app/[lang]/dashboard/@admin/configuration/gallery/_schema";
 import { randomUUID } from "crypto";
 
-// GET - Fetch a single gallery
+// GET - Fetch a single gallery (requires gallery:read permission)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ galleryId: string }> }
 ) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "gallery:read");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { galleryId } = await params;
 
     const gallery = await prisma.gallery.findUnique({
@@ -43,7 +53,7 @@ export async function GET(
   }
 }
 
-// PATCH - Update a gallery
+// PATCH - Update a gallery (requires gallery:update permission)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ galleryId: string }> }
@@ -51,21 +61,13 @@ export async function PATCH(
   try {
     const { galleryId } = await params;
 
-    // Authenticate and authorize user (admin only)
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "gallery:update");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user has admin role
-    const userRole = session.user.role;
-    if (userRole !== "admin") {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 
@@ -153,7 +155,7 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete a gallery
+// DELETE - Delete a gallery (requires gallery:delete permission)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ galleryId: string }> }
@@ -161,21 +163,13 @@ export async function DELETE(
   try {
     const { galleryId } = await params;
 
-    // Authenticate and authorize user (admin only)
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "gallery:delete");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user has admin role
-    const userRole = session.user.role;
-    if (userRole !== "admin") {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 

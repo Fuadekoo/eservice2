@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
 // GET - Fetch all services with office information (with pagination and search)
@@ -216,43 +217,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new service
+// POST - Create a new service (requires service:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "service:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Get user with role from database
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin or manager
-    const roleName = dbUser.role?.name?.toLowerCase() || "";
-    const isAdmin = roleName === "admin" || roleName === "administrator";
-    const isManager = roleName === "manager" || roleName === "office_manager";
-
-    if (!isAdmin && !isManager) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Only office managers and admins can create services",
-        },
-        { status: 403 }
       );
     }
 
@@ -289,10 +263,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If user is manager (not admin), verify they belong to the same office
+    // Check if user has permission to create services for this office
+    // Get user to check their role and permissions
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    const roleName = dbUser?.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+
+    // If user is not admin, verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId },
       });
 
       if (!managerStaff || managerStaff.officeId !== officeId) {

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { userUpdateSchema } from "@/app/[lang]/dashboard/@admin/userManagement/_schema";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
 import bcryptjs from "bcryptjs";
 
-// GET - Fetch a single user by ID
+// GET - Fetch a single user by ID (requires user:read permission)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -21,33 +21,13 @@ export async function GET(
       );
     }
 
-    // Authenticate and authorize user (admin only)
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "user:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 
@@ -128,7 +108,7 @@ export async function GET(
   }
 }
 
-// PATCH - Update a user (admin only)
+// PATCH - Update a user (requires user:update permission)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -144,33 +124,13 @@ export async function PATCH(
       );
     }
 
-    // Authenticate and authorize user (admin only)
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "user:update");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 
@@ -368,7 +328,7 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete a user (admin only)
+// DELETE - Delete a user (requires user:delete permission)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -384,33 +344,13 @@ export async function DELETE(
       );
     }
 
-    // Authenticate and authorize user (admin only)
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "user:delete");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 

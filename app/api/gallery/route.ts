@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { gallerySchema } from "@/app/[lang]/dashboard/@admin/configuration/gallery/_schema";
 import { randomUUID } from "crypto";
 
-// GET - Fetch all galleries
+// GET - Fetch all galleries (requires gallery:read permission)
 export async function GET(request: NextRequest) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "gallery:read");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const galleries = await prisma.gallery.findMany({
       include: {
         images: {
@@ -33,24 +43,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new gallery
+// POST - Create a new gallery (requires gallery:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate and authorize user (admin only)
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "gallery:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user has admin role
-    const userRole = session.user.role;
-    if (userRole !== "admin") {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 
