@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { officeSchema } from "@/app/[lang]/dashboard/@admin/office/_schema";
 
-// GET - Fetch a single office by ID
+// GET - Fetch a single office by ID (requires office:read permission)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ officeId: string }> | { officeId: string } }
 ) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:read");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const resolvedParams = await Promise.resolve(params);
     const officeId = resolvedParams.officeId;
 
@@ -51,15 +61,16 @@ export async function GET(
   }
 }
 
-// PATCH - Update an office
+// PATCH - Update an office (requires office:update permission)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ officeId: string }> | { officeId: string } }
 ) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:update");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -102,9 +113,9 @@ export async function PATCH(
     const data = validationResult.data;
     console.log("✅ Validation passed, data:", data);
 
-    // Check user's role directly from user table (admins might not have staff records)
+    // Get user to check if they're admin (for office scope validation)
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -122,7 +133,7 @@ export async function PATCH(
     if (!isAdmin) {
       // Get staff record to check office assignment
       const userStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId },
       });
 
       if (!userStaff || userStaff.officeId !== officeId) {
@@ -274,12 +285,22 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete an office
+// DELETE - Delete an office (requires office:delete permission)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ officeId: string }> | { officeId: string } }
 ) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:delete");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const resolvedParams = await Promise.resolve(params);
     const officeId = resolvedParams.officeId;
 

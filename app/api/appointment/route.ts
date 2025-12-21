@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
 // POST - Create a new appointment for an approved request
@@ -237,18 +238,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Fetch appointments (optional: filter by requestId)
+// GET - Fetch appointments (optional: filter by requestId) (requires appointment:read permission)
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
 
     // Get user role to determine access
     const dbUser = await prisma.user.findUnique({

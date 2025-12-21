@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import prisma from "@/lib/db";
 import bcryptjs from "bcryptjs";
 
-// POST - Change password (with current password verification)
+// POST - Change password (with current password verification) (requires profile:change-password permission)
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
-
+    // Check permission
+    const { response, userId } = await requirePermission(request, "profile:change-password");
+    if (response) return response;
     if (!userId) {
       return NextResponse.json(
         { 

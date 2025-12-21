@@ -17,7 +17,7 @@ export const API_PERMISSIONS: Record<string, string | string[] | undefined> = {
   "GET /api/user/me": "profile:read",
   "GET /api/user/profile": "profile:read",
   "PUT /api/user/profile": "profile:update",
-  "PUT /api/user/change-password": "profile:change-password",
+  "POST /api/user/change-password": "profile:change-password",
 
   // Office Management
   "GET /api/office": ["office:read", "office:manage"], // Allow read for public/authenticated users
@@ -31,6 +31,8 @@ export const API_PERMISSIONS: Record<string, string | string[] | undefined> = {
   "GET /api/office/[officeId]/stats": "office:read",
   "GET /api/office/[officeId]/manager": "office:read",
   "GET /api/admin/office": "office:read",
+  "POST /api/admin/office": "office:manage",
+  "DELETE /api/admin/office": "office:manage",
 
   // Service Management
   "GET /api/service": ["service:read"], // Public read access

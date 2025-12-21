@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
+import { requireAnyPermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
@@ -238,9 +239,13 @@ E-Service Platform`;
 // GET - Fetch requests (for authenticated user)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission (request:read or request:view-all)
+    const { response, userId } = await requireAnyPermission(request, [
+      "request:read",
+      "request:view-all",
+    ]);
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -248,16 +253,16 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const requestedUserId = searchParams.get("userId");
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const search = searchParams.get("search") || "";
     const officeId = searchParams.get("officeId") || "";
     const status = searchParams.get("status") || "";
 
-    // Only allow users to fetch their own requests (unless admin or manager)
+    // Get user role to determine access level
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -277,7 +282,7 @@ export async function GET(request: NextRequest) {
     if (isManager) {
       // Get manager's office from staff relation
       managerStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         select: { officeId: true },
       });
 
@@ -297,7 +302,7 @@ export async function GET(request: NextRequest) {
     } else if (isStaff) {
       // Staff can only see requests for services they're assigned to
       staffRecord = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         select: { id: true },
       });
 
@@ -340,10 +345,10 @@ export async function GET(request: NextRequest) {
       where.serviceId = { in: serviceIds };
     } else if (!isAdmin) {
       // Regular users only see their own requests
-      where.userId = session.user.id;
-    } else if (userId) {
-      // Admin can filter by userId
       where.userId = userId;
+    } else if (requestedUserId) {
+      // Admin can filter by userId
+      where.userId = requestedUserId;
     }
 
     // Office filter (only for admin)

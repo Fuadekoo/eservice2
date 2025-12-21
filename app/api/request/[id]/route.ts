@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission, requireAnyPermission } from "@/lib/rbac";
 
-// GET - Fetch a single request by ID
+// GET - Fetch a single request by ID (requires request:read permission)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "request:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -109,7 +110,7 @@ export async function GET(
 
     // Check if user has access to this request
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -126,7 +127,7 @@ export async function GET(
     } else if (isManager) {
       // Managers can view requests from their office
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         select: { officeId: true },
       });
 
@@ -146,7 +147,7 @@ export async function GET(
     } else if (isStaff) {
       // Staff can view requests for services they're assigned to
       const staffRecord = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         select: { id: true },
       });
 
@@ -175,7 +176,7 @@ export async function GET(
       }
     } else {
       // Regular users can only view their own requests
-      if (requestData.userId !== session.user.id) {
+      if (requestData.userId !== userId) {
         return NextResponse.json(
           { success: false, error: "Forbidden" },
           { status: 403 }
@@ -216,15 +217,16 @@ export async function GET(
   }
 }
 
-// PATCH - Update request (approve/reject by admin)
+// PATCH - Update request (approve/reject by admin) (requires request:update permission)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "request:update");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -233,23 +235,6 @@ export async function PATCH(
 
     const resolvedParams = await Promise.resolve(params);
     const requestId = resolvedParams.id;
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    const isAdmin =
-      dbUser?.role?.name?.toLowerCase() === "admin" ||
-      dbUser?.role?.name?.toLowerCase() === "administrator";
-
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Only admins can approve requests" },
-        { status: 403 }
-      );
-    }
 
     const body = await request.json();
     const { approveNote } = body;
@@ -266,14 +251,20 @@ export async function PATCH(
       );
     }
 
-    // Note: Admins can only view requests, not approve/reject them
-    // This endpoint is kept for backward compatibility but doesn't update status
-    // Status is managed by staff (statusbystaff) and managers (statusbyadmin)
+    // Update request with approval/rejection status and note
+    // Status is managed by staff (statusbystaff) and admins (statusbyadmin)
+    const updateData: any = {
+      approveNote: approveNote || null,
+    };
+    
+    // Allow updating statusbyadmin if provided (for admin approval/rejection)
+    if (statusbyadmin && ["approved", "rejected", "pending"].includes(statusbyadmin)) {
+      updateData.statusbyadmin = statusbyadmin;
+    }
+    
     const updatedRequest = await prisma.request.update({
       where: { id: requestId },
-      data: {
-        approveNote: approveNote || null,
-      },
+      data: updateData,
       include: {
         user: {
           select: {

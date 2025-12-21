@@ -10,13 +10,18 @@ import {
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
+import { auth } from "@/auth";
+import { filterMenuByPermissions } from "@/lib/filter-menu-by-permissions";
 
 export default async function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const menu = [
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const allMenuItems = [
     [
       {
         key: "overview",
@@ -59,6 +64,11 @@ export default async function Layout({
       },
     ],
   ];
+
+  // Filter menu items based on user permissions
+  const menu = userId
+    ? await filterMenuByPermissions(userId, "manager", allMenuItems)
+    : allMenuItems;
 
   return (
     <UserLayout menu={menu}>

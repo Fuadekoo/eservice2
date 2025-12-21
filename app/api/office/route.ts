@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { requirePermission } from "@/lib/rbac";
 import { officeSchema } from "@/app/[lang]/dashboard/@admin/office/_schema";
 
 // Pagination constants
@@ -37,9 +38,18 @@ function paginatedResponse(
   });
 }
 
-// GET - Fetch offices with pagination and search
+// GET - Fetch offices with pagination and search (requires office:read permission)
 export async function GET(request: NextRequest) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:read");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     const { searchParams } = new URL(request.url);
 
     // Parse pagination parameters
@@ -214,9 +224,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new office
+// POST - Create a new office (requires office:create permission)
 export async function POST(request: NextRequest) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:create");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate the data

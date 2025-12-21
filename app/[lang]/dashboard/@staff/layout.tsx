@@ -1,5 +1,3 @@
-"use client";
-
 import UserLayout from "@/components/layout/userLayout";
 import {
   LayoutDashboard,
@@ -11,9 +9,14 @@ import {
 } from "lucide-react";
 import React from "react";
 import InstallPrompt from "@/components/installPrompt";
+import { auth } from "@/auth";
+import { filterMenuByPermissions } from "@/lib/filter-menu-by-permissions";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  const menu = [
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const allMenuItems = [
     [
       {
         key: "overview",
@@ -42,13 +45,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         url: "report",
         Icon: <FileText className="size-6" />,
       },
-      // {
-      //   key: "profile",
-      //   url: "profile",
-      //   Icon: <User className="size-6" />,
-      // },
     ],
   ];
+
+  // Filter menu items based on user permissions
+  const menu = userId
+    ? await filterMenuByPermissions(userId, "staff", allMenuItems)
+    : allMenuItems;
 
   return (
     <UserLayout menu={menu}>

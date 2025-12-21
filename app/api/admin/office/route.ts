@@ -1,42 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
 /**
- * GET - Get the authenticated admin's office
+ * GET - Get the authenticated admin's office (requires office:read permission)
  * Admins can have a staff relationship with an office to manage it
  */
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 
@@ -81,40 +59,18 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST - Assign an office to the admin (create staff relationship)
+ * POST - Assign an office to the admin (create staff relationship) (requires office:manage permission)
  * Body: { officeId: string }
  */
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:manage");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 
@@ -209,39 +165,17 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * DELETE - Remove office assignment from admin
+ * DELETE - Remove office assignment from admin (requires office:manage permission)
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:manage");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
-
-    // Check if user is admin
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isAdmin = dbUser.role?.name?.toLowerCase() === "admin";
-    if (!isAdmin) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Admin access required" },
-        { status: 403 }
       );
     }
 

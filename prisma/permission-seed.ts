@@ -200,6 +200,104 @@ async function main() {
     { name: "dashboard:staff", description: "View staff dashboard" },
     { name: "dashboard:customer", description: "View customer dashboard" },
 
+    // Admin Dashboard Pages
+    { name: "page:admin:overview", description: "Access admin overview page" },
+    {
+      name: "page:admin:user-management",
+      description: "Access admin user management page",
+    },
+    {
+      name: "page:admin:office",
+      description: "Access admin office management page",
+    },
+    {
+      name: "page:admin:my-office",
+      description: "Access admin my office page",
+    },
+    {
+      name: "page:admin:request-management",
+      description: "Access admin request management page",
+    },
+    { name: "page:admin:report", description: "Access admin report page" },
+    {
+      name: "page:admin:languages",
+      description: "Access admin languages page",
+    },
+    { name: "page:admin:gallery", description: "Access admin gallery page" },
+    { name: "page:admin:about", description: "Access admin about page" },
+    { name: "page:admin:profile", description: "Access admin profile page" },
+
+    // Manager Dashboard Pages
+    {
+      name: "page:manager:overview",
+      description: "Access manager overview page",
+    },
+    {
+      name: "page:manager:services",
+      description: "Access manager services page",
+    },
+    { name: "page:manager:staff", description: "Access manager staff page" },
+    {
+      name: "page:manager:request-management",
+      description: "Access manager request management page",
+    },
+    { name: "page:manager:report", description: "Access manager report page" },
+    {
+      name: "page:manager:appointment",
+      description: "Access manager appointment page",
+    },
+    {
+      name: "page:manager:configuration",
+      description: "Access manager configuration page",
+    },
+    {
+      name: "page:manager:availability",
+      description: "Access manager availability page",
+    },
+
+    // Staff Dashboard Pages
+    { name: "page:staff:overview", description: "Access staff overview page" },
+    {
+      name: "page:staff:request-management",
+      description: "Access staff request management page",
+    },
+    {
+      name: "page:staff:appointment",
+      description: "Access staff appointment page",
+    },
+    {
+      name: "page:staff:service-management",
+      description: "Access staff service management page",
+    },
+    { name: "page:staff:report", description: "Access staff report page" },
+    { name: "page:staff:profile", description: "Access staff profile page" },
+
+    // Customer Dashboard Pages
+    {
+      name: "page:customer:overview",
+      description: "Access customer overview page",
+    },
+    {
+      name: "page:customer:apply-service",
+      description: "Access customer apply service page",
+    },
+    {
+      name: "page:customer:request",
+      description: "Access customer request page",
+    },
+    {
+      name: "page:customer:appointment",
+      description: "Access customer appointment page",
+    },
+    {
+      name: "page:customer:feedback",
+      description: "Access customer feedback page",
+    },
+    {
+      name: "page:customer:profile",
+      description: "Access customer profile page",
+    },
+
     // Configuration
     { name: "configuration:read", description: "View system configuration" },
     {

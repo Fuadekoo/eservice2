@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
-// GET - Fetch manager dashboard overview statistics
+// GET - Fetch manager dashboard overview statistics (requires dashboard:manager permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "dashboard:manager");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
 
     // Get the authenticated user's office ID from staff relation
     const userStaff = await prisma.staff.findFirst({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import {
   getAvailableTimeSlots,
   getDefaultSchedule,
@@ -9,13 +9,23 @@ import {
 } from "@/lib/office-availability";
 
 /**
- * GET - Get availability configuration and available slots for a date
+ * GET - Get availability configuration and available slots for a date (requires office:read permission)
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ officeId: string }> }
 ) {
   try {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:read");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { officeId } = await params;
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
@@ -113,16 +123,17 @@ export async function GET(
 }
 
 /**
- * PUT - Update availability configuration
+ * PUT - Update availability configuration (requires office:configure permission)
  */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ officeId: string }> }
 ) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "office:configure");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

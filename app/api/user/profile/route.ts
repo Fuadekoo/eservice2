@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import prisma from "@/lib/db";
 
-// GET - Get user profile
+// GET - Get user profile (requires profile:read permission)
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
-
+    // Check permission
+    const { response, userId } = await requirePermission(request, "profile:read");
+    if (response) return response;
     if (!userId) {
       return NextResponse.json(
         { 
@@ -60,12 +60,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT - Update user profile
+// PUT - Update user profile (requires profile:update permission)
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
-
+    // Check permission
+    const { response, userId } = await requirePermission(request, "profile:update");
+    if (response) return response;
     if (!userId) {
       return NextResponse.json(
         { 

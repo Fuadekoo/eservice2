@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
 /**
- * GET - Get all staff assigned to a service
+ * GET - Get all staff assigned to a service (requires service:read permission)
  */
 export async function GET(
   request: NextRequest,
@@ -15,9 +15,10 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const { serviceId } = resolvedParams;
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "service:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -87,7 +88,7 @@ export async function GET(
 }
 
 /**
- * POST - Assign staff to a service
+ * POST - Assign staff to a service (requires service:assign-staff permission)
  * Body: { staffIds: string[] }
  */
 export async function POST(
@@ -101,18 +102,19 @@ export async function POST(
     const body = await request.json();
     const { staffIds } = body;
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "service:assign-staff");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Get user with role from database
+    // Get user with role from database (for office verification)
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -123,20 +125,10 @@ export async function POST(
       );
     }
 
-    // Check if user is admin or manager
+    // Check if user is admin or manager (for office verification)
     const roleName = dbUser.role?.name?.toLowerCase() || "";
     const isAdmin = roleName === "admin" || roleName === "administrator";
     const isManager = roleName === "manager" || roleName === "office_manager";
-
-    if (!isAdmin && !isManager) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Only office managers and admins can assign services to staff",
-        },
-        { status: 403 }
-      );
-    }
 
     // Validate input
     if (!staffIds || !Array.isArray(staffIds) || staffIds.length === 0) {
@@ -162,7 +154,7 @@ export async function POST(
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
       });
 
       if (!managerStaff || managerStaff.officeId !== service.officeId) {
@@ -271,7 +263,7 @@ export async function POST(
 }
 
 /**
- * DELETE - Remove staff assignment from a service
+ * DELETE - Remove staff assignment from a service (requires service:assign-staff permission)
  * Query params: staffId
  */
 export async function DELETE(
@@ -285,18 +277,19 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const staffId = searchParams.get("staffId");
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "service:assign-staff");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Get user with role from database
+    // Get user with role from database (for office verification)
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -307,21 +300,10 @@ export async function DELETE(
       );
     }
 
-    // Check if user is admin or manager
+    // Check if user is admin or manager (for office verification)
     const roleName = dbUser.role?.name?.toLowerCase() || "";
     const isAdmin = roleName === "admin" || roleName === "administrator";
     const isManager = roleName === "manager" || roleName === "office_manager";
-
-    if (!isAdmin && !isManager) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Only office managers and admins can remove service assignments",
-        },
-        { status: 403 }
-      );
-    }
 
     // Validate input
     if (!staffId) {
@@ -347,7 +329,7 @@ export async function DELETE(
     // If user is manager (not admin), verify they belong to the same office
     if (!isAdmin) {
       const managerStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
       });
 
       if (!managerStaff || managerStaff.officeId !== service.officeId) {
