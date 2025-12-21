@@ -75,6 +75,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import useTranslation from "@/hooks/useTranslation";
+import { PermissionDialog } from "./_components/permission-dialog";
+import { RolePermissionStatus } from "./_components/role-permission-status";
 
 export default function UserManagementPage() {
   const { t } = useTranslation();
@@ -113,6 +115,10 @@ export default function UserManagementPage() {
 
   // Local search state for debouncing
   const [searchInput, setSearchInput] = useState(search);
+  
+  // Permission dialog state
+  const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<{ id: string; name: string } | null>(null);
 
   // Fetch users and roles on mount
   useEffect(() => {
@@ -180,6 +186,24 @@ export default function UserManagementPage() {
   const isAdmin = (user: User) => {
     const roleName = user.role?.name?.toLowerCase() || "";
     return roleName === "admin" || roleName === "administrator";
+  };
+
+  // Handle permission management click
+  const handleManagePermissions = (user: User) => {
+    if (!user.role) {
+      toast.error("User has no role assigned");
+      return;
+    }
+    setSelectedRoleForPermissions({
+      id: user.role.id,
+      name: user.role.name,
+    });
+    setIsPermissionDialogOpen(true);
+  };
+
+  // Handle permission dialog success
+  const handlePermissionDialogSuccess = () => {
+    refreshUsers(); // Refresh users to update permission status
   };
 
   // Handle delete click
@@ -414,6 +438,7 @@ export default function UserManagementPage() {
                       <TableHead>{t("dashboard.contact")}</TableHead>
                       <TableHead>{t("dashboard.role")}</TableHead>
                       <TableHead>{t("dashboard.office")}</TableHead>
+                      <TableHead>Permissions</TableHead>
                       <TableHead>{t("common.status")}</TableHead>
                       <TableHead className="text-right">
                         {t("common.actions")}
@@ -497,6 +522,20 @@ export default function UserManagementPage() {
                               <span className="text-muted-foreground text-sm">
                                 {t("dashboard.noOffice")}
                               </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {user.role ? (
+                              <RolePermissionStatus
+                                roleId={user.role.id}
+                                roleName={user.role.name}
+                                onClick={() => handleManagePermissions(user)}
+                              />
+                            ) : (
+                              <Badge variant="outline" className="gap-1">
+                                <XCircle className="h-3 w-3" />
+                                No Role
+                              </Badge>
                             )}
                           </TableCell>
                           <TableCell>
@@ -728,6 +767,24 @@ export default function UserManagementPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Permission Management Dialog */}
+        {selectedRoleForPermissions && (
+          <PermissionDialog
+            role={{
+              id: selectedRoleForPermissions.id,
+              name: selectedRoleForPermissions.name,
+            } as any}
+            open={isPermissionDialogOpen}
+            onOpenChange={(open) => {
+              setIsPermissionDialogOpen(open);
+              if (!open) {
+                setSelectedRoleForPermissions(null);
+              }
+            }}
+            onSuccess={handlePermissionDialogSuccess}
+          />
+        )}
       </div>
     </div>
   );
