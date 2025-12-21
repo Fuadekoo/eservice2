@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     // Authenticate user (optional for public access)
     const session = await auth();
     let officeId: string | null = null;
+    let isAdmin = false;
+    let isManager = false;
 
     // If user is authenticated, check permission and get their office ID
     if (session?.user?.id) {
@@ -37,21 +39,36 @@ export async function GET(request: NextRequest) {
       });
 
       const roleName = dbUser?.role?.name?.toLowerCase() || "";
-      const isAdmin = roleName === "admin" || roleName === "administrator";
-      const isManager = roleName === "manager" || roleName === "office_manager";
+      isAdmin = roleName === "admin" || roleName === "administrator";
+      isManager = roleName === "manager" || roleName === "office_manager";
 
-      // If user is admin or manager, get their office ID
-      // They can only see services from their office
-      if (isAdmin || isManager) {
+      // For managers, get their office ID - they can only see services from their office
+      if (isManager) {
+        // First, try to get officeId from staff relation
         const userStaff = await prisma.staff.findFirst({
           where: { userId: userId },
           select: { officeId: true },
         });
 
-        if (userStaff) {
+        if (userStaff?.officeId) {
           officeId = userStaff.officeId;
+        } else if (dbUser.role?.officeId) {
+          // Fallback to role's officeId if staff record doesn't exist
+          officeId = dbUser.role.officeId;
+        }
+        
+        // If manager still doesn't have an officeId, deny access
+        if (!officeId) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Office not found. Please contact administrator.",
+            },
+            { status: 403 }
+          );
         }
       }
+      // Admins can see all services, so we don't set officeId for them
     }
 
     // If officeId is provided in query and user is not authenticated manager/admin, use it
@@ -69,7 +86,8 @@ export async function GET(request: NextRequest) {
 
     // For public/guest access (no authentication or no officeId), fetch all services from active offices
     // This allows the guest service page to display all available services
-    const isPublicAccess = !session?.user || (!officeId && !requestedOfficeId);
+    // Admins also see all services (they don't have officeId restriction)
+    const isPublicAccess = !session?.user || (!officeId && !requestedOfficeId) || isAdmin;
 
     console.log("📋 Fetching services:", {
       officeId,
