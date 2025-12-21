@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { canStaffApproveService } from "@/lib/service-staff-assignment";
 import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
 /**
- * POST - Approve request as staff
+ * POST - Approve request as staff (requires request:approve-staff permission)
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "request:approve-staff");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -24,13 +25,21 @@ export async function POST(
     const resolvedParams = await Promise.resolve(params);
     const requestId = resolvedParams.id;
 
-    // Check if user is staff
+    // Get user with role from database
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
-    const isStaff = dbUser?.role?.name?.toLowerCase() === "staff";
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isStaff = roleName === "staff";
 
     if (!isStaff) {
       return NextResponse.json(
@@ -41,7 +50,7 @@ export async function POST(
 
     // Get staff's staff record
     const staffRecord = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { id: true },
     });
 

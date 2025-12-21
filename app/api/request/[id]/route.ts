@@ -237,11 +237,16 @@ export async function PATCH(
     const requestId = resolvedParams.id;
 
     const body = await request.json();
-    const { approveNote } = body;
+    const { approveNote, statusbyadmin, serviceId, currentAddress, date } = body;
 
     // Get the request
     const requestData = await prisma.request.findUnique({
       where: { id: requestId },
+      include: {
+        user: {
+          select: { id: true },
+        },
+      },
     });
 
     if (!requestData) {
@@ -251,15 +256,49 @@ export async function PATCH(
       );
     }
 
-    // Update request with approval/rejection status and note
-    // Status is managed by staff (statusbystaff) and admins (statusbyadmin)
-    const updateData: any = {
-      approveNote: approveNote || null,
-    };
+    // Get user role to determine what can be updated
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    const isAdmin =
+      dbUser?.role?.name?.toLowerCase() === "admin" ||
+      dbUser?.role?.name?.toLowerCase() === "administrator";
+    const isCustomer =
+      dbUser?.role?.name?.toLowerCase() === "customer";
+
+    // Customers can only update their own requests and only certain fields
+    if (isCustomer && requestData.userId !== userId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden - You can only update your own requests" },
+        { status: 403 }
+      );
+    }
+
+    // Build update data based on role
+    const updateData: any = {};
     
-    // Allow updating statusbyadmin if provided (for admin approval/rejection)
-    if (statusbyadmin && ["approved", "rejected", "pending"].includes(statusbyadmin)) {
-      updateData.statusbyadmin = statusbyadmin;
+    if (isAdmin) {
+      // Admins can update approval status and note
+      if (approveNote !== undefined) updateData.approveNote = approveNote || null;
+      if (statusbyadmin && ["approved", "rejected", "pending"].includes(statusbyadmin)) {
+        updateData.statusbyadmin = statusbyadmin;
+      }
+    } else if (isCustomer) {
+      // Customers can update request details (serviceId, currentAddress, date) for pending requests
+      if (requestData.statusbystaff !== "pending" || requestData.statusbyadmin !== "pending") {
+        return NextResponse.json(
+          { success: false, error: "Cannot update request that is no longer pending" },
+          { status: 400 }
+        );
+      }
+      if (serviceId) updateData.serviceId = serviceId;
+      if (currentAddress) updateData.currentAddress = currentAddress;
+      if (date) updateData.date = new Date(date);
+    } else {
+      // Other roles (manager, staff) - for now, only allow approveNote
+      if (approveNote !== undefined) updateData.approveNote = approveNote || null;
     }
     
     const updatedRequest = await prisma.request.update({

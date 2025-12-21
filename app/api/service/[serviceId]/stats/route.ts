@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
 /**
  * GET - Get service statistics (total apply, pending, approved, rejected)
+ * Requires service:read permission and office verification
  */
 export async function GET(
   request: NextRequest,
@@ -14,9 +15,10 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const { serviceId } = resolvedParams;
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "service:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -25,7 +27,7 @@ export async function GET(
 
     // Get the authenticated user's office ID
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 
@@ -51,7 +53,7 @@ export async function GET(
 
     if (service.officeId !== userStaff.officeId) {
       return NextResponse.json(
-        { success: false, error: "Access denied" },
+        { success: false, error: "Access denied. You can only view statistics for services from your office" },
         { status: 403 }
       );
     }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
 import bcryptjs from "bcryptjs";
 
 /**
- * GET - Get a single staff by ID
+ * GET - Get a single staff by ID (requires staff:read permission)
  */
 export async function GET(
   request: NextRequest,
@@ -16,9 +16,10 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const { staffId } = resolvedParams;
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "staff:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -27,7 +28,7 @@ export async function GET(
 
     // Get the authenticated user's office ID
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 
@@ -110,7 +111,7 @@ export async function GET(
 }
 
 /**
- * PATCH - Update a staff member
+ * PATCH - Update a staff member (requires staff:update permission)
  */
 export async function PATCH(
   request: NextRequest,
@@ -121,18 +122,19 @@ export async function PATCH(
     const resolvedParams = await Promise.resolve(params);
     const { staffId } = resolvedParams;
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "staff:update");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Get user with role from database
+    // Get user with role from database (for office verification)
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -143,23 +145,12 @@ export async function PATCH(
       );
     }
 
-    // Check if user is admin or manager
+    // Check if user is admin (for office verification)
     const roleName = dbUser.role?.name?.toLowerCase() || "";
     const isAdmin = roleName === "admin" || roleName === "administrator";
-    const isManager = roleName === "manager" || roleName === "office_manager";
-
-    if (!isAdmin && !isManager) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Only office managers and admins can update staff",
-        },
-        { status: 403 }
-      );
-    }
 
     const body = await request.json();
-    const { userId, officeId, username, phoneNumber, password, roleId } = body;
+    const { userId: bodyUserId, officeId, username, phoneNumber, password, roleId } = body;
 
     // Get existing staff
     const existingStaff = await prisma.staff.findUnique({
@@ -176,7 +167,7 @@ export async function PATCH(
 
     // Get manager's office ID
     const managerStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 
@@ -378,7 +369,7 @@ export async function PATCH(
 }
 
 /**
- * DELETE - Delete a staff member
+ * DELETE - Delete a staff member (requires staff:delete permission)
  */
 export async function DELETE(
   request: NextRequest,
@@ -389,18 +380,19 @@ export async function DELETE(
     const resolvedParams = await Promise.resolve(params);
     const { staffId } = resolvedParams;
 
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "staff:delete");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Get user with role from database
+    // Get user with role from database (for office verification)
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -411,20 +403,9 @@ export async function DELETE(
       );
     }
 
-    // Check if user is admin or manager
+    // Check if user is admin (for office verification)
     const roleName = dbUser.role?.name?.toLowerCase() || "";
     const isAdmin = roleName === "admin" || roleName === "administrator";
-    const isManager = roleName === "manager" || roleName === "office_manager";
-
-    if (!isAdmin && !isManager) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Only office managers and admins can delete staff",
-        },
-        { status: 403 }
-      );
-    }
 
     // Get existing staff
     const existingStaff = await prisma.staff.findUnique({
@@ -441,7 +422,7 @@ export async function DELETE(
 
     // Get manager's office ID
     const managerStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 

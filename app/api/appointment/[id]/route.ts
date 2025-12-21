@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
-// GET - Get a specific appointment
+// GET - Get a specific appointment (requires appointment:read permission)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
     const resolvedParams = await Promise.resolve(params);
     const appointmentId = resolvedParams.id;
 
@@ -111,21 +111,21 @@ export async function GET(
   }
 }
 
-// PATCH - Update an appointment
+// PATCH - Update an appointment (requires appointment:update permission)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:update");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
     const resolvedParams = await Promise.resolve(params);
     const appointmentId = resolvedParams.id;
 
@@ -253,21 +253,21 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete an appointment
+// DELETE - Delete an appointment (requires appointment:delete permission)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:delete");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
     const resolvedParams = await Promise.resolve(params);
     const appointmentId = resolvedParams.id;
 

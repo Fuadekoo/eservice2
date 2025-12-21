@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
-// GET - Fetch all admin users (for managers to send reports to)
+// GET - Fetch all admin users (for managers to send reports to) (requires report:create permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission (users who can create reports need to see admin list)
+    const { response, userId } = await requirePermission(request, "report:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

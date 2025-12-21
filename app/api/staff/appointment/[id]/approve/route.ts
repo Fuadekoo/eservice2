@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { canStaffApproveService } from "@/lib/service-staff-assignment";
 
-// PATCH - Approve or reject an appointment
+// PATCH - Approve or reject an appointment (requires appointment:approve permission)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:approve");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
     const resolvedParams = await Promise.resolve(params);
     const appointmentId = resolvedParams.id;
 

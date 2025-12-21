@@ -1,38 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
-// GET - Fetch reports for manager (received from staff OR sent to admin)
+// GET - Fetch reports for manager (received from staff OR sent to admin) (requires report:read permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "report:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user is manager
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isManager = dbUser.role?.name?.toLowerCase() === "manager";
-    if (!isManager) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Manager access required" },
-        { status: 403 }
       );
     }
 
@@ -49,10 +29,10 @@ export async function GET(request: NextRequest) {
 
     if (type === "received") {
       // Reports received by this manager (sent from staff)
-      where.reportSentTo = session.user.id;
+      where.reportSentTo = userId;
     } else if (type === "sent") {
       // Reports sent by this manager (to admin)
-      where.reportSentBy = session.user.id;
+      where.reportSentBy = userId;
     }
 
     // Add search filter
@@ -170,36 +150,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new report (manager sends to admin)
+// POST - Create a new report (manager sends to admin) (requires report:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "report:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
-      );
-    }
-
-    // Check if user is manager
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    const isManager = dbUser.role?.name?.toLowerCase() === "manager";
-    if (!isManager) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden - Manager access required" },
-        { status: 403 }
       );
     }
 
@@ -241,21 +201,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure session.user.id is defined
-    const senderId = session.user.id;
-    if (!senderId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 401 }
-      );
-    }
-
     // Create report with fileData
     const report = await prisma.report.create({
       data: {
         name,
         description,
-        reportSentBy: senderId,
+        reportSentBy: userId,
         reportSentTo,
         receiverStatus: "pending",
         fileData:

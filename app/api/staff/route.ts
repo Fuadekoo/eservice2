@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
 import bcryptjs from "bcryptjs";
 
-// GET - Fetch all staff for manager's office (with pagination and search)
+// GET - Fetch all staff for manager's office (with pagination and search) (requires staff:read permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "staff:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     // Get the authenticated user's office ID from staff relation
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       search,
       page,
       pageSize,
-      userId: session.user.id,
+      userId: userId,
     });
 
     // Build where clause - always filter by authenticated user's office
@@ -163,52 +164,25 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new staff member
+// POST - Create a new staff member (requires staff:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "staff:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Get user with role from database
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { role: true },
-    });
-
-    if (!dbUser) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin or manager
-    const roleName = dbUser.role?.name?.toLowerCase() || "";
-    const isAdmin = roleName === "admin" || roleName === "administrator";
-    const isManager = roleName === "manager" || roleName === "office_manager";
-
-    if (!isAdmin && !isManager) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Only office managers and admins can create staff",
-        },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
-    const { userId, officeId, username, phoneNumber, password, roleId } = body;
+    const { userId: bodyUserId, officeId, username, phoneNumber, password, roleId } = body;
 
     // Get manager's office ID
     const managerStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 
@@ -234,7 +208,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let finalUserId = userId;
+    let finalUserId = bodyUserId;
 
     // If creating new user (username, phoneNumber, password provided)
     if (username && phoneNumber && password) {
@@ -325,7 +299,7 @@ export async function POST(request: NextRequest) {
       });
 
       finalUserId = newUser.id;
-    } else if (!userId) {
+    } else if (!bodyUserId) {
       return NextResponse.json(
         {
           success: false,

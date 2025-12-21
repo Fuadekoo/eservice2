@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { canStaffApproveService } from "@/lib/service-staff-assignment";
 
-// GET - Fetch appointments for services assigned to the logged-in staff
+// GET - Fetch appointments for services assigned to the logged-in staff (requires appointment:read permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
 
     // Get user role
     const dbUser = await prisma.user.findUnique({
@@ -23,7 +22,8 @@ export async function GET(request: NextRequest) {
       include: { role: true },
     });
 
-    const isStaff = dbUser?.role?.name?.toLowerCase() === "staff";
+    const roleName = dbUser?.role?.name?.toLowerCase() || "";
+    const isStaff = roleName === "staff";
 
     if (!isStaff) {
       return NextResponse.json(

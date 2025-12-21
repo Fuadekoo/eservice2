@@ -30,6 +30,41 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
 
+    // Get user with role from database for office verification
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
+
+    // If user is manager (not admin), verify they belong to the same office
+    if (!isAdmin && isManager) {
+      const userStaff = await prisma.staff.findFirst({
+        where: { userId: userId },
+        select: { officeId: true },
+      });
+
+      if (!userStaff || userStaff.officeId !== officeId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Access denied. You can only view availability for your own office",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Get or create availability configuration
     let availability = await prisma.officeAvailability.findUnique({
       where: { officeId },
@@ -165,7 +200,7 @@ export async function PUT(
 
     // Check user's role directly from user table (admins might not have staff records)
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -183,7 +218,7 @@ export async function PUT(
     if (!isAdmin) {
       // Get staff record to check office assignment
       const userStaff = await prisma.staff.findFirst({
-        where: { userId: session.user.id },
+        where: { userId: userId },
       });
 
       if (!userStaff || userStaff.officeId !== officeId) {

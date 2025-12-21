@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
+import { requirePermission } from "@/lib/rbac";
 
 const readFileAsync = promisify(fs.readFile);
 const statAsync = promisify(fs.stat);
@@ -31,25 +32,35 @@ function getMimeType(filePath: string): string {
 }
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ file: string }> }
 ) {
-  const filename = (await params).file;
-
-  if (!filename) {
-    return NextResponse.json(
-      { error: "Filename is required" },
-      { status: 400 }
-    );
-  }
-
-  if (filename.includes("..") || filename.includes("/")) {
-    return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
-  }
-
-  const filePath = path.join(FILE_STORAGE_PATH, filename);
-
   try {
+    // Check permission for file download
+    const { response, userId } = await requirePermission(request, "file:download");
+    if (response) return response;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const filename = (await params).file;
+
+    if (!filename) {
+      return NextResponse.json(
+        { error: "Filename is required" },
+        { status: 400 }
+      );
+    }
+
+    if (filename.includes("..") || filename.includes("/")) {
+      return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
+    }
+
+    const filePath = path.join(FILE_STORAGE_PATH, filename);
+
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ error: "FILE NOT FOUND" }, { status: 404 });
@@ -83,18 +94,13 @@ export async function GET(
       status: 200,
       headers,
     });
-  } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      Object.prototype.hasOwnProperty.call(error, "code") &&
-      (error as { code?: string }).code === "ENOENT"
-    ) {
+  } catch (error: any) {
+    if (error.code === "ENOENT") {
       return NextResponse.json({ error: "FILE NOT FOUND" }, { status: 404 });
     }
     console.error("Error serving file:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error.message || "Internal server error" },
       { status: 500 }
     );
   }

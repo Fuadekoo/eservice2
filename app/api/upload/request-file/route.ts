@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
 const FILEDATA_DIR = path.join(process.cwd(), "filedata");
 
@@ -26,11 +26,13 @@ function generateFilename(originalName: string): string {
   return `${timestamp}-${random}${ext}`;
 }
 
+// POST - Upload request file (requires file:upload permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "file:upload");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

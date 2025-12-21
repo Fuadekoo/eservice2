@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
-import { requireAnyPermission } from "@/lib/rbac";
+import { requirePermission, requireAnyPermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
-// POST - Create a new request
+// POST - Create a new request (requires request:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "request:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    // Store userId after validation
-    const userId = session.user.id;
 
     const body = await request.json();
     const {

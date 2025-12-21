@@ -40,6 +40,41 @@ export async function GET(
       );
     }
 
+    // Get user with role from database for office verification
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 401 }
+      );
+    }
+
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
+
+    // If user is manager (not admin), verify they belong to the same office
+    if (!isAdmin && isManager) {
+      const userStaff = await prisma.staff.findFirst({
+        where: { userId: userId },
+        select: { officeId: true },
+      });
+
+      if (!userStaff || userStaff.officeId !== officeId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Access denied. You can only view your own office",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Serialize dates properly
     const serializedOffice = {
       ...office,

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
-// GET - Get available users for staff assignment (users not already staff in the manager's office)
+// GET - Get available users for staff assignment (users not already staff in the manager's office) (requires staff:create permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "staff:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Get the authenticated user's office ID from staff relation
     const userStaff = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 

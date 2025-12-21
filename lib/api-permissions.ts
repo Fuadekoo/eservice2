@@ -33,6 +33,7 @@ export const API_PERMISSIONS: Record<string, string | string[] | undefined> = {
   "GET /api/admin/office": "office:read",
   "POST /api/admin/office": "office:manage",
   "DELETE /api/admin/office": "office:manage",
+  "GET /api/manager/office": "office:read",
 
   // Service Management
   "GET /api/service": ["service:read"], // Public read access
@@ -62,7 +63,7 @@ export const API_PERMISSIONS: Record<string, string | string[] | undefined> = {
   "PATCH /api/appointment/[id]": "appointment:update",
   "DELETE /api/appointment/[id]": "appointment:delete",
   "GET /api/staff/appointment": "appointment:read",
-  "POST /api/staff/appointment/[id]/approve": "appointment:approve",
+  "PATCH /api/staff/appointment/[id]/approve": "appointment:approve",
 
   // Staff Management
   "GET /api/staff": "staff:read",
@@ -85,6 +86,7 @@ export const API_PERMISSIONS: Record<string, string | string[] | undefined> = {
   "GET /api/manager/report": "report:read",
   "POST /api/manager/report": "report:create",
   "GET /api/manager/report/[id]": "report:read",
+  "GET /api/admin/list": "report:create", // Managers need this to see admin list when creating reports
   "GET /api/staff/report": "report:read",
   "POST /api/staff/report": "report:create",
   "GET /api/staff/report/[id]": "report:read",

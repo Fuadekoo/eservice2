@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
 import prisma from "@/lib/db";
+import { requirePermission } from "@/lib/rbac";
 
-// GET - Get current authenticated user
+// GET - Get current authenticated user (requires profile:read permission)
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "profile:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch user data from database
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         id: true,
         username: true,
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
         id: user.id,
         username: user.username,
         phoneNumber: user.phoneNumber,
-        role: user.role?.name || session.user.role,
+        role: user.role?.name || null,
       },
     });
   } catch (error: any) {

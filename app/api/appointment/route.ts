@@ -4,19 +4,18 @@ import { auth } from "@/auth";
 import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
-// POST - Create a new appointment for an approved request
+// POST - Create a new appointment for an approved request (requires appointment:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "appointment:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
 
     const body = await request.json();
     const { requestId, date, time, notes, staffId } = body;

@@ -55,6 +55,31 @@ export async function GET(
       );
     }
 
+    // Verify user has access to this service's office
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    const roleName = dbUser?.role?.name?.toLowerCase() || "";
+    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isManager = roleName === "manager" || roleName === "office_manager";
+
+    // If user is admin or manager, verify they belong to the same office as the service
+    if (isAdmin || isManager) {
+      const userStaff = await prisma.staff.findFirst({
+        where: { userId: userId },
+        select: { officeId: true },
+      });
+
+      if (userStaff && service.officeId !== userStaff.officeId) {
+        return NextResponse.json(
+          { success: false, error: "Access denied. You can only view staff assignments for services from your office" },
+          { status: 403 }
+        );
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {

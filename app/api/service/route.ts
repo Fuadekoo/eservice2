@@ -7,9 +7,6 @@ import { randomUUID } from "crypto";
 // GET - Fetch all services with office information (with pagination and search)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user (optional for public access)
-    const session = await auth();
-
     const { searchParams } = new URL(request.url);
     const requestedOfficeId = searchParams.get("officeId");
     const search = searchParams.get("search") || "";
@@ -17,12 +14,25 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
     const skip = (page - 1) * pageSize;
 
+    // Authenticate user (optional for public access)
+    const session = await auth();
     let officeId: string | null = null;
 
-    // If user is authenticated, check their role
-    if (session?.user) {
+    // If user is authenticated, check permission and get their office ID
+    if (session?.user?.id) {
+      // Check permission for authenticated users
+      const { response, userId } = await requirePermission(request, "service:read");
+      if (response) return response;
+      if (!userId) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      // Get user with role from database
       const dbUser = await prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: userId },
         include: { role: true },
       });
 
@@ -31,9 +41,10 @@ export async function GET(request: NextRequest) {
       const isManager = roleName === "manager" || roleName === "office_manager";
 
       // If user is admin or manager, get their office ID
+      // They can only see services from their office
       if (isAdmin || isManager) {
         const userStaff = await prisma.staff.findFirst({
-          where: { userId: session.user.id },
+          where: { userId: userId },
           select: { officeId: true },
         });
 
@@ -43,8 +54,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If officeId is provided in query and user is not manager/admin, use it
-    // This allows customers to view services for a specific office
+    // If officeId is provided in query and user is not authenticated manager/admin, use it
+    // This allows customers/public to view services for a specific office
     if (requestedOfficeId && !officeId) {
       // Verify office exists and is active
       const office = await prisma.office.findUnique({

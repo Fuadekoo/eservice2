@@ -1,30 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 
 /**
- * GET - Get a single report by ID
+ * GET - Get a single report by ID (requires report:read permission)
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const resolvedParams = await Promise.resolve(params);
-    const reportId = resolvedParams.id;
-
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "report:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Check if user is staff
+    const resolvedParams = await Promise.resolve(params);
+    const reportId = resolvedParams.id;
+
+    // Get user with role from database
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -35,7 +36,8 @@ export async function GET(
       );
     }
 
-    const isStaff = dbUser.role?.name?.toLowerCase() === "staff";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isStaff = roleName === "staff";
     if (!isStaff) {
       return NextResponse.json(
         { success: false, error: "Forbidden - Staff access required" },
@@ -84,8 +86,8 @@ export async function GET(
 
     // Verify staff has access to this report (either sent or received)
     if (
-      report.reportSentBy !== session.user.id &&
-      report.reportSentTo !== session.user.id
+      report.reportSentBy !== userId &&
+      report.reportSentTo !== userId
     ) {
       return NextResponse.json(
         { success: false, error: "Forbidden - Access denied" },

@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
-// GET - Get feedback for a request
+// GET - Get feedback for a request (requires feedback:read permission)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ requestId: string }> | { requestId: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "feedback:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -35,7 +37,7 @@ export async function GET(
     });
 
     // Verify the request belongs to the user (for customers)
-    if (feedback && feedback.request.userId !== session.user.id) {
+    if (feedback && feedback.request.userId !== userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 403 }
@@ -68,21 +70,21 @@ export async function GET(
   }
 }
 
-// POST/PUT - Create or update feedback for a request
+// POST/PUT - Create or update feedback for a request (requires feedback:create permission)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ requestId: string }> | { requestId: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "feedback:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
     const resolvedParams = await Promise.resolve(params);
     const requestId = resolvedParams.requestId;
 

@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/auth";
+import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
-// GET - Fetch reports for staff (received from manager OR sent to manager)
+// GET - Fetch reports for staff (received from manager OR sent to manager) (requires report:read permission)
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "report:read");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Check if user is staff
+    // Get user with role from database
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -28,7 +29,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const isStaff = dbUser.role?.name?.toLowerCase() === "staff";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isStaff = roleName === "staff";
     if (!isStaff) {
       return NextResponse.json(
         { success: false, error: "Forbidden - Staff access required" },
@@ -49,10 +51,10 @@ export async function GET(request: NextRequest) {
 
     if (type === "received") {
       // Reports received by this staff (sent from manager)
-      where.reportSentTo = session.user.id;
+      where.reportSentTo = userId;
     } else if (type === "sent") {
       // Reports sent by this staff (to manager)
-      where.reportSentBy = session.user.id;
+      where.reportSentBy = userId;
     }
 
     // Add search filter
@@ -170,21 +172,22 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new report (staff sends to manager)
+// POST - Create a new report (staff sends to manager) (requires report:create permission)
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate user
-    const session = await auth();
-    if (!session?.user) {
+    // Check permission
+    const { response, userId } = await requirePermission(request, "report:create");
+    if (response) return response;
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // Check if user is staff
+    // Get user with role from database
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       include: { role: true },
     });
 
@@ -195,7 +198,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isStaff = dbUser.role?.name?.toLowerCase() === "staff";
+    const roleName = dbUser.role?.name?.toLowerCase() || "";
+    const isStaff = roleName === "staff";
     if (!isStaff) {
       return NextResponse.json(
         { success: false, error: "Forbidden - Staff access required" },
@@ -219,7 +223,7 @@ export async function POST(request: NextRequest) {
 
     // Get staff's office
     const staffRecord = await prisma.staff.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       select: { officeId: true },
     });
 
@@ -271,21 +275,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure session.user.id is defined
-    const senderId = session.user.id;
-    if (!senderId) {
-      return NextResponse.json(
-        { success: false, error: "User ID not found" },
-        { status: 401 }
-      );
-    }
-
     // Create report with fileData
     const report = await prisma.report.create({
       data: {
         name,
         description,
-        reportSentBy: senderId,
+        reportSentBy: userId,
         reportSentTo,
         receiverStatus: "pending",
         fileData:
