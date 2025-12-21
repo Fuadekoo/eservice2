@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/auth";
+import { assignDefaultPermissionsToRole } from "@/lib/role-permissions-assignment";
 
 // POST - Create a custom role for an office
 export async function POST(request: NextRequest) {
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Add permissions if provided
+      // Add permissions if provided, otherwise assign default permissions based on role name
       if (
         permissionIds &&
         Array.isArray(permissionIds) &&
@@ -170,10 +171,29 @@ export async function POST(request: NextRequest) {
             })
           )
         );
+      } else {
+        // No permissions provided - assign default permissions based on role name
+        // Note: We need to do this outside the transaction since our utility function uses prisma directly
+        // The transaction will complete first, then we'll assign permissions
       }
 
       return newRole;
     });
+
+    // If no permissions were provided, assign default permissions based on role name
+    if (!permissionIds || !Array.isArray(permissionIds) || permissionIds.length === 0) {
+      const assignmentResult = await assignDefaultPermissionsToRole(role.id, roleNameUpper);
+      if (assignmentResult.success) {
+        console.log(
+          `✅ Assigned ${assignmentResult.assignedCount} default permissions to role: ${roleNameUpper}`
+        );
+      } else {
+        console.warn(
+          `⚠️  Failed to assign default permissions to role ${roleNameUpper}:`,
+          assignmentResult.error
+        );
+      }
+    }
 
     console.log(`✅ Successfully created custom role: ${role.id}`);
 

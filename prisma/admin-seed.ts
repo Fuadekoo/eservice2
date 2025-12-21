@@ -105,60 +105,41 @@ async function main() {
     "✅ Admin user 3 ready (username: admin3, password: password123)"
   );
 
-  // Assign all permissions to admin role
+  // Assign all permissions to admin role using the utility function
   console.log("\n🔐 Assigning all permissions to admin role...");
   try {
-    // Get all permissions from database
-    const allPermissions = await prisma.permission.findMany({
-      select: { id: true, name: true },
-    });
+    const { assignDefaultPermissionsToRole } = await import(
+      "./role-permissions-assignment"
+    );
+    const assignmentResult = await assignDefaultPermissionsToRole(
+      adminRole.id,
+      "admin"
+    );
 
-    if (allPermissions.length === 0) {
+    if (assignmentResult.success) {
       console.log(
-        "⚠️  No permissions found in database. Please run permission seed first:"
+        `✅ Assigned ${assignmentResult.assignedCount} permissions to admin role`
       );
-      console.log("   npm run db:seed:permission");
-    } else {
-      console.log(`📋 Found ${allPermissions.length} permissions`);
-
-      // Get existing role permissions to avoid duplicates
-      const existingRolePermissions = await prisma.rolePermission.findMany({
-        where: { roleId: adminRole.id },
-        select: { permissionId: true },
-      });
-
-      const existingPermissionIds = new Set(
-        existingRolePermissions.map((rp) => rp.permissionId)
-      );
-
-      // Filter out permissions that are already assigned
-      const permissionsToAssign = allPermissions.filter(
-        (perm) => !existingPermissionIds.has(perm.id)
-      );
-
-      if (permissionsToAssign.length > 0) {
-        // Create role permissions using createMany (will skip duplicates due to unique constraint)
-        await prisma.rolePermission.createMany({
-          data: permissionsToAssign.map((perm) => ({
-            roleId: adminRole.id,
-            permissionId: perm.id,
-          })),
-          skipDuplicates: true,
-        });
-        console.log(
-          `✅ Assigned ${permissionsToAssign.length} new permissions to admin role`
-        );
-      } else {
-        console.log("✅ All permissions are already assigned to admin role");
-      }
 
       // Verify assignment
+      const totalPermissions = await prisma.permission.count();
       const totalAssigned = await prisma.rolePermission.count({
         where: { roleId: adminRole.id },
       });
       console.log(
-        `📊 Total permissions assigned to admin role: ${totalAssigned}/${allPermissions.length}`
+        `📊 Total permissions assigned to admin role: ${totalAssigned}/${totalPermissions}`
       );
+    } else {
+      console.log(
+        `⚠️  Failed to assign permissions: ${
+          assignmentResult.error || "Unknown error"
+        }`
+      );
+      if (assignmentResult.error?.includes("No permissions found")) {
+        console.log(
+          "   Please run permission seed first: npm run db:seed:permission"
+        );
+      }
     }
   } catch (error: any) {
     if (error.code === "P2021") {

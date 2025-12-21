@@ -118,6 +118,69 @@ async function main() {
     staffRole = await getOrCreateRole("staff");
     customerRole = await getOrCreateRole("customer");
     console.log("✅ Roles ready");
+
+    // Assign default permissions to each role
+    console.log("\n🔐 Assigning default permissions to roles...");
+    const { assignDefaultPermissionsToRole } = await import(
+      "./role-permissions-assignment"
+    );
+
+    // Note: We need to check if permissions table exists first
+    try {
+      await prisma.$queryRaw`SELECT 1 FROM permission LIMIT 1`;
+
+      // Assign permissions to admin role
+      const adminResult = await assignDefaultPermissionsToRole(
+        adminRole.id,
+        "admin"
+      );
+      console.log(
+        adminResult.success
+          ? `✅ Admin role: ${adminResult.assignedCount} permissions assigned`
+          : `⚠️  Admin role: ${adminResult.error}`
+      );
+
+      // Assign permissions to manager role
+      const managerResult = await assignDefaultPermissionsToRole(
+        managerRole.id,
+        "manager"
+      );
+      console.log(
+        managerResult.success
+          ? `✅ Manager role: ${managerResult.assignedCount} permissions assigned`
+          : `⚠️  Manager role: ${managerResult.error}`
+      );
+
+      // Assign permissions to staff role
+      const staffResult = await assignDefaultPermissionsToRole(
+        staffRole.id,
+        "staff"
+      );
+      console.log(
+        staffResult.success
+          ? `✅ Staff role: ${staffResult.assignedCount} permissions assigned`
+          : `⚠️  Staff role: ${staffResult.error}`
+      );
+
+      // Assign permissions to customer role
+      const customerResult = await assignDefaultPermissionsToRole(
+        customerRole.id,
+        "customer"
+      );
+      console.log(
+        customerResult.success
+          ? `✅ Customer role: ${customerResult.assignedCount} permissions assigned`
+          : `⚠️  Customer role: ${customerResult.error}`
+      );
+    } catch (permError: any) {
+      if (permError.code === "P2021" || permError.code === "42S02") {
+        console.log(
+          "⚠️  Permissions table doesn't exist yet. Run permission seed first: npm run db:seed:permission"
+        );
+      } else {
+        throw permError;
+      }
+    }
   } catch (error: any) {
     if (error.message.includes("Database tables don't exist")) {
       throw error;

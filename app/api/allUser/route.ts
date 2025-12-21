@@ -415,6 +415,20 @@ export async function POST(request: NextRequest) {
               },
             });
             console.log("✅ Created manager role for office:", data.officeId);
+            
+            // Assign default permissions to the new manager role
+            const { assignDefaultPermissionsToRole } = await import("@/lib/role-permissions-assignment");
+            const assignmentResult = await assignDefaultPermissionsToRole(managerRole.id, "manager");
+            if (assignmentResult.success) {
+              console.log(
+                `✅ Assigned ${assignmentResult.assignedCount} default permissions to manager role`
+              );
+            } else {
+              console.warn(
+                `⚠️  Failed to assign default permissions to manager role:`,
+                assignmentResult.error
+              );
+            }
           }
 
           finalRoleId = managerRole.id;
