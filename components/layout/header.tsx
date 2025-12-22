@@ -12,14 +12,14 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 h-16 lg:h-20 bg-background border-b shadow-sm">
       <div className="h-full px-3 sm:px-4 lg:px-6 xl:px-10 flex items-center gap-2 sm:gap-3">
-        {/* Mobile hamburger menu */}
+        {/* Sidebar toggle button - visible on all screen sizes */}
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden shrink-0 h-9 w-9"
+          className="shrink-0 h-9 w-9"
           asChild
         >
-          <label htmlFor="sidebar">
+          <label htmlFor="sidebar" className="cursor-pointer">
             <AlignLeft className="h-5 w-5" />
           </label>
         </Button>

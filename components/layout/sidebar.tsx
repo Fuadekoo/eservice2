@@ -40,7 +40,7 @@ export default function SideBar({
   return (
     <nav
       className={
-        "z-[60] lg:z-50 lg:grid overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden "
+        "z-[60] lg:z-50 overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden lg:peer-checked/sidebar:grid "
       }
     >
       <div className="overflow-hidden max-lg:w-64 lg:w-56 bg-blue-500 dark:bg-blue-700 grid grid-rows-[auto_1fr_auto] min-h-screen">
