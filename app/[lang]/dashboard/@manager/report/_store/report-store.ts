@@ -28,7 +28,7 @@ interface ReportManagementState {
   createReport: (data: {
     name: string;
     description: string;
-    reportSentTo: string;
+    reportSentTo: string | string[]; // Can be single ID or array of IDs
     fileDataIds?: string[];
   }) => Promise<void>;
   updateReportStatus: (id: string, action: "approve" | "reject") => Promise<void>;

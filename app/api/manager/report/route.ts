@@ -171,45 +171,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Name, description, and recipient are required",
+          error: "Name, description, and recipient(s) are required",
         },
         { status: 400 }
       );
     }
 
-    // Verify that reportSentTo is an admin
-    const recipient = await prisma.user.findUnique({
-      where: { id: reportSentTo },
+    // Ensure reportSentTo is an array
+    const recipientIds = Array.isArray(reportSentTo) ? reportSentTo : [reportSentTo];
+
+    if (recipientIds.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "At least one recipient is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Verify that all recipients are admins
+    const recipients = await prisma.user.findMany({
+      where: { id: { in: recipientIds } },
       include: { role: true },
     });
 
-    if (!recipient) {
+    if (recipients.length !== recipientIds.length) {
       return NextResponse.json(
-        { success: false, error: "Recipient not found" },
+        { success: false, error: "One or more recipients not found" },
         { status: 404 }
       );
     }
 
-    const isAdmin =
-      recipient.role?.name?.toLowerCase() === "admin" ||
-      recipient.role?.name?.toLowerCase() === "administrator";
+    // Check all recipients are admins
+    const allAdmins = recipients.every(
+      (recipient) =>
+        recipient.role?.name?.toLowerCase() === "admin" ||
+        recipient.role?.name?.toLowerCase() === "administrator"
+    );
 
-    if (!isAdmin) {
+    if (!allAdmins) {
       return NextResponse.json(
         { success: false, error: "Reports can only be sent to admins" },
         { status: 400 }
       );
     }
 
-    // Create report with fileData
-    const report = await prisma.report.create({
-      data: {
-        name,
-        description,
-        reportSentBy: userId,
-        reportSentTo,
-        receiverStatus: "pending",
-        fileData:
+    // Create multiple reports sequentially (one for each admin)
+    // This ensures better error handling and prevents partial failures
+    const reports = [];
+    const errors = [];
+
+    for (const adminId of recipientIds) {
+      try {
+        // Generate unique fileData for each report
+        const fileDataCreate =
           files && Array.isArray(files) && files.length > 0
             ? {
                 create: files.map(
@@ -225,39 +241,73 @@ export async function POST(request: NextRequest) {
                   })
                 ),
               }
-            : undefined,
-      },
-      include: {
-        fileData: {
-          select: {
-            id: true,
-            name: true,
-            filepath: true,
-            description: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        reportSentToUser: {
-          select: {
-            id: true,
-            username: true,
-            phoneNumber: true,
-          },
-        },
-        reportSentByUser: {
-          select: {
-            id: true,
-            username: true,
-            phoneNumber: true,
-          },
-        },
-      },
-    });
+            : undefined;
 
-    // Serialize dates
-    const serializedReport = {
+        const report = await prisma.report.create({
+          data: {
+            name,
+            description,
+            reportSentBy: userId,
+            reportSentTo: adminId,
+            receiverStatus: "pending",
+            fileData: fileDataCreate,
+          },
+          include: {
+            fileData: {
+              select: {
+                id: true,
+                name: true,
+                filepath: true,
+                description: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+              orderBy: { createdAt: "desc" },
+            },
+            reportSentToUser: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+            reportSentByUser: {
+              select: {
+                id: true,
+                username: true,
+                phoneNumber: true,
+              },
+            },
+          },
+        });
+
+        reports.push(report);
+      } catch (error: any) {
+        console.error(`❌ Error creating report for admin ${adminId}:`, error);
+        // Find the admin username for better error reporting
+        const admin = recipients.find((r) => r.id === adminId);
+        errors.push({
+          adminId,
+          adminUsername: admin?.username || "Unknown",
+          error: error.message || "Failed to create report",
+        });
+      }
+    }
+
+    // If no reports were created, return error
+    if (reports.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to create reports for all recipients",
+          details: errors,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Serialize dates for all successfully created reports
+    const serializedReports = reports.map((report) => ({
       ...report,
       createdAt: report.createdAt.toISOString(),
       updatedAt: report.updatedAt.toISOString(),
@@ -266,11 +316,17 @@ export async function POST(request: NextRequest) {
         createdAt: file.createdAt.toISOString(),
         updatedAt: file.updatedAt.toISOString(),
       })),
-    };
+    }));
 
+    // Return success with warnings if some reports failed
     return NextResponse.json({
       success: true,
-      data: serializedReport,
+      data: serializedReports,
+      message:
+        errors.length > 0
+          ? `Report sent to ${reports.length} admin${reports.length > 1 ? "s" : ""} successfully. ${errors.length} failed.`
+          : `Report sent to ${reports.length} admin${reports.length > 1 ? "s" : ""} successfully`,
+      warnings: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {
     console.error("❌ Error creating report:", error);

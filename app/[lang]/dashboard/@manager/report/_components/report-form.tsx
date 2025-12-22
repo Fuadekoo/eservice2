@@ -14,17 +14,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useManagerReportStore } from "../_store/report-store";
 import { toast } from "sonner";
-import { FileText, Upload, X, Loader2 } from "lucide-react";
+import { FileText, Upload, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface ReportFormProps {
@@ -54,11 +62,13 @@ export function ReportForm({ open, onOpenChange, onSuccess }: ReportFormProps) {
     reset,
     setValue,
     watch,
+    getValues,
   } = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
   });
 
-  const selectedAdmin = watch("reportSentTo");
+  const selectedAdmins = watch("reportSentTo") || [];
+  const [adminPopoverOpen, setAdminPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -142,17 +152,46 @@ export function ReportForm({ open, onOpenChange, onSuccess }: ReportFormProps) {
         body: JSON.stringify({
           name: data.name,
           description: data.description,
-          reportSentTo: data.reportSentTo,
+          reportSentTo: data.reportSentTo, // Now an array of admin IDs
           files: files,
         }),
       });
 
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || "Failed to create report");
+      // Check if response is OK
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        // If response is not JSON, handle as error
+        if (!response.ok) {
+          throw new Error(`Failed to create report: ${response.status} ${response.statusText}`);
+        } else {
+          throw new Error("Invalid response from server");
+        }
       }
 
-      toast.success("Report created successfully");
+      // Check if response was OK but result indicates failure
+      if (!response.ok) {
+        throw new Error(result.error || `Failed to create report: ${response.statusText}`);
+      }
+      if (!result.success) {
+        // Handle warnings if some reports failed
+        if (result.warnings && result.warnings.length > 0) {
+          const warningMessage = result.warnings
+            .map((w: any) => `Failed for ${w.adminUsername}`)
+            .join(", ");
+          toast.warning(
+            `${result.message || "Partial success"}. Failed: ${warningMessage}`
+          );
+        } else {
+          throw new Error(result.error || "Failed to create report");
+        }
+      }
+
+      const reportCount = Array.isArray(result.data) ? result.data.length : 1;
+      toast.success(
+        result.message || `Report sent to ${reportCount} admin${reportCount > 1 ? "s" : ""} successfully`
+      );
       reset();
       setUploadedFiles([]);
       onSuccess?.();
@@ -205,44 +244,90 @@ export function ReportForm({ open, onOpenChange, onSuccess }: ReportFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="reportSentTo">Send To (Admin) *</Label>
-            <Select
-              value={selectedAdmin || ""}
-              onValueChange={(value) => setValue("reportSentTo", value)}
-              disabled={isLoadingAdmins}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    isLoadingAdmins
-                      ? "Loading admins..."
-                      : admins.length === 0
-                      ? "No admins available"
-                      : "Select an admin"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {isLoadingAdmins ? (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading admins...
-                  </div>
-                ) : admins.length === 0 ? (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    No admins found. Please contact system administrator.
-                  </div>
-                ) : (
-                  admins.map((admin) => (
-                    <SelectItem key={admin.id} value={admin.id}>
-                      {admin.username} ({admin.phoneNumber})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            {isLoadingAdmins ? (
+              <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2 border rounded-md">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading admins...
+              </div>
+            ) : admins.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-muted-foreground border rounded-md">
+                No admins found. Please contact system administrator.
+              </div>
+            ) : (
+              <Popover open={adminPopoverOpen} onOpenChange={setAdminPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={adminPopoverOpen}
+                    className={cn(
+                      "w-full justify-between",
+                      selectedAdmins.length === 0 && "text-muted-foreground",
+                      errors.reportSentTo && "border-destructive"
+                    )}
+                  >
+                    {selectedAdmins.length === 0
+                      ? "Select admin(s)..."
+                      : selectedAdmins.length === 1
+                      ? admins.find((admin) => admin.id === selectedAdmins[0])
+                          ?.username || "1 admin selected"
+                      : `${selectedAdmins.length} admins selected`}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search admins..." />
+                    <CommandList className="max-h-[300px] overflow-y-auto">
+                      <CommandEmpty>No admin found.</CommandEmpty>
+                      <CommandGroup>
+                        {admins.map((admin) => {
+                          const isSelected = selectedAdmins.includes(admin.id);
+                          return (
+                            <CommandItem
+                              key={admin.id}
+                              value={`${admin.username} ${admin.phoneNumber}`}
+                              onSelect={() => {
+                                const current = getValues("reportSentTo") || [];
+                                if (isSelected) {
+                                  const updated = current.filter((id) => id !== admin.id);
+                                  setValue("reportSentTo", updated, { shouldValidate: true });
+                                } else {
+                                  const updated = [...current, admin.id];
+                                  setValue("reportSentTo", updated, { shouldValidate: true });
+                                }
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col flex-1 min-w-0">
+                                <span className="font-medium">{admin.username}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {admin.phoneNumber}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            )}
             {errors.reportSentTo && (
               <p className="text-sm text-destructive">
                 {errors.reportSentTo.message}
+              </p>
+            )}
+            {!isLoadingAdmins && selectedAdmins.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {selectedAdmins.length} admin{selectedAdmins.length > 1 ? "s" : ""} selected
               </p>
             )}
             {!isLoadingAdmins && admins.length === 0 && (
