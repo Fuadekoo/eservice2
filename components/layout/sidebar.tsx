@@ -40,10 +40,10 @@ export default function SideBar({
   return (
     <nav
       className={
-        "z-[60] lg:z-50 overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden lg:peer-checked/sidebar:grid "
+        "z-[60] lg:z-50 overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden lg:peer-checked/sidebar:block transition-all duration-300 shrink-0"
       }
     >
-      <div className="overflow-hidden max-lg:w-64 lg:w-56 bg-blue-500 dark:bg-blue-700 grid grid-rows-[auto_1fr_auto] min-h-screen">
+      <div className="overflow-hidden max-lg:w-64 lg:w-56 lg:shrink-0 bg-blue-500 dark:bg-blue-700 grid grid-rows-[auto_1fr_auto] min-h-screen">
         <div className="relative border-b border-blue-400/30 dark:border-blue-600/30">
           <Logo />
           {/* Close button for mobile */}

@@ -27,12 +27,12 @@ export default function UserLayout({
           className="size-60 md:size-96 opacity-20"
         />
       </div>
-      <div className="z-10 grid lg:grid-cols-[auto_1fr] overflow-hidden min-h-screen">
+      <div className="z-10 flex overflow-hidden min-h-screen">
         <input type="checkbox" id="sidebar" className="hidden peer/sidebar" defaultChecked />
         <SideBar {...{ menu }} />
-        <div className="overflow-hidden flex flex-col min-h-screen">
+        <div className="flex-1 overflow-hidden flex flex-col min-h-screen w-full transition-all duration-300">
           <Header />
-          <article className="flex-1 overflow-auto">{children}</article>
+          <article className="flex-1 overflow-auto w-full">{children}</article>
         </div>
       </div>
     </div>
