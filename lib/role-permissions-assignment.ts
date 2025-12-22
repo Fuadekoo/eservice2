@@ -75,6 +75,7 @@ export function getRolePermissions(roleName: string): string[] {
         "report:update",
         "report:delete",
         "report:send",
+        "report:approve",
         "report:view-all",
         
         // Profile Management

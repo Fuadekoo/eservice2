@@ -27,10 +27,13 @@ import {
   Presentation,
   FileImage,
   Eye,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useManagerReportStore } from "../_store/report-store";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface ReportDetailProps {
   report: Report | null;
@@ -85,7 +88,9 @@ export function ReportDetail({
   const [activeTab, setActiveTab] = useState("details");
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
-  const { fetchReportById } = useManagerReportStore();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { fetchReportById, updateReportStatus, fetchReports } =
+    useManagerReportStore();
 
   useEffect(() => {
     if (open && report) {
@@ -175,6 +180,32 @@ export function ReportDetail({
 
     return `/api/filedata/${filename}`;
   };
+
+  const handleApproveReject = async (action: "approve" | "reject") => {
+    if (!report) return;
+    try {
+      setIsProcessing(true);
+      await updateReportStatus(report.id, action);
+      toast.success(
+        `Report ${action === "approve" ? "approved" : "rejected"} successfully`
+      );
+      // Refresh the report data
+      await fetchReportById(report.id);
+      // Refresh the reports list
+      await fetchReports();
+    } catch (error: any) {
+      toast.error(error.message || `Failed to ${action} report`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Only show approve/reject buttons for received reports (reports sent TO the manager)
+  // and only if the status is not already approved (read) or rejected (archived)
+  const canApproveReject =
+    report.reportSentByUser && // This is a received report (sent by someone to the manager)
+    report.receiverStatus !== "read" &&
+    report.receiverStatus !== "archived";
 
   return (
     <>
@@ -333,6 +364,44 @@ export function ReportDetail({
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Approve/Reject Actions - Only for received reports */}
+              {canApproveReject && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => handleApproveReject("approve")}
+                        disabled={isProcessing}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4 mr-2" />
+                        )}
+                        Approve Report
+                      </Button>
+                      <Button
+                        onClick={() => handleApproveReject("reject")}
+                        disabled={isProcessing}
+                        variant="destructive"
+                        className="flex-1"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <X className="w-4 h-4 mr-2" />
+                        )}
+                        Reject Report
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent

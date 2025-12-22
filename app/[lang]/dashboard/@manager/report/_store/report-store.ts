@@ -31,6 +31,7 @@ interface ReportManagementState {
     reportSentTo: string;
     fileDataIds?: string[];
   }) => Promise<void>;
+  updateReportStatus: (id: string, action: "approve" | "reject") => Promise<void>;
   setReportType: (type: ReportType) => void;
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
@@ -168,6 +169,37 @@ export const useManagerReportStore = create<ReportManagementState>(
       } catch (error: any) {
         console.error("Error creating report:", error);
         set({ isLoading: false });
+        throw error;
+      }
+    },
+
+    updateReportStatus: async (id: string, action: "approve" | "reject") => {
+      try {
+        const response = await fetch(`/api/report/${id}/approve`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action }),
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Refresh the reports list
+          await get().fetchReports();
+          // Update selected report if it's the one being updated
+          const currentSelected = get().selectedReport;
+          if (currentSelected?.id === id) {
+            await get().fetchReportById(id);
+          }
+          return result.data;
+        } else {
+          throw new Error(result.error || `Failed to ${action} report`);
+        }
+      } catch (error: any) {
+        console.error(`Error ${action}ing report:`, error);
         throw error;
       }
     },
