@@ -13,7 +13,7 @@ export default function UserLayout({
   menu: {
     key: string;
     url: string;
-    Icon: React.JSX.Element;
+    Icon: React.ReactNode;
   }[][];
 }) {
   return (

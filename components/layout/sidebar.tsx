@@ -15,7 +15,7 @@ export default function SideBar({
   menu: {
     key: string;
     url: string;
-    Icon: React.JSX.Element;
+    Icon: React.ReactNode;
   }[][];
 }) {
   const selected = usePathname().split("/")[3] ?? "";

@@ -23,7 +23,10 @@ export async function GET(request: NextRequest) {
     // If user is authenticated, check permission and get their office ID
     if (session?.user?.id) {
       // Check permission for authenticated users
-      const { response, userId } = await requirePermission(request, "service:read");
+      const { response, userId } = await requirePermission(
+        request,
+        "service:read"
+      );
       if (response) return response;
       if (!userId) {
         return NextResponse.json(
@@ -52,11 +55,11 @@ export async function GET(request: NextRequest) {
 
         if (userStaff?.officeId) {
           officeId = userStaff.officeId;
-        } else if (dbUser.role?.officeId) {
+        } else if (dbUser?.role?.officeId) {
           // Fallback to role's officeId if staff record doesn't exist
           officeId = dbUser.role.officeId;
         }
-        
+
         // If manager still doesn't have an officeId, deny access
         if (!officeId) {
           return NextResponse.json(
@@ -87,7 +90,8 @@ export async function GET(request: NextRequest) {
     // For public/guest access (no authentication or no officeId), fetch all services from active offices
     // This allows the guest service page to display all available services
     // Admins also see all services (they don't have officeId restriction)
-    const isPublicAccess = !session?.user || (!officeId && !requestedOfficeId) || isAdmin;
+    const isPublicAccess =
+      !session?.user || (!officeId && !requestedOfficeId) || isAdmin;
 
     console.log("📋 Fetching services:", {
       officeId,
@@ -250,7 +254,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check permission
-    const { response, userId } = await requirePermission(request, "service:create");
+    const { response, userId } = await requirePermission(
+      request,
+      "service:create"
+    );
     if (response) return response;
     if (!userId) {
       return NextResponse.json(

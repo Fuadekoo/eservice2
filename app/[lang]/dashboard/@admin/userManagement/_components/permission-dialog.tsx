@@ -85,7 +85,7 @@ export function PermissionDialog({
         setAssignedCount(result.data.assignedPermissionCount || 0);
 
         // Set selected permissions
-        const assigned = new Set(
+        const assigned = new Set<string>(
           perms.filter((p: Permission) => p.assigned).map((p: Permission) => p.id)
         );
         setSelectedPermissions(assigned);

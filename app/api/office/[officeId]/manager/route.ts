@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requirePermission } from "@/lib/rbac";
+import { auth } from "@/auth";
 import bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
