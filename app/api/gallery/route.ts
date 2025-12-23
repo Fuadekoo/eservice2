@@ -4,19 +4,10 @@ import { requirePermission } from "@/lib/rbac";
 import { gallerySchema } from "@/app/[lang]/dashboard/@admin/configuration/gallery/_schema";
 import { randomUUID } from "crypto";
 
-// GET - Fetch all galleries (requires gallery:read permission)
+// GET - Fetch all galleries (public access for guest users)
 export async function GET(request: NextRequest) {
   try {
-    // Check permission
-    const { response, userId } = await requirePermission(request, "gallery:read");
-    if (response) return response;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
+    // Allow public access - no authentication required for viewing galleries
     const galleries = await prisma.gallery.findMany({
       include: {
         images: {

@@ -4,22 +4,10 @@ import { requirePermission } from "@/lib/rbac";
 import { administrationSchema } from "@/app/[lang]/dashboard/@admin/configuration/about/_schema";
 import { randomUUID } from "crypto";
 
-// GET - Fetch all administrations (requires administration:read permission)
+// GET - Fetch all administrations (public access for guest users)
 export async function GET(request: NextRequest) {
   try {
-    // Check permission
-    const { response, userId } = await requirePermission(
-      request,
-      "administration:read"
-    );
-    if (response) return response;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
+    // Allow public access - no authentication required for viewing administrations
     console.log("📥 Fetching administrations from database...");
 
     const administrations = await prisma.administration.findMany({

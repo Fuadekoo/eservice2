@@ -70,13 +70,13 @@ export async function GET(
     // Require authentication for PDFs and other file types
     if (!isImage) {
       // Check permission for non-image file download
-      const { response, userId } = await requirePermission(request, "file:download");
+      const { response, userId } = await requirePermission(
+        request,
+        "file:download"
+      );
       if (response) return response;
       if (!userId) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
 

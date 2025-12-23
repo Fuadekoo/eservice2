@@ -4,19 +4,10 @@ import { requirePermission } from "@/lib/rbac";
 import { aboutSchema } from "@/app/[lang]/dashboard/@admin/configuration/about/_schema";
 import { randomUUID } from "crypto";
 
-// GET - Fetch all about sections (requires about:read permission)
+// GET - Fetch all about sections (public access for guest users)
 export async function GET(request: NextRequest) {
   try {
-    // Check permission
-    const { response, userId } = await requirePermission(request, "about:read");
-    if (response) return response;
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
+    // Allow public access - no authentication required for viewing about sections
     console.log("📥 Fetching about sections from database...");
 
     const aboutSections = await prisma.about.findMany({
