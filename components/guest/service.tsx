@@ -290,6 +290,7 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                         fill
                         className="object-contain rounded"
                         sizes="96px"
+                        unoptimized
                         onError={(e) => {
                           // Fallback to icon if image fails to load
                           const target = e.target as HTMLImageElement;
@@ -357,6 +358,7 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                           fill
                           className="object-contain rounded bg-white/10"
                           sizes="96px"
+                          unoptimized
                           onError={(e) => {
                             // Fallback to icon if image fails to load
                             const target = e.target as HTMLImageElement;
@@ -507,6 +509,7 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
                                 fill
                                 className="object-contain rounded"
                                 sizes="64px"
+                                unoptimized
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = "none";

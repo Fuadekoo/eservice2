@@ -49,6 +49,12 @@ export function Body() {
                 height={200}
                 className="object-contain"
                 priority
+                unoptimized
+                onError={(e) => {
+                  // Fallback handling if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                }}
               />
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white dark:text-primary-foreground">

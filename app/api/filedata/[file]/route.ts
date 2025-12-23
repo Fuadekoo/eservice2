@@ -36,16 +36,6 @@ export async function GET(
   { params }: { params: Promise<{ file: string }> }
 ) {
   try {
-    // Check permission for file download
-    const { response, userId } = await requirePermission(request, "file:download");
-    if (response) return response;
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
     const filename = (await params).file;
 
     if (!filename) {
@@ -74,6 +64,21 @@ export async function GET(
     const fileBuffer = await readFileAsync(filePath);
     const mimeType = getMimeType(filePath);
     const isPdf = mimeType === "application/pdf";
+    const isImage = mimeType.startsWith("image/");
+
+    // Allow public access for image files (logos, etc.) for guest pages
+    // Require authentication for PDFs and other file types
+    if (!isImage) {
+      // Check permission for non-image file download
+      const { response, userId } = await requirePermission(request, "file:download");
+      if (response) return response;
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+    }
 
     // Prepare headers
     const headers: Record<string, string> = {
