@@ -35,7 +35,7 @@ export function Body() {
     : null;
 
   return (
-    <main className="flex-1">
+    <main className="flex-1 pb-8">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-primary dark:to-accent text-white dark:text-primary-foreground py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -8,9 +8,9 @@ import About from "@/components/guest/about";
 
 function Page() {
   const { t } = useTranslation();
-  
+
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-col">
       <Navbar />
       <main className="flex-1">
         <About />

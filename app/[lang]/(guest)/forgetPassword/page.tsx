@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
+    <div className="flex items-center justify-center p-4 relative">
       {/* Theme Toggle - Top Right Corner */}
       <div className="absolute top-4 right-4 z-50">
         <ThemeToggle />
@@ -113,7 +113,9 @@ export default function ForgotPasswordPage() {
               className="space-y-4"
             >
               <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold mb-2">{t("guest.resetPassword")}</h1>
+                <h1 className="text-2xl font-bold mb-2">
+                  {t("guest.resetPassword")}
+                </h1>
                 <p className="text-muted-foreground text-sm">
                   {t("guest.resetPasswordDescription")}
                 </p>
@@ -208,7 +210,9 @@ export default function ForgotPasswordPage() {
                       {(form.formState.isSubmitting || isVerifyingOTP) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isVerifyingOTP ? t("guest.verifying") : t("guest.verifyContinue")}
+                      {isVerifyingOTP
+                        ? t("guest.verifying")
+                        : t("guest.verifyContinue")}
                     </Button>
                   </div>
                 </>
@@ -280,7 +284,9 @@ export default function ForgotPasswordPage() {
                       {(form.formState.isSubmitting || isResetting) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isResetting ? t("guest.resetting") : t("guest.resetPasswordButton")}
+                      {isResetting
+                        ? t("guest.resetting")
+                        : t("guest.resetPasswordButton")}
                     </Button>
                   </div>
                 </>
@@ -310,7 +316,9 @@ export default function ForgotPasswordPage() {
             />
           </Link>
           <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">{t("guest.resetYourPassword")}</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {t("guest.resetYourPassword")}
+            </h2>
             <p className="text-muted-foreground">
               {t("guest.resetPasswordSidebar")}
             </p>

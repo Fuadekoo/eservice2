@@ -6,7 +6,7 @@ import { Body } from "@/components/guest/body";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col overflow-auto">
+    <div className="flex flex-col overflow-auto">
       <Navbar />
       <Body />
       <Footer />

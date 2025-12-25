@@ -47,7 +47,7 @@ export default function ServiceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-4">
@@ -64,7 +64,7 @@ export default function ServiceDetailPage() {
 
   if (error || !service) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center py-20">
           <Card className="max-w-md w-full">
@@ -89,7 +89,7 @@ export default function ServiceDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden">
       <Navbar />
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

@@ -94,7 +94,7 @@ export default function SignUpPage() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
+    <div className="flex items-center justify-center p-4 relative">
       {/* Theme Toggle - Top Right Corner */}
       <div className="absolute top-4 right-4 z-50">
         <ThemeToggle />
@@ -120,7 +120,9 @@ export default function SignUpPage() {
               className="space-y-4"
             >
               <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold mb-2">{t("guest.createAccountTitle")}</h1>
+                <h1 className="text-2xl font-bold mb-2">
+                  {t("guest.createAccountTitle")}
+                </h1>
                 <p className="text-muted-foreground text-sm">
                   {t("guest.signUpDescription")}
                 </p>
@@ -234,7 +236,9 @@ export default function SignUpPage() {
                       {(form.formState.isSubmitting || isVerifyingOTP) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isVerifyingOTP ? t("guest.verifying") : t("guest.verifyContinue")}
+                      {isVerifyingOTP
+                        ? t("guest.verifying")
+                        : t("guest.verifyContinue")}
                     </Button>
                   </div>
                 </>
@@ -306,7 +310,9 @@ export default function SignUpPage() {
                       {(form.formState.isSubmitting || isRegistering) && (
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       )}
-                      {isRegistering ? t("guest.creatingAccount") : t("guest.register")}
+                      {isRegistering
+                        ? t("guest.creatingAccount")
+                        : t("guest.register")}
                     </Button>
                   </div>
                 </>
@@ -339,9 +345,7 @@ export default function SignUpPage() {
             <h2 className="text-xl font-semibold mb-2">
               {t("guest.welcomeToService")}
             </h2>
-            <p className="text-muted-foreground">
-              {t("guest.joinUs")}
-            </p>
+            <p className="text-muted-foreground">{t("guest.joinUs")}</p>
           </div>
         </div>
       </Card>

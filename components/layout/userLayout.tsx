@@ -17,7 +17,7 @@ export default function UserLayout({
   }[][];
 }) {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-primary-200 to-secondary-200 grid min-h-screen">
+    <div className="relative overflow-hidden bg-gradient-to-br from-primary-200 to-secondary-200 grid">
       <div className="z-0 absolute inset-0 grid place-content-center">
         <Image
           alt=""
@@ -27,10 +27,15 @@ export default function UserLayout({
           className="size-60 md:size-96 opacity-20"
         />
       </div>
-      <div className="z-10 flex overflow-hidden min-h-screen">
-        <input type="checkbox" id="sidebar" className="hidden peer/sidebar" defaultChecked />
+      <div className="z-10 flex overflow-hidden">
+        <input
+          type="checkbox"
+          id="sidebar"
+          className="hidden peer/sidebar"
+          defaultChecked
+        />
         <SideBar {...{ menu }} />
-        <div className="flex-1 overflow-hidden flex flex-col min-h-screen w-full transition-all duration-300">
+        <div className="flex-1 overflow-hidden flex flex-col w-full transition-all duration-300">
           <Header />
           <article className="flex-1 overflow-auto w-full">{children}</article>
         </div>

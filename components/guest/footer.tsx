@@ -6,7 +6,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t bg-muted/50">
+    <footer className="border-t bg-muted/50 mt-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* About */}
@@ -96,9 +96,12 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t pt-6 text-center text-sm text-muted-foreground">
+        <div className="mt-8 border-t pt-6 pb-4 text-center text-sm text-muted-foreground">
           <p>
             © {currentYear} East Shoa Government Services. All rights reserved.
+          </p>
+          <p className="mt-2">
+            Designed and Developed by Fuad Abdurahman and Said Abdurahman
           </p>
         </div>
       </div>

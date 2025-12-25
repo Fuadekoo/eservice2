@@ -114,7 +114,7 @@ export default function AdminOverviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -126,7 +126,7 @@ export default function AdminOverviewPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {username 
+            {username
               ? t("dashboard.welcomeBackUser").replace("{username}", username)
               : t("dashboard.welcomeBack")}
           </h1>

@@ -21,7 +21,7 @@ export default function Error({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background to-muted/20">
       {/* Transparent Logo Background */}
       <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
         <Image
