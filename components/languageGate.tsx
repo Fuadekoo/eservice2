@@ -43,7 +43,12 @@ export function LanguageGate() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
+  // Do not show language gate on public docs
+  const isDocsRoute = pathname?.startsWith("/docs");
+
   useEffect(() => {
+    if (isDocsRoute) return;
+
     setIsMounted(true);
     // Check if user has already selected a language in cookies
     const cookieLang = getLanguageFromCookie();
@@ -60,7 +65,7 @@ export function LanguageGate() {
       // Language already selected, don't show the gate
       setIsOpen(false);
     }
-  }, []);
+  }, [isDocsRoute]);
 
   const handleLanguageSelect = (langCode: Language) => {
     // Set language in Zustand store
@@ -79,6 +84,10 @@ export function LanguageGate() {
   };
 
   if (!isMounted) {
+    return null;
+  }
+
+  if (isDocsRoute) {
     return null;
   }
 

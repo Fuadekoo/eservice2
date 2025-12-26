@@ -4,7 +4,106 @@ import { auth } from "@/auth";
 import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
-// POST - Create a new appointment for an approved request (requires appointment:create permission)
+/**
+ * @swagger
+ * /api/appointment:
+ *   post:
+ *     tags:
+ *       - Appointments
+ *     summary: Create appointment
+ *     description: Create a new appointment for an approved service request
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestId
+ *               - date
+ *             properties:
+ *               requestId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the approved request
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Appointment date (YYYY-MM-DD)
+ *               time:
+ *                 type: string
+ *                 format: time
+ *                 description: Appointment time (HH:MM)
+ *               notes:
+ *                 type: string
+ *                 description: Additional appointment notes
+ *               staffId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the staff member (optional, defaults to current user if staff)
+ *     responses:
+ *       200:
+ *         description: Appointment created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Appointment'
+ *                 message:
+ *                   type: string
+ *                   example: "Appointment created successfully"
+ *       400:
+ *         description: Bad request - Missing required fields or invalid data
+ *       401:
+ *         description: Unauthorized - Missing or invalid authentication
+ *       403:
+ *         description: Forbidden - Insufficient permissions or invalid access
+ *       404:
+ *         description: Not found - Request not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   get:
+ *     tags:
+ *       - Appointments
+ *     summary: Get appointments
+ *     description: Retrieve appointments, optionally filtered by request ID
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: requestId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter appointments by request ID
+ *     responses:
+ *       200:
+ *         description: Appointments retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Appointment'
+ *       401:
+ *         description: Unauthorized - Missing or invalid authentication
+ *       500:
+ *         description: Internal server error
+ */
 export async function POST(request: NextRequest) {
   try {
     // Check permission

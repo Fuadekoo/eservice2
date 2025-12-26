@@ -32,6 +32,10 @@ export class CustomError extends CredentialsSignin {
 
 const authConfig = {
   trustHost: true,
+  session: {
+    strategy: "jwt" as const,
+    maxAge: 3 * 24 * 60 * 60, // 3 days in seconds
+  },
   pages: {
     signIn: "/en/login",
     signOut: "/en/signout",

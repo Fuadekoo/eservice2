@@ -1,20 +1,68 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { rateLimit } from "./lib/rate-limit";
 
 const SUPPORTED_LANGUAGES = ["en", "am", "or"];
 
+// Initialize rate limiters for different purposes
+const authLimiter = rateLimit({
+  interval: 15 * 60 * 1000, // 15 minutes
+  uniqueTokenPerInterval: 500,
+});
+
+const apiLimiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 1000,
+});
+
 export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  
+  // Get IP address
+  const forwarded = req.headers.get("x-forwarded-for");
+  const ip = forwarded ? forwarded.split(',')[0] : "127.0.0.1";
 
-  // Skip middleware for API routes, static files, and Next.js internals
+  // Rate limiting for sensitive API routes
+  if (
+    pathname.startsWith("/api/auth/login") || 
+    pathname.startsWith("/api/auth/signup") || 
+    pathname.startsWith("/api/auth/reset-password") ||
+    pathname.startsWith("/api/auth/change-password") ||
+    pathname.startsWith("/api/otp/") || 
+    pathname.startsWith("/api/hahusms/")
+  ) {
+    const isAllowed = authLimiter.check(new Response(), `auth_${ip}`, 5); // 5 attempts per 15 mins
+    if (!isAllowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+  }
+
+  // General API rate limiting (optional, but good for security)
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/docs")) {
+    const isAllowed = apiLimiter.check(new Response(), `api_${ip}`, 60); // 60 requests per minute
+    if (!isAllowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later." },
+        { status: 429 }
+      );
+    }
+  }
+
+  // Skip middleware for API routes, static files, docs, and Next.js internals for language redirection
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/static/") ||
+    pathname.startsWith("/docs") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
+
+  // ... rest of the language redirection logic ...
 
   // Check if pathname already has a language prefix
   const langMatch = pathname.match(/^\/(en|am|or)/);
@@ -62,11 +110,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - static (public static files)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|static).*)",
   ],
 };

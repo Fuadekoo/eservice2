@@ -4,6 +4,194 @@ import { auth } from "@/auth";
 import { requirePermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 
+/**
+ * @swagger
+ * /api/service:
+ *   get:
+ *     tags:
+ *       - Services
+ *     summary: Get services
+ *     description: Fetch services with pagination, search, and office filtering. Public access allowed for guest users.
+ *     parameters:
+ *       - in: query
+ *         name: officeId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter services by specific office ID
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search services by name or description
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of services per page
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Services fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     services:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           name:
+ *                             type: string
+ *                             example: "Birth Certificate"
+ *                           description:
+ *                             type: string
+ *                           timeToTake:
+ *                             type: string
+ *                             example: "2 hours"
+ *                           requirements:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           serviceFors:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           office:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                                 format: uuid
+ *                               name:
+ *                                 type: string
+ *                               officeLogo:
+ *                                 type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         pageSize:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *                         totalItems:
+ *                           type: integer
+ *       401:
+ *         description: Unauthorized - authentication required for non-public access
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     tags:
+ *       - Services
+ *     summary: Create service
+ *     description: Create a new service for an office
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - description
+ *               - timeToTake
+ *               - officeId
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Service name
+ *                 example: "Birth Certificate"
+ *               description:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Service description
+ *               timeToTake:
+ *                 type: string
+ *                 description: Time required to complete the service
+ *                 example: "2 hours"
+ *               officeId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the office offering this service
+ *               requirements:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of requirements for the service
+ *                 example: ["ID Card", "Birth Certificate"]
+ *               serviceFors:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Target beneficiaries of the service
+ *                 example: ["Citizens", "Residents"]
+ *     responses:
+ *       200:
+ *         description: Service created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Service created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     name:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     timeToTake:
+ *                       type: string
+ *                     officeId:
+ *                       type: string
+ *                       format: uuid
+ *       400:
+ *         description: Bad request - missing required fields or validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
 // GET - Fetch all services with office information (with pagination and search)
 export async function GET(request: NextRequest) {
   try {

@@ -2,6 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requirePermission } from "@/lib/rbac";
 
+/**
+ * @swagger
+ * /api/user/me:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get current user
+ *     description: Get information about the currently authenticated user
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     username:
+ *                       type: string
+ *                       example: "johndoe_5678"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "0912345678"
+ *                     role:
+ *                       type: string
+ *                       example: "customer"
+ *                       enum: ["admin", "manager", "staff", "customer"]
+ *       401:
+ *         description: Unauthorized - user not authenticated
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+
 // GET - Get current authenticated user (requires profile:read permission)
 export async function GET(request: NextRequest) {
   try {

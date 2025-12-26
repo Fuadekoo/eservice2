@@ -4,6 +4,220 @@ import { requirePermission, requireAnyPermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
+/**
+ * @swagger
+ * /api/request:
+ *   post:
+ *     tags:
+ *       - Requests
+ *     summary: Create service request
+ *     description: Create a new service request for a specific service
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - serviceId
+ *               - currentAddress
+ *               - date
+ *             properties:
+ *               serviceId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the service being requested
+ *               currentAddress:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Current address of the requester
+ *                 example: "Adama, Ethiopia"
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: Preferred date for the service (YYYY-MM-DD)
+ *               status:
+ *                 type: string
+ *                 enum: ["pending", "approved", "rejected", "completed"]
+ *                 default: "pending"
+ *                 description: Request status
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: List of uploaded file names
+ *                 example: ["document1.pdf", "document2.jpg"]
+ *               notes:
+ *                 type: string
+ *                 description: Additional notes for the request
+ *     responses:
+ *       200:
+ *         description: Request created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Request created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     requestNumber:
+ *                       type: string
+ *                       example: "REQ-20241226-001"
+ *                     status:
+ *                       type: string
+ *                       example: "pending"
+ *                     serviceId:
+ *                       type: string
+ *                       format: uuid
+ *                     currentAddress:
+ *                       type: string
+ *                     preferredDate:
+ *                       type: string
+ *                       format: date
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Bad request - missing required fields or validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *   get:
+ *     tags:
+ *       - Requests
+ *     summary: Get service requests
+ *     description: Fetch service requests with filtering and pagination
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of requests per page
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: ["pending", "approved", "rejected", "completed"]
+ *         description: Filter by request status
+ *       - in: query
+ *         name: serviceId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by service ID
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by user ID (admin/manager only)
+ *     responses:
+ *       200:
+ *         description: Requests fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       requestNumber:
+ *                         type: string
+ *                         example: "REQ-20241226-001"
+ *                       status:
+ *                         type: string
+ *                         enum: ["pending", "approved", "rejected", "completed"]
+ *                       currentAddress:
+ *                         type: string
+ *                       preferredDate:
+ *                         type: string
+ *                         format: date
+ *                       notes:
+ *                         type: string
+ *                       files:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       service:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           name:
+ *                             type: string
+ *                           office:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                                 format: uuid
+ *                               name:
+ *                                 type: string
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           username:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     pages:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
 // POST - Create a new request (requires request:create permission)
 export async function POST(request: NextRequest) {
   try {

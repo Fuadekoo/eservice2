@@ -3,6 +3,166 @@ import prisma from "@/lib/db";
 import { requirePermission } from "@/lib/rbac";
 import { officeSchema } from "@/app/[lang]/dashboard/@admin/office/_schema";
 
+/**
+ * @swagger
+ * /api/office:
+ *   get:
+ *     tags:
+ *       - Offices
+ *     summary: Get offices
+ *     description: Fetch offices with pagination, search, and filtering
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of offices per page (max 100)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search offices by name or location
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: boolean
+ *         description: Filter by office status (active/inactive)
+ *     responses:
+ *       200:
+ *         description: Offices fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                         example: "East Shoa Office"
+ *                       location:
+ *                         type: string
+ *                         example: "Adama, Ethiopia"
+ *                       status:
+ *                         type: boolean
+ *                         example: true
+ *                       officeLogo:
+ *                         type: string
+ *                         example: "logo.png"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total:
+ *                       type: integer
+ *                       example: 25
+ *                     pages:
+ *                       type: integer
+ *                       example: 3
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     tags:
+ *       - Offices
+ *     summary: Create office
+ *     description: Create a new office
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - location
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Office name
+ *                 example: "East Shoa Office"
+ *               location:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Office location
+ *                 example: "Adama, Ethiopia"
+ *               status:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Office status (active/inactive)
+ *               officeLogo:
+ *                 type: string
+ *                 description: Office logo filename
+ *                 example: "logo.png"
+ *     responses:
+ *       200:
+ *         description: Office created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Office created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     name:
+ *                       type: string
+ *                     location:
+ *                       type: string
+ *                     status:
+ *                       type: boolean
+ *                     officeLogo:
+ *                       type: string
+ *       400:
+ *         description: Bad request - validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
 // Pagination constants
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 100;

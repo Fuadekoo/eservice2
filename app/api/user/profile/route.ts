@@ -2,7 +2,98 @@ import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/rbac";
 import prisma from "@/lib/db";
 
-// GET - Get user profile (requires profile:read permission)
+/**
+ * @swagger
+ * /api/user/profile:
+ *   get:
+ *     tags:
+ *       - User Management
+ *     summary: Get user profile
+ *     description: Retrieve the current user's profile information
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     username:
+ *                       type: string
+ *                     phoneNumber:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                       enum: [admin, manager, staff, user]
+ *                     isActive:
+ *                       type: boolean
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized - Missing or invalid authentication
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   put:
+ *     tags:
+ *       - User Management
+ *     summary: Update user profile
+ *     description: Update the current user's profile information (username and phone number)
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: New username (optional)
+ *               phone:
+ *                 type: string
+ *                 description: New phone number (optional)
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Profile updated successfully"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Bad request - Username or phone number already exists
+ *       401:
+ *         description: Unauthorized - Missing or invalid authentication
+ *       500:
+ *         description: Internal server error
+ */
 export async function GET(request: NextRequest) {
   try {
     // Check permission

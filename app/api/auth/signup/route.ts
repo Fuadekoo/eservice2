@@ -5,6 +5,105 @@ import bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 
+/**
+ * @swagger
+ * /api/auth/signup:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: User registration
+ *     description: Register a new user with phone number, name, and password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - phoneNumber
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 2
+ *                 description: Full name of the user
+ *                 example: "John Doe"
+ *               phoneNumber:
+ *                 type: string
+ *                 description: Ethiopian phone number
+ *                 example: "0912345678"
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: User password
+ *               otpCode:
+ *                 type: string
+ *                 description: OTP code for phone verification (optional)
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: User successfully registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Account created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     username:
+ *                       type: string
+ *                       example: "johndoe_5678"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "0912345678"
+ *                     role:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           format: uuid
+ *                         name:
+ *                           type: string
+ *                           example: "customer"
+ *       400:
+ *         description: Bad request - missing required fields or validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Name, phone number, and password are required"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to create account"
+ */
+
 // POST - Register a new customer
 export async function POST(request: NextRequest) {
   try {
