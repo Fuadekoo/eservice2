@@ -34,3 +34,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Workspace Root and Lockfiles
+
+If you see a warning like:
+
+> Next.js inferred your workspace root, but it may not be correct. We detected multiple lockfiles and selected the directory of C:\\Users\\Fuad\\package-lock.json as the root directory.
+
+This project sets `outputFileTracingRoot` in [next.config.ts](next.config.ts) to the project directory to prevent Next.js from selecting a parent folder due to an additional `package-lock.json`. You can also remove the parent lockfile if it’s not needed.
