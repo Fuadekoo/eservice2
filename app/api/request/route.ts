@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { requirePermission, requireAnyPermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
 import { sendHahuSMS } from "@/lib/utils/hahu-sms";
+import { generateRequestNumber } from "@/lib/utils";
 
 /**
  * @swagger
@@ -74,7 +75,8 @@ import { sendHahuSMS } from "@/lib/utils/hahu-sms";
  *                       format: uuid
  *                     requestNumber:
  *                       type: string
- *                       example: "REQ-20241226-001"
+ *                       example: "REQ-20241227-001"
+ *                       description: "Sequential request number in format REQ-YYYYMMDD-XXX"
  *                     status:
  *                       type: string
  *                       example: "pending"
@@ -154,7 +156,8 @@ import { sendHahuSMS } from "@/lib/utils/hahu-sms";
  *                         format: uuid
  *                       requestNumber:
  *                         type: string
- *                         example: "REQ-20241226-001"
+ *                         example: "REQ-20241227-001"
+ *                         description: "Sequential request number in format REQ-YYYYMMDD-XXX"
  *                       status:
  *                         type: string
  *                         enum: ["pending", "approved", "rejected", "completed"]
@@ -266,6 +269,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Generate request number
+    const requestNumber = await generateRequestNumber();
 
     // Create request
     const newRequest = await prisma.request.create({
@@ -383,7 +389,7 @@ Maqaa Fayyadamaa: ${newRequest.user.username}
 Lakkoofsa Bilbilaa: ${newRequest.user.phoneNumber}
 Teessoo Tajaajilaa: ${currentAddress}
 Guyyaa Gaaffii: ${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-ID Gaaffii: ${newRequest.id.slice(0, 8).toUpperCase()}
+Lakkoofsa Gaaffii: ${requestNumber}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🏢 Odeeffannoo Waajjiraa:
@@ -419,6 +425,7 @@ E-Service Platform`;
       success: true,
       data: {
         ...newRequest,
+        requestNumber: requestNumber, // Include generated request number in response
         date: newRequest.date.toISOString(),
         createdAt: newRequest.createdAt.toISOString(),
         updatedAt: newRequest.updatedAt.toISOString(),

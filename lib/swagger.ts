@@ -119,6 +119,7 @@ export const getApiDocs = async () => {
             type: 'object',
             properties: {
               id: { type: 'string', format: 'uuid' },
+              requestNumber: { type: 'string', example: 'REQ-20241227-001', description: 'Sequential request number in format REQ-YYYYMMDD-XXX' },
               userId: { type: 'string', format: 'uuid' },
               serviceId: { type: 'string', format: 'uuid' },
               statusbystaff: { type: 'string', enum: ['pending', 'approved', 'rejected'] },
