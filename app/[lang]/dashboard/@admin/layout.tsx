@@ -50,6 +50,18 @@ export default async function Layout({
     ],
     [
       {
+        key: "report",
+        url: "report",
+        Icon: <FileText className="size-6" />,
+      },
+      {
+        key: "requestManagement",
+        url: "requestManagement",
+        Icon: <FileText className="size-6" />,
+      },
+    ],
+    [
+      {
         key: "languages",
         url: "languages",
         Icon: <Languages className="size-6" />,
@@ -63,18 +75,6 @@ export default async function Layout({
         key: "about",
         url: "configuration/about",
         Icon: <Info className="size-6" />,
-      },
-    ],
-    [
-      {
-        key: "report",
-        url: "report",
-        Icon: <FileText className="size-6" />,
-      },
-      {
-        key: "requestManagement",
-        url: "requestManagement",
-        Icon: <FileText className="size-6" />,
       },
     ],
   ];
