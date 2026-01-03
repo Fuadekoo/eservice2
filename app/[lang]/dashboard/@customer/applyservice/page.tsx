@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +25,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Loader2,
@@ -46,6 +45,10 @@ import useTranslation from "@/hooks/useTranslation";
 
 export default function ApplyServicePage() {
   const { t } = useTranslation();
+  const tr = (key: string, fallback: string) => {
+    const value = t(key);
+    return !value || value === key ? fallback : value;
+  };
   const params = useParams<{ lang: string }>();
   const router = useRouter();
   const lang = params.lang || "en";
@@ -85,51 +88,67 @@ export default function ApplyServicePage() {
   const watchedOfficeId = form.watch("officeId");
   const watchedServiceId = form.watch("serviceId");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const [slotFilter, setSlotFilter] = useState<string>("all");
+  const [slotError, setSlotError] = useState<string>("");
 
-  // Calculate current step for progress
+  // Calculate current step for simplified 3-step progress
   const getCurrentStep = () => {
-    if (!watchedOfficeId) return 1;
-    if (!watchedServiceId) return 2;
-    if (!selectedService) return 3;
-    if (!form.watch("currentAddress") || !form.watch("date")) return 4;
-    return 5;
+    // Step 1: Service Details (office/service selection + info)
+    if (!watchedOfficeId || !watchedServiceId || !selectedService) return 1;
+    // Step 2: Application Form (until submission success)
+    if (!showSuccess) return 2;
+    // Step 3: Confirmation
+    return 3;
   };
 
   const currentStep = getCurrentStep();
-  const totalSteps = 5;
-  const progress = (currentStep / totalSteps) * 100;
+  const totalSteps = 3;
+
+  // Scroll progress (fills the thin bar under the banner)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scrollPercent, setScrollPercent] = useState<number>(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      const pct = max > 0 ? (el.scrollTop / max) * 100 : 0;
+      setScrollPercent(Math.min(100, Math.max(0, pct)));
+    };
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Steps definition
   const STEPS = [
     {
       id: 1,
-      title: t("dashboard.selectOffice"),
-      icon: Building2,
-      completed: !!watchedOfficeId,
-    },
-    {
-      id: 2,
-      title: t("dashboard.selectService"),
+      title: t("dashboard.serviceDetails") || "Service Details",
       icon: FileText,
-      completed: !!watchedServiceId,
-    },
-    {
-      id: 3,
-      title: t("dashboard.viewInformation"),
-      icon: List,
       completed: !!selectedService,
     },
     {
-      id: 4,
-      title: t("dashboard.applicationDetails"),
+      id: 2,
+      title:
+        t("dashboard.applicationForm") ||
+        t("dashboard.applicationDetails") ||
+        "Application Form",
       icon: FileCheck,
-      completed: !!(form.watch("currentAddress") && form.watch("date")),
+      completed:
+        !!form.watch("currentAddress") &&
+        !!form.watch("date") &&
+        files.length > 0,
     },
     {
-      id: 5,
-      title: t("dashboard.uploadFiles"),
-      icon: Upload,
-      completed: files.length > 0,
+      id: 3,
+      title: t("dashboard.confirmation") || "Confirmation",
+      icon: CheckCircle2,
+      completed: showSuccess,
     },
   ];
 
@@ -173,7 +192,11 @@ export default function ApplyServicePage() {
       serviceId: data.serviceId,
       currentAddress: data.currentAddress,
       date: data.date instanceof Date ? data.date : new Date(data.date),
-      notes: data.notes,
+      notes: selectedSlot
+        ? `${
+            (t("dashboard.preferredTime") || "Preferred time") + ": "
+          }${selectedSlot}${data.notes ? " | " + data.notes : ""}`
+        : data.notes,
     };
     const success = await submitApplication(formData);
     if (success) {
@@ -196,113 +219,132 @@ export default function ApplyServicePage() {
     { key: "6", label: t("dashboard.saturday") },
   ];
 
+  // Fetch available time slots when office/date selected
+  useEffect(() => {
+    const fetchSlots = async () => {
+      setSlotError("");
+      setAvailableSlots([]);
+      setSelectedSlot("");
+      if (!watchedOfficeId || !form.getValues("date")) return;
+      try {
+        setSlotsLoading(true);
+        const d = form.getValues("date") as unknown;
+        let dateObj: Date;
+        if (d instanceof Date) {
+          dateObj = d;
+        } else if (typeof d === "string" || typeof d === "number") {
+          dateObj = new Date(d);
+        } else {
+          dateObj = new Date();
+        }
+        const dateStr = dateObj.toISOString().split("T")[0];
+        const res = await fetch(
+          `/api/office/${watchedOfficeId}/availability/slots?date=${dateStr}`
+        );
+        const json = await res.json();
+        if (res.ok && json?.availableSlots) {
+          setAvailableSlots(json.availableSlots as string[]);
+        } else {
+          setSlotError(json?.error || "No slots available for selected date");
+        }
+      } catch (e: any) {
+        setSlotError(e.message || "Failed to load slots");
+      } finally {
+        setSlotsLoading(false);
+      }
+    };
+    fetchSlots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedOfficeId, form.watch("date")]);
+
+  // Group slots into time-of-day categories similar to the reference UI
+  const categoryDefs = useMemo(
+    () => [
+      { key: "midnight", label: "Midnight", start: 0, end: 330 }, // 00:00 - 05:30
+      { key: "fajr", label: "Fajr", start: 330, end: 420 }, // 05:30 - 07:00
+      {
+        key: "morning",
+        label: t("dashboard.morning") || "Morning",
+        start: 420,
+        end: 720,
+      }, // 07:00-12:00
+      { key: "zuhur", label: "Zuhur", start: 720, end: 900 }, // 12:00-15:00
+      { key: "asr", label: "Asr", start: 900, end: 1020 }, // 15:00-17:00
+      { key: "maghrib", label: "Maghrib", start: 1020, end: 1140 }, // 17:00-19:00
+      { key: "isha", label: "Isha", start: 1140, end: 1440 }, // 19:00-24:00
+    ],
+    [t]
+  );
+
+  const categorizedSlots = useMemo(() => {
+    const toMinutes = (time: string) => {
+      const [h, m] = time.split(":").map(Number);
+      return h * 60 + m;
+    };
+    const byCategory: Record<string, string[]> = {};
+    categoryDefs.forEach((c) => (byCategory[c.key] = []));
+    availableSlots.forEach((s) => {
+      const mins = toMinutes(s);
+      const cat = categoryDefs.find((c) => mins >= c.start && mins < c.end);
+      if (cat) byCategory[cat.key].push(s);
+    });
+    return byCategory;
+  }, [availableSlots, categoryDefs]);
+
   return (
-    <div className="w-full h-dvh overflow-y-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          {t("dashboard.applyForService")}
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          {t("dashboard.fillDetailsToApply")}
-        </p>
-      </div>
-
-      {/* Progress Indicator */}
-      <Card className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">{t("dashboard.progress")}</span>
-                <span className="text-muted-foreground">
-                  {currentStep} {t("dashboard.of")} {totalSteps}{" "}
-                  {t("dashboard.steps")}
-                </span>
+    <div
+      ref={containerRef}
+      className="w-full h-dvh overflow-y-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8"
+    >
+      {/* Gradient Progress Banner (sticky) */}
+      <div className="sticky top-0 z-20">
+        <div className="rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white bg-linear-to-r from-teal-600 via-sky-600 to-indigo-600 shadow">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 ring-2 ring-white/30 flex items-center justify-center">
+                <Image src="/favicon.ico" alt="Logo" width={28} height={28} />
               </div>
-              <Progress value={progress} className="h-2" />
+              <div>
+                <h1 className="text-lg sm:text-2xl font-bold leading-tight">
+                  {t("dashboard.applyForService")}
+                </h1>
+                <p className="text-xs sm:text-sm text-white/80">
+                  {t("dashboard.fillDetailsToApply")}
+                </p>
+              </div>
             </div>
 
-            {/* Steps Indicator */}
-            <div className="hidden sm:flex items-center justify-between">
-              {STEPS.map((step, index) => {
-                const StepIcon = step.icon;
-                const isActive = currentStep === step.id;
-                const isCompleted = step.completed || currentStep > step.id;
-
-                return (
-                  <div key={step.id} className="flex items-center flex-1">
-                    <div className="flex flex-col items-center flex-1">
-                      <div
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
-                          isActive
-                            ? "bg-primary text-primary-foreground scale-110 shadow-lg"
-                            : isCompleted
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        ) : (
-                          <StepIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                        )}
-                      </div>
-                      <p
-                        className={`text-xs mt-2 text-center max-w-[80px] ${
-                          isActive
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {step.title}
-                      </p>
-                    </div>
-                    {index < STEPS.length - 1 && (
-                      <div
-                        className={`h-1 flex-1 mx-2 transition-colors ${
-                          isCompleted ? "bg-primary" : "bg-muted"
-                        }`}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {/* Mobile Steps Indicator - Show only current step */}
-            <div className="sm:hidden flex items-center justify-center gap-2">
-              <div className="flex items-center gap-2">
-                {STEPS.map((step) => {
-                  const StepIcon = step.icon;
-                  const isActive = currentStep === step.id;
-                  const isCompleted = step.completed || currentStep > step.id;
-                  if (!isActive && !isCompleted) return null;
-
-                  return (
-                    <div key={step.id} className="flex items-center gap-2">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-primary/20 text-primary"
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4" />
-                        ) : (
-                          <StepIcon className="w-4 h-4" />
-                        )}
-                      </div>
-                      <span className="text-xs font-medium">{step.title}</span>
-                    </div>
-                  );
-                })}
+            {/* Step pill with dots */}
+            <div className="shrink-0 bg-white/20 text-white/95 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <span className="text-xs sm:text-sm font-medium">
+                  {t("dashboard.step") || "Step"} {currentStep}{" "}
+                  {t("dashboard.of") || "of"} {totalSteps}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3].map((i) => (
+                    <span
+                      key={i}
+                      className={`inline-block w-2.5 h-2.5 rounded-full ${
+                        i <= currentStep ? "bg-emerald-300" : "bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Thin scroll progress bar */}
+          <div className="mt-3 sm:mt-4 h-2 rounded-full bg-white/25 overflow-hidden">
+            <div
+              className="h-2 rounded-full bg-emerald-300"
+              style={{ width: `${scrollPercent}%` }}
+              aria-hidden
+            />
+          </div>
+        </div>
+      </div>
 
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
@@ -373,6 +415,78 @@ export default function ApplyServicePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Preferred Time Slot Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-semibold">
+                    {tr(
+                      "dashboard.selectPreferredTimeSlot",
+                      "Select Preferred Time Slot"
+                    )}
+                  </h4>
+                </div>
+
+                {/* Slots content */}
+                <div className="space-y-3">
+                  {slotsLoading && (
+                    <div className="p-4 border rounded-md flex items-center gap-2 text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {t("dashboard.loadingSlots") ||
+                        "Loading available time slots..."}
+                    </div>
+                  )}
+                  {!slotsLoading && slotError && (
+                    <div className="p-4 border rounded-md text-sm text-destructive bg-destructive/5">
+                      {slotError}
+                    </div>
+                  )}
+
+                  {!slotsLoading && availableSlots.length > 0 && (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {(slotFilter === "all"
+                        ? categoryDefs
+                        : categoryDefs.filter((c) => c.key === slotFilter)
+                      ).map((cat) => {
+                        const slots = categorizedSlots[cat.key] || [];
+                        if (slots.length === 0) return null;
+                        return (
+                          <Card key={cat.key} className="border rounded-xl">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-base flex items-center gap-2">
+                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                                {cat.label}
+                              </CardTitle>
+                              <CardDescription>
+                                {t("dashboard.available") || "Available"}:{" "}
+                                {slots.length}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-2 gap-3">
+                              {slots.map((s) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  onClick={() => setSelectedSlot(s)}
+                                  className={`text-left border rounded-lg px-3 py-3 transition shadow-sm hover:shadow ${
+                                    selectedSlot === s
+                                      ? "border-primary ring-2 ring-primary/30"
+                                      : "border-muted"
+                                  }`}
+                                >
+                                  <div className="font-semibold">{s}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {t("dashboard.available") || "Available"}
+                                  </div>
+                                </button>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
               <Controller
                 control={form.control}
                 name="serviceId"
