@@ -290,16 +290,26 @@ export default function StaffPage() {
       ) : (
         <>
           <div className="rounded-md border overflow-hidden">
-            <div className="h-dvh overflow-auto">
-              <Table>
-                <TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead>{t("dashboard.staff")}</TableHead>
-                    <TableHead>{t("dashboard.contact")}</TableHead>
-                    <TableHead>{t("dashboard.role")}</TableHead>
-                    <TableHead>{t("dashboard.office")}</TableHead>
-                    <TableHead>{t("common.status")}</TableHead>
-                    <TableHead className="text-right">
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      {t("dashboard.staff")}
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell text-xs sm:text-sm">
+                      {t("dashboard.contact")}
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell text-xs sm:text-sm">
+                      {t("dashboard.role")}
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell text-xs sm:text-sm">
+                      {t("dashboard.office")}
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm">
+                      {t("common.status")}
+                    </TableHead>
+                    <TableHead className="text-right text-xs sm:text-sm">
                       {t("common.actions")}
                     </TableHead>
                   </TableRow>
@@ -317,19 +327,24 @@ export default function StaffPage() {
                               <AvatarFallback>{initials}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
-                              <div className="font-medium">
+                              <span className="font-medium text-sm sm:text-base">
                                 {staffMember.username}
-                              </div>
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {staffMember.phoneNumber}
+                              </span>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm">
+                        <TableCell className="hidden md:table-cell">
+                          <div className="flex items-center gap-2 text-xs sm:text-sm">
                             <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span>{staffMember.phoneNumber}</span>
+                            <span className="whitespace-nowrap">
+                              {staffMember.phoneNumber}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {staffMember.role ? (
                             <Badge
                               variant="secondary"
@@ -339,12 +354,12 @@ export default function StaffPage() {
                               {staffMember.role.name}
                             </Badge>
                           ) : (
-                            <span className="text-muted-foreground text-sm">
+                            <span className="text-muted-foreground text-xs sm:text-sm">
                               {t("dashboard.noRole")}
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           {staffMember.office ? (
                             <Badge
                               variant="outline"
@@ -354,7 +369,7 @@ export default function StaffPage() {
                               {staffMember.office.name}
                             </Badge>
                           ) : (
-                            <span className="text-muted-foreground text-sm">
+                            <span className="text-muted-foreground text-xs sm:text-sm">
                               {t("dashboard.noOffice")}
                             </span>
                           )}

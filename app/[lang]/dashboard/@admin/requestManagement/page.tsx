@@ -4,6 +4,13 @@ import { useEffect } from "react";
 import { useRequestManagementStore } from "./_store/request-management-store";
 import { RequestDetail } from "./_components/request-detail";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -154,8 +161,8 @@ export default function RequestManagementPage() {
   };
 
   return (
-    <div className="w-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
-      <div className="container mx-auto space-y-6">
+    <div className="w-full overflow-y-auto py-6 space-y-8 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -179,61 +186,69 @@ export default function RequestManagementPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={t("dashboard.searchRequests")}
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9"
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("common.filters")}</CardTitle>
+            <CardDescription>
+              {t("dashboard.filterByOfficeStatusAndSearch")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={t("dashboard.searchRequests")}
+                  value={search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select
+                value={officeId || "all"}
+                onValueChange={(value) =>
+                  setOfficeId(value === "all" ? "" : value)
+                }
+              >
+                <SelectTrigger className="w-full sm:w-52">
+                  <SelectValue placeholder={t("dashboard.allOffices")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("dashboard.allOffices")}</SelectItem>
+                  {offices.map((office) => (
+                    <SelectItem key={office.id} value={office.id}>
+                      {office.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={status || "all"}
+                onValueChange={(value) => setStatus(value === "all" ? "" : value)}
+              >
+                <SelectTrigger className="w-full sm:w-52">
+                  <SelectValue placeholder={t("dashboard.allStatus")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("dashboard.allStatus")}</SelectItem>
+                  <SelectItem value="pending">{t("dashboard.pending")}</SelectItem>
+                  <SelectItem value="approved">{t("dashboard.approved")}</SelectItem>
+                  <SelectItem value="rejected">{t("dashboard.rejected")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select
-              value={officeId || "all"}
-              onValueChange={(value) =>
-                setOfficeId(value === "all" ? "" : value)
-              }
-            >
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder={t("dashboard.allOffices")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("dashboard.allOffices")}</SelectItem>
-                {offices.map((office) => (
-                  <SelectItem key={office.id} value={office.id}>
-                    {office.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={status || "all"}
-              onValueChange={(value) => setStatus(value === "all" ? "" : value)}
-            >
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder={t("dashboard.allStatus")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("dashboard.allStatus")}</SelectItem>
-                <SelectItem value="pending">
-                  {t("dashboard.pending")}
-                </SelectItem>
-                <SelectItem value="approved">
-                  {t("dashboard.approved")}
-                </SelectItem>
-                <SelectItem value="rejected">
-                  {t("dashboard.rejected")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {/* Removed top per-page selector for cleaner UI; bottom control remains */}
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Table */}
-        <div className="border rounded-lg overflow-hidden">
+        <Card className="overflow-hidden">
+          <CardHeader>
+            <CardTitle>{t("navigation.requestManagement")}</CardTitle>
+            <CardDescription>
+              {t("dashboard.viewRequestDetailsRolesAndStatus")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -252,92 +267,92 @@ export default function RequestManagementPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-auto">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background z-10">
-                    <TableRow>
-                      <TableHead>{t("dashboard.customer")}</TableHead>
-                      <TableHead>{t("dashboard.service")}</TableHead>
-                      <TableHead>{t("navigation.office")}</TableHead>
-                      <TableHead>{t("common.date")}</TableHead>
-                      <TableHead>{t("common.status")}</TableHead>
-                      <TableHead>{t("dashboard.staffApproval")}</TableHead>
-                      <TableHead>{t("dashboard.managerApproval")}</TableHead>
-                      <TableHead className="text-right">
-                        {t("common.actions")}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">
-                              {request.user.username}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {request.user.phoneNumber}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">
-                              {request.service.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground line-clamp-1">
-                              {request.service.description}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                <div className="overflow-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableRow>
+                        <TableHead className="text-xs sm:text-sm">{t("dashboard.customer")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("dashboard.service")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden md:table-cell">{t("navigation.office")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm whitespace-nowrap">{t("common.date")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("common.status")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("dashboard.staffApproval")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("dashboard.managerApproval")}</TableHead>
+                        <TableHead className="text-right text-xs sm:text-sm">
+                          {t("common.actions")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.map((request) => (
+                        <TableRow key={request.id}>
+                          <TableCell>
                             <div>
-                              <p className="text-sm">
-                                {request.service.office.name}
+                              <p className="font-medium">
+                                {request.user.username}
                               </p>
-                              <p className="text-xs text-muted-foreground">
-                                Room {request.service.office.roomNumber}
+                              <p className="text-sm text-muted-foreground">
+                                {request.user.phoneNumber}
                               </p>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="text-sm">
-                              {format(new Date(request.date), "MMM dd, yyyy")}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(new Date(request.createdAt), "MMM dd")}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(
-                            calculateOverallStatus(
-                              request.statusbystaff,
-                              request.statusbyadmin
-                            )
-                          )}
-                        </TableCell>
-                        <TableCell>{getStaffApproval(request)}</TableCell>
-                        <TableCell>{getManagerApproval(request)}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewDetails(request)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">
+                                {request.service.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground line-clamp-1 max-w-xs sm:max-w-md">
+                                {request.service.description}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-sm">
+                                  {request.service.office.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Room {request.service.office.roomNumber}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <div>
+                              <p className="text-sm">
+                                {format(new Date(request.date), "MMM dd, yyyy")}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(request.createdAt), "MMM dd")}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(
+                              calculateOverallStatus(
+                                request.statusbystaff,
+                                request.statusbyadmin
+                              )
+                            )}
+                          </TableCell>
+                          <TableCell>{getStaffApproval(request)}</TableCell>
+                          <TableCell>{getManagerApproval(request)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetails(request)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
               {/* Pagination */}
               {total > 0 &&
@@ -446,7 +461,8 @@ export default function RequestManagementPage() {
                 })()}
             </>
           )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Request Detail Dialog */}

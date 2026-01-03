@@ -360,10 +360,7 @@ export default function ReportManagementPage() {
               </div>
             ) : (
               <>
-                <div
-                  className="overflow-x-auto"
-                  style={{ maxHeight: "calc(100vh - 450px)" }}
-                >
+                <div className="overflow-x-auto">
                   <Table>
                     <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
