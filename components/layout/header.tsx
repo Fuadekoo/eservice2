@@ -1,10 +1,44 @@
+"use client";
+
 import { AlignLeft, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
+import { useEffect, useMemo, useState } from "react";
 import Lang from "./lang";
 import Theme from "./theme";
 import UserMenu from "./user-menu";
 
+type UserMeResponse = {
+  success?: boolean;
+  data?: {
+    username?: string | null;
+  };
+};
+
 export default function Header() {
+  const [displayName, setDisplayName] = useState<string>("User");
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await fetch("/api/user/me");
+        const json = (await res.json()) as UserMeResponse;
+        const name = json?.data?.username || "User";
+        setDisplayName(name);
+      } catch {
+        // Keep default
+      }
+    };
+
+    fetchMe();
+  }, []);
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  }, []);
+
   const handleRefresh = () => {
     window.location.reload();
   };
@@ -23,6 +57,13 @@ export default function Header() {
             <AlignLeft className="h-5 w-5" />
           </label>
         </Button>
+
+        {/* Greeting */}
+        <div className="min-w-0">
+          <h2 className="truncate text-base sm:text-lg lg:text-2xl font-bold leading-tight">
+            {greeting}, {displayName}!
+          </h2>
+        </div>
 
         {/* Spacer */}
         <div className="flex-1 min-w-0"></div>

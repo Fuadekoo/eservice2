@@ -40,10 +40,30 @@ export default function SideBar({
   return (
     <nav
       className={
-        "z-60 lg:z-50 overflow-hidden max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] hidden lg:peer-checked/sidebar:block transition-all duration-300 shrink-0 h-full"
+        "z-60 lg:z-50 overflow-hidden transition-all duration-300 shrink-0 h-full " +
+        // Mobile: hidden until toggled open
+        "max-lg:absolute max-lg:inset-0 max-lg:peer-checked/sidebar:grid max-lg:grid-cols-[auto_1fr] max-lg:hidden " +
+        // Desktop: always visible (expanded or collapsed)
+        "lg:block " +
+        // Desktop collapsed rail styles (unchecked)
+        "**:data-[sidebar=container]:lg:w-16 " +
+        "**:data-[sidebar=container]:transition-[width] **:data-[sidebar=container]:duration-200 " +
+        "**:data-[sidebar=logo]:lg:justify-center **:data-[sidebar=logo]:lg:px-2 " +
+        "**:data-[sidebar=scroll]:lg:px-2 " +
+        "**:data-[sidebar=label]:lg:hidden " +
+        "**:data-[sidebar=item]:lg:justify-center **:data-[sidebar=item]:lg:px-2 **:data-[sidebar=item]:lg:gap-0 " +
+        // Desktop expanded styles (checked)
+        "peer-checked/sidebar:**:data-[sidebar=container]:lg:w-56 " +
+        "peer-checked/sidebar:**:data-[sidebar=logo]:lg:justify-start peer-checked/sidebar:**:data-[sidebar=logo]:lg:px-3 " +
+        "peer-checked/sidebar:**:data-[sidebar=scroll]:lg:px-3 " +
+        "peer-checked/sidebar:**:data-[sidebar=label]:lg:inline " +
+        "peer-checked/sidebar:**:data-[sidebar=item]:lg:justify-start peer-checked/sidebar:**:data-[sidebar=item]:lg:px-3 peer-checked/sidebar:**:data-[sidebar=item]:lg:gap-2"
       }
     >
-      <div className="overflow-hidden max-lg:w-64 lg:w-56 lg:shrink-0 bg-blue-500 dark:bg-blue-700 grid grid-rows-[auto_1fr_auto] h-full">
+      <div
+        data-sidebar="container"
+        className="overflow-hidden max-lg:w-64 lg:shrink-0 bg-blue-500 dark:bg-blue-700 grid grid-rows-[auto_1fr_auto] h-full"
+      >
         <div className="relative border-b border-blue-400/30 dark:border-blue-600/30">
           <Logo />
           {/* Close button for mobile */}
@@ -58,7 +78,7 @@ export default function SideBar({
             </label>
           </Button>
         </div>
-        <ScrollArea className="flex-1 p-3 pb-3">
+        <ScrollArea data-sidebar="scroll" className="flex-1 p-3 pb-3">
           <div className="flex flex-col">
             {menu.map((item, i) => (
               <React.Fragment key={i + ""}>
@@ -77,6 +97,7 @@ export default function SideBar({
                         key={i + ""}
                         size="lg"
                         variant="ghost"
+                        data-sidebar="item"
                         className={`shrink-0 justify-start capitalize text-sm px-3 h-10 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/10 ${
                           isSelected ? "bg-black/20 dark:bg-white/20" : ""
                         }`}
@@ -86,7 +107,10 @@ export default function SideBar({
                           <span className="text-black dark:text-white">
                             {Icon}
                           </span>
-                          <span className="truncate text-black dark:text-white">
+                          <span
+                            data-sidebar="label"
+                            className="truncate text-black dark:text-white"
+                          >
                             {t(`navigation.${key}`)}
                           </span>
                         </Link>

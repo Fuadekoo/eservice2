@@ -8,7 +8,10 @@ export default function Logo() {
   const { lang } = useParams<{ lang: string }>();
 
   return (
-    <div className="shrink-0 px-3 py-2.5 flex gap-2 items-center">
+    <div
+      data-sidebar="logo"
+      className="shrink-0 px-3 py-2.5 flex gap-2 items-center"
+    >
       <Link href={"/"} className="shrink-0">
         <Image
           alt=""
@@ -20,6 +23,7 @@ export default function Logo() {
       </Link>
       <Link
         href={"/"}
+        data-sidebar="label"
         className="text-lg tracking-wide font-bold text-black dark:text-white truncate"
       >
         {lang == "am" ? "E-service" : "East shoa E-service"}
