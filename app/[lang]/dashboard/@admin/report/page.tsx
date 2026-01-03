@@ -210,63 +210,28 @@ export default function ReportManagementPage() {
               {t("dashboard.viewAndManageReports")}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fetchReports()}
-              disabled={isLoading}
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-              />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                try {
-                  const headers = [
-                    "Name",
-                    "Description",
-                    "Sender",
-                    "Office",
-                    "Files",
-                    "Status",
-                    "Received Date",
-                  ];
-                  const rows = reports.map((r) => [
-                    r.name || "",
-                    (r.description || "").replace(/\n|\r/g, " "),
-                    r.reportSentByUser?.username || "",
-                    r.reportSentByUser?.office?.name || "",
-                    String(r.fileData?.length || 0),
-                    r.receiverStatus || "",
-                    format(new Date(r.createdAt), "yyyy-MM-dd HH:mm"),
-                  ]);
-                  const csv = [headers, ...rows]
-                    .map((row) =>
-                      row
-                        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-                        .join(",")
-                    )
-                    .join("\n");
-                  const blob = new Blob([csv], {
-                    type: "text/csv;charset=utf-8;",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `reports_page${page}.csv`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                } catch (e) {
-                  console.error("CSV export failed", e);
-                  toast.error("Failed to export CSV");
-                }
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {t("dashboard.perPage")}
+            </span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                const ps = parseInt(value);
+                setPageSize(ps);
+                setPage(1);
               }}
             >
-              {t("dashboard.exportCsv")}
-            </Button>
+              <SelectTrigger className="w-24 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -571,29 +536,7 @@ export default function ReportManagementPage() {
                               </PaginationContent>
                             </Pagination>
                           )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                              {t("dashboard.perPage")}
-                            </span>
-                            <Select
-                              value={pageSize.toString()}
-                              onValueChange={(value) => {
-                                const ps = parseInt(value);
-                                setPageSize(ps);
-                                setPage(1);
-                              }}
-                            >
-                              <SelectTrigger className="w-24 h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="10">10</SelectItem>
-                                <SelectItem value="25">25</SelectItem>
-                                <SelectItem value="50">50</SelectItem>
-                                <SelectItem value="100">100</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {/* Per-page selector moved to header to avoid duplication */}
                         </div>
                       </div>
                     </div>

@@ -186,31 +186,30 @@ export default function OfficePage() {
     const derivedTotalPages = Math.max(1, Math.ceil(total / pageSize));
 
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 mt-6 border-t">
-        <div className="text-sm text-muted-foreground font-medium">
-          {t("dashboard.showing") || "Showing"} {start}{" "}
-          {t("dashboard.to") || "to"} {end} {t("dashboard.of") || "of"} {total}
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (page > 1) {
-                setPage(page - 1);
-              }
-            }}
-            disabled={page === 1}
-            className="min-w-[90px]"
-          >
-            {t("dashboard.previous") || "Previous"}
-          </Button>
-          {derivedTotalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                {Array.from({ length: derivedTotalPages }, (_, i) => i + 1).map(
-                  (pageNum) => {
-                    // Show first page, last page, current page, and pages around current
+      <div className="px-4 py-3 border-t sticky bottom-0 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-muted-foreground">
+            {t("dashboard.showing")} {start} {t("dashboard.to")} {end}{" "}
+            {t("dashboard.of")} {total}
+          </div>
+          <div className="flex items-center gap-4">
+            {derivedTotalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => page > 1 && setPage(page - 1)}
+                      className={
+                        page === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                  {Array.from(
+                    { length: derivedTotalPages },
+                    (_, i) => i + 1
+                  ).map((pageNum) => {
                     if (
                       pageNum === 1 ||
                       pageNum === derivedTotalPages ||
@@ -228,7 +227,6 @@ export default function OfficePage() {
                         </PaginationItem>
                       );
                     } else if (pageNum === page - 2 || pageNum === page + 2) {
-                      // Show ellipsis
                       return (
                         <PaginationItem key={`ellipsis-${pageNum}`}>
                           <PaginationEllipsis />
@@ -236,49 +234,22 @@ export default function OfficePage() {
                       );
                     }
                     return null;
-                  }
-                )}
-              </PaginationContent>
-            </Pagination>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (page < derivedTotalPages) {
-                setPage(page + 1);
-              }
-            }}
-            disabled={page === derivedTotalPages}
-            className="min-w-[90px]"
-          >
-            {t("dashboard.next") || "Next"}
-          </Button>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {t("dashboard.perPage")}
-            </span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => {
-                const newPageSize = Number(v);
-                setPageSize(newPageSize);
-                // Reset to page 1 when changing page size
-                if (page !== 1) {
-                  setPage(1);
-                }
-              }}
-            >
-              <SelectTrigger className="w-[110px] h-8">
-                <SelectValue placeholder="Per page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
+                  })}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        page < derivedTotalPages && setPage(page + 1)
+                      }
+                      className={
+                        page === derivedTotalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </div>
         </div>
       </div>
@@ -311,28 +282,51 @@ export default function OfficePage() {
             <div className="text-sm text-muted-foreground">
               {t("dashboard.createAndManageOffices")}
             </div>
-            <div>
-              <Button onClick={handleCreateNew} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                {t("dashboard.newOffice")}
-              </Button>
-            </div>
           </div>
 
           {/* Filters card */}
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    placeholder={t("dashboard.searchOffices")}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full sm:w-[260px]"
-                  />
-                </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-4">
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  placeholder={t("dashboard.searchOffices")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full sm:w-[260px]"
+                />
               </div>
-            </CardContent>
+              <div className="flex items-center justify-end gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {t("dashboard.perPage")}
+                  </span>
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(v) => {
+                      const newPageSize = Number(v);
+                      setPageSize(newPageSize);
+                      if (page !== 1) {
+                        setPage(1);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[110px] h-8">
+                      <SelectValue placeholder="Per page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleCreateNew} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("dashboard.newOffice")}
+                </Button>
+              </div>
+            </div>
           </Card>
 
           {/* Cards grid */}

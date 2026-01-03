@@ -31,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Loader2,
-  RefreshCw,
   Eye,
   CheckCircle2,
   XCircle,
@@ -173,16 +172,29 @@ export default function RequestManagementPage() {
               {t("dashboard.viewAndManageAllRequests")}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fetchRequests()}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-          </Button>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {t("dashboard.perPage")}
+            </span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                const ps = parseInt(value);
+                setPageSize(ps);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-24 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Filters */}
@@ -438,27 +450,7 @@ export default function RequestManagementPage() {
                               </PaginationContent>
                             </Pagination>
                           )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                              {t("dashboard.perPage")}
-                            </span>
-                            <Select
-                              value={pageSize.toString()}
-                              onValueChange={(value) =>
-                                setPageSize(parseInt(value))
-                              }
-                            >
-                              <SelectTrigger className="w-24 h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="1">1</SelectItem>
-                                <SelectItem value="25">25</SelectItem>
-                                <SelectItem value="50">50</SelectItem>
-                                <SelectItem value="100">100</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {/* Per-page selector moved to header to avoid duplication */}
                         </div>
                       </div>
                     </div>
