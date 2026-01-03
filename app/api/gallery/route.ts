@@ -152,22 +152,44 @@ import { randomUUID } from "crypto";
 export async function GET(request: NextRequest) {
   try {
     // Allow public access - no authentication required for viewing galleries
-    const galleries = await prisma.gallery.findMany({
-      include: {
-        images: {
-          orderBy: {
-            order: "asc",
+    // Add pagination support via query params: page (1-based) and limit (page size)
+    const url = new URL(request.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+    const limit = Math.max(
+      1,
+      parseInt(url.searchParams.get("limit") || "12", 10)
+    );
+    const skip = (page - 1) * limit;
+
+    const [total, galleries] = await Promise.all([
+      prisma.gallery.count(),
+      prisma.gallery.findMany({
+        skip,
+        take: limit,
+        include: {
+          images: {
+            orderBy: {
+              order: "asc",
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
     return NextResponse.json({
       success: true,
       data: galleries,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
     });
   } catch (error: any) {
     console.error("❌ Error fetching galleries:", error);
@@ -182,7 +204,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check permission
-    const { response, userId } = await requirePermission(request, "gallery:create");
+    const { response, userId } = await requirePermission(
+      request,
+      "gallery:create"
+    );
     if (response) return response;
     if (!userId) {
       return NextResponse.json(

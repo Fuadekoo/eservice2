@@ -210,16 +210,64 @@ export default function ReportManagementPage() {
               {t("dashboard.viewAndManageReports")}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fetchReports()}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => fetchReports()}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+              />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                try {
+                  const headers = [
+                    "Name",
+                    "Description",
+                    "Sender",
+                    "Office",
+                    "Files",
+                    "Status",
+                    "Received Date",
+                  ];
+                  const rows = reports.map((r) => [
+                    r.name || "",
+                    (r.description || "").replace(/\n|\r/g, " "),
+                    r.reportSentByUser?.username || "",
+                    r.reportSentByUser?.office?.name || "",
+                    String(r.fileData?.length || 0),
+                    r.receiverStatus || "",
+                    format(new Date(r.createdAt), "yyyy-MM-dd HH:mm"),
+                  ]);
+                  const csv = [headers, ...rows]
+                    .map((row) =>
+                      row
+                        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+                        .join(",")
+                    )
+                    .join("\n");
+                  const blob = new Blob([csv], {
+                    type: "text/csv;charset=utf-8;",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `reports_page${page}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch (e) {
+                  console.error("CSV export failed", e);
+                  toast.error("Failed to export CSV");
+                }
+              }}
+            >
+              {t("dashboard.exportCsv")}
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -243,7 +291,7 @@ export default function ReportManagementPage() {
                   }
                   disabled={isLoadingOffices}
                 >
-                  <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectTrigger className="w-full sm:w-52">
                     <SelectValue placeholder={t("dashboard.allOffices")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -263,7 +311,7 @@ export default function ReportManagementPage() {
                     setStatus(value === "all" ? "" : value)
                   }
                 >
-                  <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectTrigger className="w-full sm:w-52">
                     <SelectValue placeholder={t("dashboard.allStatus")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -286,35 +334,7 @@ export default function ReportManagementPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {t("dashboard.show")}:
-                </span>
-                <Select
-                  value={pageSize.toString()}
-                  onValueChange={(value) => {
-                    const newPageSize = parseInt(value);
-                    setPageSize(newPageSize);
-                    // Reset to page 1 when changing page size
-                    if (page !== 1) {
-                      setPage(1);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-[80px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-muted-foreground">
-                  {t("dashboard.itemsPerPage")}
-                </span>
-              </div>
+              {/* Removed top per-page selector to avoid duplication; bottom control remains */}
             </div>
           </CardContent>
         </Card>
@@ -345,7 +365,7 @@ export default function ReportManagementPage() {
                   style={{ maxHeight: "calc(100vh - 450px)" }}
                 >
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 bg-background z-10">
                       <TableRow>
                         <TableHead>{t("dashboard.reportName")}</TableHead>
                         <TableHead>{t("common.description")}</TableHead>
@@ -480,85 +500,116 @@ export default function ReportManagementPage() {
                 </div>
 
                 {/* Pagination */}
-                {total > 0 && (
-                  <div className="border-t p-4 bg-background">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="text-sm text-muted-foreground">
-                        {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
-                        {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
-                        {t("dashboard.of")} {total} {t("dashboard.reports")}
+                {total > 0 &&
+                  (() => {
+                    const derivedTotalPages = Math.max(
+                      1,
+                      Math.ceil(total / pageSize)
+                    );
+                    return (
+                      <div className="px-4 py-3 border-t sticky bottom-0 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="text-sm text-muted-foreground">
+                            {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
+                            {t("dashboard.to")}{" "}
+                            {Math.min(page * pageSize, total)}{" "}
+                            {t("dashboard.of")} {total} {t("dashboard.reports")}
+                          </div>
+                          <div className="flex items-center gap-4">
+                            {derivedTotalPages > 1 && (
+                              <Pagination>
+                                <PaginationContent>
+                                  <PaginationItem>
+                                    <PaginationPrevious
+                                      onClick={() =>
+                                        page > 1 && setPage(page - 1)
+                                      }
+                                      className={
+                                        page === 1 || isLoading
+                                          ? "pointer-events-none opacity-50"
+                                          : "cursor-pointer"
+                                      }
+                                    />
+                                  </PaginationItem>
+                                  {Array.from(
+                                    { length: derivedTotalPages },
+                                    (_, i) => i + 1
+                                  ).map((pageNum) => {
+                                    if (
+                                      pageNum === 1 ||
+                                      pageNum === derivedTotalPages ||
+                                      (pageNum >= page - 1 &&
+                                        pageNum <= page + 1)
+                                    ) {
+                                      return (
+                                        <PaginationItem key={pageNum}>
+                                          <PaginationLink
+                                            onClick={() => setPage(pageNum)}
+                                            isActive={pageNum === page}
+                                            className="cursor-pointer"
+                                          >
+                                            {pageNum}
+                                          </PaginationLink>
+                                        </PaginationItem>
+                                      );
+                                    } else if (
+                                      pageNum === page - 2 ||
+                                      pageNum === page + 2
+                                    ) {
+                                      return (
+                                        <PaginationItem
+                                          key={`ellipsis-${pageNum}`}
+                                        >
+                                          <PaginationEllipsis />
+                                        </PaginationItem>
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                  <PaginationItem>
+                                    <PaginationNext
+                                      onClick={() =>
+                                        page < derivedTotalPages &&
+                                        setPage(page + 1)
+                                      }
+                                      className={
+                                        page === derivedTotalPages || isLoading
+                                          ? "pointer-events-none opacity-50"
+                                          : "cursor-pointer"
+                                      }
+                                    />
+                                  </PaginationItem>
+                                </PaginationContent>
+                              </Pagination>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">
+                                {t("dashboard.perPage")}
+                              </span>
+                              <Select
+                                value={pageSize.toString()}
+                                onValueChange={(value) => {
+                                  const ps = parseInt(value);
+                                  setPageSize(ps);
+                                  setPage(1);
+                                }}
+                              >
+                                <SelectTrigger className="w-24 h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="10">10</SelectItem>
+                                  <SelectItem value="25">25</SelectItem>
+                                  <SelectItem value="50">50</SelectItem>
+                                  <SelectItem value="100">100</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      {totalPages > 1 && (
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() => {
-                                  if (page > 1) {
-                                    setPage(page - 1);
-                                  }
-                                }}
-                                className={
-                                  page === 1
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer hover:bg-accent"
-                                }
-                                aria-disabled={page === 1}
-                              />
-                            </PaginationItem>
-                            {Array.from(
-                              { length: totalPages },
-                              (_, i) => i + 1
-                            ).map((pageNum) => {
-                              if (
-                                pageNum === 1 ||
-                                pageNum === totalPages ||
-                                (pageNum >= page - 1 && pageNum <= page + 1)
-                              ) {
-                                return (
-                                  <PaginationItem key={pageNum}>
-                                    <PaginationLink
-                                      onClick={() => setPage(pageNum)}
-                                      isActive={pageNum === page}
-                                      className="cursor-pointer"
-                                    >
-                                      {pageNum}
-                                    </PaginationLink>
-                                  </PaginationItem>
-                                );
-                              } else if (
-                                pageNum === page - 2 ||
-                                pageNum === page + 2
-                              ) {
-                                return (
-                                  <PaginationItem key={`ellipsis-${pageNum}`}>
-                                    <PaginationEllipsis />
-                                  </PaginationItem>
-                                );
-                              }
-                              return null;
-                            })}
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() => {
-                                  if (page < totalPages) {
-                                    setPage(page + 1);
-                                  }
-                                }}
-                                className={
-                                  page === totalPages
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer hover:bg-accent"
-                                }
-                                aria-disabled={page === totalPages}
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      )}
-                    </div>
-                  </div>
-                )}
+                    );
+                  })()}
               </>
             )}
           </CardContent>

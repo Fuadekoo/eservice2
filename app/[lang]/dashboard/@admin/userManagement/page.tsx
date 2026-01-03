@@ -73,6 +73,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import useTranslation from "@/hooks/useTranslation";
 import { PermissionDialog } from "./_components/permission-dialog";
@@ -115,10 +116,13 @@ export default function UserManagementPage() {
 
   // Local search state for debouncing
   const [searchInput, setSearchInput] = useState(search);
-  
+
   // Permission dialog state
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
-  const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<{ id: string; name: string } | null>(null);
+  const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Fetch users and roles on mount
   useEffect(() => {
@@ -392,7 +396,7 @@ export default function UserManagementPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="1">1</SelectItem>
                 <SelectItem value="25">25</SelectItem>
                 <SelectItem value="50">50</SelectItem>
                 <SelectItem value="100">100</SelectItem>
@@ -429,18 +433,30 @@ export default function UserManagementPage() {
           </div>
         ) : (
           <>
-            <div className="rounded-md border overflow-hidden">
-              <div className="h-dvh overflow-auto">
+            <div className="rounded-md border overflow-hidden hidden md:block">
+              <div className="w-full overflow-x-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                      <TableHead>{t("dashboard.user")}</TableHead>
-                      <TableHead>{t("dashboard.contact")}</TableHead>
-                      <TableHead>{t("dashboard.role")}</TableHead>
-                      <TableHead>{t("dashboard.office")}</TableHead>
-                      <TableHead>Permissions</TableHead>
-                      <TableHead>{t("common.status")}</TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="sticky top-0 bg-background">
+                        {t("dashboard.user")}
+                      </TableHead>
+                      <TableHead className="sticky top-0 bg-background">
+                        {t("dashboard.contact")}
+                      </TableHead>
+                      <TableHead className="sticky top-0 bg-background">
+                        {t("dashboard.role")}
+                      </TableHead>
+                      <TableHead className="sticky top-0 bg-background">
+                        {t("dashboard.office")}
+                      </TableHead>
+                      <TableHead className="sticky top-0 bg-background">
+                        Permissions
+                      </TableHead>
+                      <TableHead className="sticky top-0 bg-background">
+                        {t("common.status")}
+                      </TableHead>
+                      <TableHead className="text-right sticky top-0 bg-background">
                         {t("common.actions")}
                       </TableHead>
                     </TableRow>
@@ -629,64 +645,229 @@ export default function UserManagementPage() {
               </div>
             </div>
 
+            {/* Mobile/Card view */}
+            <div className="md:hidden space-y-3">
+              {users.map((user) => {
+                const initials = getInitials(user.name || user.username || "U");
+                return (
+                  <Card key={user.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage
+                              src={user.image || undefined}
+                              alt={user.name || user.username || "User"}
+                            />
+                            <AvatarFallback>{initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1">
+                            <div className="font-medium leading-none">
+                              {user.name || user.username || "N/A"}
+                            </div>
+                            {user.username && (
+                              <div className="text-sm text-muted-foreground">
+                                @{user.username}
+                              </div>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              {user.role ? (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Shield className="h-3 w-3" />
+                                  {user.role.name}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  {t("dashboard.noRole")}
+                                </span>
+                              )}
+                              {user.office ? (
+                                <Badge variant="outline" className="gap-1">
+                                  <Building2 className="h-3 w-3" />
+                                  {user.office.name}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  {t("dashboard.noOffice")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <span>{user.phoneNumber}</span>
+                              {user.phoneNumberVerified && (
+                                <Badge variant="outline" className="text-xs">
+                                  {t("dashboard.verified")}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEdit(user)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                {t("common.edit")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleToggleStatusClick(user)}
+                              >
+                                {user.isActive ? (
+                                  <>
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    {t("dashboard.inactive")}
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    {t("dashboard.active")}
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              {!isAdmin(user) ? (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteClick(user)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {t("common.delete")}
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  disabled
+                                  className="text-muted-foreground cursor-not-allowed"
+                                >
+                                  <Shield className="mr-2 h-4 w-4" />
+                                  {t("dashboard.cannotDeleteAdmin")}
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Badge
+                          variant={
+                            user.isActive === true ? "default" : "secondary"
+                          }
+                          className="w-fit text-xs flex items-center gap-1"
+                        >
+                          {user.isActive === true ? (
+                            <CheckCircle className="h-3 w-3" />
+                          ) : (
+                            <XCircle className="h-3 w-3" />
+                          )}
+                          {user.isActive === true
+                            ? t("dashboard.active")
+                            : t("dashboard.inactive")}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
-                  {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
-                  {t("dashboard.of")} {total} {t("dashboard.users")}
-                </div>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setPage(Math.max(1, page - 1))}
-                        className={
-                          page === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {getPaginationItems().map((item, index) => {
-                      if (
-                        item === "ellipsis-start" ||
-                        item === "ellipsis-end"
-                      ) {
-                        return (
-                          <PaginationItem key={`ellipsis-${index}`}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-                      const pageNum = item as number;
-                      return (
-                        <PaginationItem key={pageNum}>
-                          <PaginationLink
-                            onClick={() => setPage(pageNum)}
-                            isActive={page === pageNum}
-                            className="cursor-pointer"
-                          >
-                            {pageNum}
-                          </PaginationLink>
+            {(() => {
+              const derivedTotalPages = Math.max(
+                1,
+                Math.ceil(total / pageSize)
+              );
+              return derivedTotalPages > 1 ? (
+                <div className="flex items-center justify-between gap-3 px-3 py-2 sticky bottom-0 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    {t("dashboard.showing")}{" "}
+                    {Math.min((page - 1) * pageSize + 1, total)}{" "}
+                    {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
+                    {t("dashboard.of")} {total} {t("dashboard.users")}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setPage(Math.max(1, page - 1))}
+                            className={
+                              page === 1 || isLoading
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
                         </PaginationItem>
-                      );
-                    })}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setPage(Math.min(totalPages, page + 1))}
-                        className={
-                          page === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
+                        {getPaginationItems().map((item, index) => {
+                          if (
+                            item === "ellipsis-start" ||
+                            item === "ellipsis-end"
+                          ) {
+                            return (
+                              <PaginationItem key={`ellipsis-${index}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          const pageNum = item as number;
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => setPage(pageNum)}
+                                isActive={page === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              page < derivedTotalPages && setPage(page + 1)
+                            }
+                            className={
+                              page === derivedTotalPages || isLoading
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {t("dashboard.perPage")}
+                      </span>
+                      <Select
+                        value={pageSize.toString()}
+                        onValueChange={(value) => setPageSize(parseInt(value))}
+                      >
+                        <SelectTrigger className="w-[100px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+            })()}
           </>
         )}
 
@@ -771,10 +952,12 @@ export default function UserManagementPage() {
         {/* Permission Management Dialog */}
         {selectedRoleForPermissions && (
           <PermissionDialog
-            role={{
-              id: selectedRoleForPermissions.id,
-              name: selectedRoleForPermissions.name,
-            } as any}
+            role={
+              {
+                id: selectedRoleForPermissions.id,
+                name: selectedRoleForPermissions.name,
+              } as any
+            }
             open={isPermissionDialogOpen}
             onOpenChange={(open) => {
               setIsPermissionDialogOpen(open);

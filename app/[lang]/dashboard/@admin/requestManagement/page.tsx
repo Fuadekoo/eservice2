@@ -154,7 +154,7 @@ export default function RequestManagementPage() {
   };
 
   return (
-    <div className="w-full h-dvh overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="w-full overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="container mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ export default function RequestManagementPage() {
                 setOfficeId(value === "all" ? "" : value)
               }
             >
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder={t("dashboard.allOffices")} />
               </SelectTrigger>
               <SelectContent>
@@ -212,7 +212,7 @@ export default function RequestManagementPage() {
               value={status || "all"}
               onValueChange={(value) => setStatus(value === "all" ? "" : value)}
             >
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder={t("dashboard.allStatus")} />
               </SelectTrigger>
               <SelectContent>
@@ -229,32 +229,11 @@ export default function RequestManagementPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {t("dashboard.show")}:
-            </span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => setPageSize(parseInt(value))}
-            >
-              <SelectTrigger className="w-[80px] h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-muted-foreground">
-              {t("dashboard.itemsPerPage")}
-            </span>
-          </div>
+          {/* Removed top per-page selector for cleaner UI; bottom control remains */}
         </div>
 
         {/* Table */}
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -273,9 +252,9 @@ export default function RequestManagementPage() {
             </div>
           ) : (
             <>
-              <div className="h-dvh overflow-auto">
+              <div className="overflow-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
                       <TableHead>{t("dashboard.customer")}</TableHead>
                       <TableHead>{t("dashboard.service")}</TableHead>
@@ -361,77 +340,110 @@ export default function RequestManagementPage() {
               </div>
 
               {/* Pagination */}
-              {total > 0 && (
-                <div className="border-t p-4">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-sm text-muted-foreground">
-                      {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
-                      {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
-                      {t("dashboard.of")} {total} {t("dashboard.requests")}
+              {total > 0 &&
+                (() => {
+                  const derivedTotalPages = Math.max(
+                    1,
+                    Math.ceil(total / pageSize)
+                  );
+                  return (
+                    <div className="px-4 py-3 border-t sticky bottom-0 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="text-sm text-muted-foreground">
+                          {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
+                          {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
+                          {t("dashboard.of")} {total} {t("dashboard.requests")}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {derivedTotalPages > 1 && (
+                            <Pagination>
+                              <PaginationContent>
+                                <PaginationItem>
+                                  <PaginationPrevious
+                                    onClick={() =>
+                                      page > 1 && setPage(page - 1)
+                                    }
+                                    className={
+                                      page === 1 || isLoading
+                                        ? "pointer-events-none opacity-50"
+                                        : "cursor-pointer"
+                                    }
+                                  />
+                                </PaginationItem>
+                                {Array.from(
+                                  { length: derivedTotalPages },
+                                  (_, i) => i + 1
+                                ).map((pageNum) => {
+                                  if (
+                                    pageNum === 1 ||
+                                    pageNum === derivedTotalPages ||
+                                    (pageNum >= page - 1 && pageNum <= page + 1)
+                                  ) {
+                                    return (
+                                      <PaginationItem key={pageNum}>
+                                        <PaginationLink
+                                          onClick={() => setPage(pageNum)}
+                                          isActive={pageNum === page}
+                                          className="cursor-pointer"
+                                        >
+                                          {pageNum}
+                                        </PaginationLink>
+                                      </PaginationItem>
+                                    );
+                                  } else if (
+                                    pageNum === page - 2 ||
+                                    pageNum === page + 2
+                                  ) {
+                                    return (
+                                      <PaginationItem key={pageNum}>
+                                        <PaginationEllipsis />
+                                      </PaginationItem>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                                <PaginationItem>
+                                  <PaginationNext
+                                    onClick={() =>
+                                      page < derivedTotalPages &&
+                                      setPage(page + 1)
+                                    }
+                                    className={
+                                      page === derivedTotalPages || isLoading
+                                        ? "pointer-events-none opacity-50"
+                                        : "cursor-pointer"
+                                    }
+                                  />
+                                </PaginationItem>
+                              </PaginationContent>
+                            </Pagination>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              {t("dashboard.perPage")}
+                            </span>
+                            <Select
+                              value={pageSize.toString()}
+                              onValueChange={(value) =>
+                                setPageSize(parseInt(value))
+                              }
+                            >
+                              <SelectTrigger className="w-24 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1</SelectItem>
+                                <SelectItem value="25">25</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                                <SelectItem value="100">100</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    {totalPages > 1 && (
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              onClick={() => page > 1 && setPage(page - 1)}
-                              className={
-                                page === 1
-                                  ? "pointer-events-none opacity-50"
-                                  : "cursor-pointer"
-                              }
-                            />
-                          </PaginationItem>
-                          {Array.from(
-                            { length: totalPages },
-                            (_, i) => i + 1
-                          ).map((pageNum) => {
-                            if (
-                              pageNum === 1 ||
-                              pageNum === totalPages ||
-                              (pageNum >= page - 1 && pageNum <= page + 1)
-                            ) {
-                              return (
-                                <PaginationItem key={pageNum}>
-                                  <PaginationLink
-                                    onClick={() => setPage(pageNum)}
-                                    isActive={pageNum === page}
-                                    className="cursor-pointer"
-                                  >
-                                    {pageNum}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            } else if (
-                              pageNum === page - 2 ||
-                              pageNum === page + 2
-                            ) {
-                              return (
-                                <PaginationItem key={pageNum}>
-                                  <PaginationEllipsis />
-                                </PaginationItem>
-                              );
-                            }
-                            return null;
-                          })}
-                          <PaginationItem>
-                            <PaginationNext
-                              onClick={() =>
-                                page < totalPages && setPage(page + 1)
-                              }
-                              className={
-                                page === totalPages
-                                  ? "pointer-events-none opacity-50"
-                                  : "cursor-pointer"
-                              }
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    )}
-                  </div>
-                </div>
-              )}
+                  );
+                })()}
             </>
           )}
         </div>

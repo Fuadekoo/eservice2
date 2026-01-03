@@ -115,7 +115,8 @@ export const useOfficeStore = create<OfficeStore>((set, get) => ({
 
       if (result.success) {
         const officesData = Array.isArray(result.data) ? result.data : [];
-        const meta = result.meta || {};
+        // Prefer `pagination` per API, but support legacy `meta`
+        const meta = result.pagination || result.meta || {};
 
         console.log(
           `✅ Loaded ${officesData.length} offices (page ${meta.page}/${
@@ -155,12 +156,24 @@ export const useOfficeStore = create<OfficeStore>((set, get) => ({
           };
         });
 
+        // Derive robust pagination meta when API does not provide totalPages
+        const effectiveLimit = meta.limit || limitToFetch || 1;
+        const effectiveTotal = meta.total ?? 0;
+        const computedTotalPages = Math.max(
+          1,
+          Math.ceil(effectiveTotal / effectiveLimit)
+        );
+        const effectiveTotalPages =
+          meta.totalPages && meta.totalPages > 0
+            ? meta.totalPages
+            : computedTotalPages;
+
         set({
           offices: officesWithDates,
           page: meta.page || pageToFetch,
-          pageSize: meta.limit || limitToFetch,
-          totalPages: meta.totalPages || 1,
-          total: meta.total || 0,
+          pageSize: effectiveLimit,
+          totalPages: effectiveTotalPages,
+          total: effectiveTotal,
           search: searchToFetch,
         });
 

@@ -181,12 +181,17 @@ export default function OfficePage() {
   const PaginationComponent = () => {
     if (total === 0) return null;
 
+    const start = (page - 1) * pageSize + 1;
+    const end = Math.min(page * pageSize, total);
+    const derivedTotalPages = Math.max(1, Math.ceil(total / pageSize));
+
     return (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 mt-6 border-t">
         <div className="text-sm text-muted-foreground font-medium">
-          {page} {t("dashboard.of")} {totalPages} {totalPages === 1 ? t("dashboard.office") : t("dashboard.offices")}
+          {t("dashboard.showing") || "Showing"} {start}{" "}
+          {t("dashboard.to") || "to"} {end} {t("dashboard.of") || "of"} {total}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -200,15 +205,15 @@ export default function OfficePage() {
           >
             {t("dashboard.previous") || "Previous"}
           </Button>
-          {totalPages > 1 && (
+          {derivedTotalPages > 1 && (
             <Pagination>
               <PaginationContent>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                {Array.from({ length: derivedTotalPages }, (_, i) => i + 1).map(
                   (pageNum) => {
                     // Show first page, last page, current page, and pages around current
                     if (
                       pageNum === 1 ||
-                      pageNum === totalPages ||
+                      pageNum === derivedTotalPages ||
                       (pageNum >= page - 1 && pageNum <= page + 1)
                     ) {
                       return (
@@ -222,10 +227,7 @@ export default function OfficePage() {
                           </PaginationLink>
                         </PaginationItem>
                       );
-                    } else if (
-                      pageNum === page - 2 ||
-                      pageNum === page + 2
-                    ) {
+                    } else if (pageNum === page - 2 || pageNum === page + 2) {
                       // Show ellipsis
                       return (
                         <PaginationItem key={`ellipsis-${pageNum}`}>
@@ -243,15 +245,41 @@ export default function OfficePage() {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (page < totalPages) {
+              if (page < derivedTotalPages) {
                 setPage(page + 1);
               }
             }}
-            disabled={page === totalPages}
+            disabled={page === derivedTotalPages}
             className="min-w-[90px]"
           >
             {t("dashboard.next") || "Next"}
           </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {t("dashboard.perPage")}
+            </span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                const newPageSize = Number(v);
+                setPageSize(newPageSize);
+                // Reset to page 1 when changing page size
+                if (page !== 1) {
+                  setPage(1);
+                }
+              }}
+            >
+              <SelectTrigger className="w-[110px] h-8">
+                <SelectValue placeholder="Per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     );
@@ -261,94 +289,70 @@ export default function OfficePage() {
     <>
       <div className="w-full h-dvh overflow-y-auto py-6 space-y-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-4">
-        {loading && data.length === 0 && (
-          <div className="flex items-center justify-center p-8 text-muted-foreground">
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            {t("dashboard.loadingOffices")}
-          </div>
-        )}
-
-        {!loading && data.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-8 text-muted-foreground border rounded-lg">
-            <Building2 className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium">{t("dashboard.noOfficesYet")}</p>
-            <p className="text-sm">
-              {t("dashboard.clickNewOfficeToCreate")}
-            </p>
-          </div>
-        )}
-
-        {/* Header: description + create button */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-muted-foreground">
-            {t("dashboard.createAndManageOffices")}
-          </div>
-          <div>
-            <Button onClick={handleCreateNew} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              {t("dashboard.newOffice")}
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters card */}
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 flex-1">
-                <Input
-                  placeholder={t("dashboard.searchOffices")}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full sm:w-[260px]"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{t("dashboard.perPage")}</span>
-                <Select
-                  value={String(pageSize)}
-                  onValueChange={(v) => {
-                    const newPageSize = Number(v);
-                    setPageSize(newPageSize);
-                    // Reset to page 1 when changing page size
-                    if (page !== 1) {
-                      setPage(1);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-[110px] h-8">
-                    <SelectValue placeholder="Per page" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {loading && data.length === 0 && (
+            <div className="flex items-center justify-center p-8 text-muted-foreground">
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              {t("dashboard.loadingOffices")}
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* Cards grid */}
-        <div className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {data.map((office) => (
-              <OfficeCard
-                key={office.id}
-                office={office}
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
-                onToggleStatus={handleToggleStatusClick}
-                onViewDetails={handleViewDetails}
-              />
-            ))}
+          {!loading && data.length === 0 && (
+            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground border rounded-lg">
+              <Building2 className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium">
+                {t("dashboard.noOfficesYet")}
+              </p>
+              <p className="text-sm">{t("dashboard.clickNewOfficeToCreate")}</p>
+            </div>
+          )}
+
+          {/* Header: description + create button */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-muted-foreground">
+              {t("dashboard.createAndManageOffices")}
+            </div>
+            <div>
+              <Button onClick={handleCreateNew} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                {t("dashboard.newOffice")}
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Pagination at bottom */}
-        {data.length > 0 && <PaginationComponent />}
+          {/* Filters card */}
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 flex-1">
+                  <Input
+                    placeholder={t("dashboard.searchOffices")}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full sm:w-[260px]"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cards grid */}
+          <div className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {data.map((office) => (
+                <OfficeCard
+                  key={office.id}
+                  office={office}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                  onToggleStatus={handleToggleStatusClick}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Pagination at bottom */}
+          {data.length > 0 && <PaginationComponent />}
         </div>
       </div>
 
@@ -357,7 +361,9 @@ export default function OfficePage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedOffice ? t("dashboard.editOffice") : t("dashboard.createNewOffice")}
+              {selectedOffice
+                ? t("dashboard.editOffice")
+                : t("dashboard.createNewOffice")}
             </DialogTitle>
             <DialogDescription>
               {selectedOffice
@@ -392,7 +398,10 @@ export default function OfficePage() {
               </div>
             </div>
             <AlertDialogDescription className="pt-3 text-base">
-              {t("dashboard.deleteOfficeConfirm").replace("{name}", selectedOffice?.name || "")}
+              {t("dashboard.deleteOfficeConfirm").replace(
+                "{name}",
+                selectedOffice?.name || ""
+              )}
               <br />
               <br />
               <span className="text-muted-foreground">
@@ -410,7 +419,9 @@ export default function OfficePage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              {isSubmitting ? t("dashboard.deleting") : t("dashboard.yesDelete")}
+              {isSubmitting
+                ? t("dashboard.deleting")
+                : t("dashboard.yesDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -425,8 +436,14 @@ export default function OfficePage() {
               {selectedOffice && (
                 <>
                   {selectedOffice.status
-                    ? t("dashboard.deactivateOfficeConfirm").replace("{name}", selectedOffice.name)
-                    : t("dashboard.activateOfficeConfirm").replace("{name}", selectedOffice.name)}
+                    ? t("dashboard.deactivateOfficeConfirm").replace(
+                        "{name}",
+                        selectedOffice.name
+                      )
+                    : t("dashboard.activateOfficeConfirm").replace(
+                        "{name}",
+                        selectedOffice.name
+                      )}
                 </>
               )}
             </AlertDialogDescription>

@@ -11,9 +11,17 @@ interface GalleryStore {
   isFormOpen: boolean;
   isDeleteDialogOpen: boolean;
   selectedGallery: Gallery | null;
+  // Pagination state
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 
   // Actions - Fetch
-  fetchGalleries: () => Promise<void>;
+  fetchGalleries: (opts?: {
+    page?: number;
+    pageSize?: number;
+  }) => Promise<void>;
   refreshGalleries: () => Promise<void>;
 
   // Actions - CRUD
@@ -25,6 +33,8 @@ interface GalleryStore {
   setFormOpen: (open: boolean) => void;
   setDeleteDialogOpen: (open: boolean) => void;
   setSelectedGallery: (gallery: Gallery | null) => void;
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
 
   // Helpers
   getGalleryById: (id: string) => Gallery | undefined;
@@ -40,20 +50,32 @@ export const useGalleryStore = create<GalleryStore>((set, get) => ({
   isFormOpen: false,
   isDeleteDialogOpen: false,
   selectedGallery: null,
+  page: 1,
+  pageSize: 12,
+  total: 0,
+  totalPages: 1,
 
   // Fetch galleries from API
-  fetchGalleries: async () => {
+  fetchGalleries: async (opts) => {
     try {
       set({ isLoading: true });
-      console.log("🔄 Fetching galleries...");
-
-      const response = await fetch("/api/gallery", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-store",
+      const currentPage = opts?.page ?? get().page;
+      const currentPageSize = opts?.pageSize ?? get().pageSize;
+      console.log("🔄 Fetching galleries...", {
+        page: currentPage,
+        limit: currentPageSize,
       });
+
+      const response = await fetch(
+        `/api/gallery?page=${currentPage}&limit=${currentPageSize}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -80,7 +102,29 @@ export const useGalleryStore = create<GalleryStore>((set, get) => ({
           images: gallery.images || [],
         }));
 
-        set({ galleries: galleriesWithDates });
+        const pagination = result.pagination || {};
+        const effectiveTotal =
+          typeof pagination.total === "number"
+            ? pagination.total
+            : galleriesWithDates.length;
+        const effectiveLimit =
+          typeof pagination.limit === "number"
+            ? pagination.limit
+            : currentPageSize;
+        const effectivePage =
+          typeof pagination.page === "number" ? pagination.page : currentPage;
+        const effectiveTotalPages = Math.max(
+          1,
+          Math.ceil(effectiveTotal / effectiveLimit)
+        );
+
+        set({
+          galleries: galleriesWithDates,
+          total: effectiveTotal,
+          page: effectivePage,
+          pageSize: effectiveLimit,
+          totalPages: effectiveTotalPages,
+        });
 
         if (galleriesWithDates.length === 0) {
           console.log("ℹ️ No galleries found in database");
@@ -88,12 +132,12 @@ export const useGalleryStore = create<GalleryStore>((set, get) => ({
       } else {
         console.error("❌ API returned error:", result.error);
         toast.error(result.error || "Failed to fetch galleries");
-        set({ galleries: [] });
+        set({ galleries: [], total: 0, totalPages: 1 });
       }
     } catch (error: any) {
       console.error("❌ Error fetching galleries:", error);
       toast.error(error.message || "Failed to fetch galleries");
-      set({ galleries: [] });
+      set({ galleries: [], total: 0, totalPages: 1 });
     } finally {
       set({ isLoading: false });
     }
@@ -241,6 +285,18 @@ export const useGalleryStore = create<GalleryStore>((set, get) => ({
     set({ selectedGallery: gallery });
   },
 
+  setPage: (page: number) => {
+    set({ page });
+    // Refetch with updated pagination
+    get().fetchGalleries({ page, pageSize: get().pageSize });
+  },
+
+  setPageSize: (pageSize: number) => {
+    set({ pageSize, page: 1 });
+    // Reset to page 1 when page size changes and refetch
+    get().fetchGalleries({ page: 1, pageSize });
+  },
+
   // Helpers
   getGalleryById: (id: string) => {
     return get().galleries.find((g) => g.id === id);
@@ -260,4 +316,3 @@ export const useGalleryStore = create<GalleryStore>((set, get) => ({
     }));
   },
 }));
-
