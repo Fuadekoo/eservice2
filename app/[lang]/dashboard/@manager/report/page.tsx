@@ -24,7 +24,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search,
   Loader2,
-  RefreshCw,
   Eye,
   FileText,
   Clock,
@@ -178,9 +177,9 @@ export default function ManagerReportPage() {
 
     return (
       <>
-        <div className="h-dvh overflow-auto">
+        <div className="overflow-x-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
                 <TableHead>{t("dashboard.reportName")}</TableHead>
                 <TableHead>{t("dashboard.description")}</TableHead>
@@ -273,74 +272,83 @@ export default function ManagerReportPage() {
         </div>
 
         {/* Pagination */}
-        {total > 0 && (
-          <div className="border-t p-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-muted-foreground">
-                {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
-                {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
-                {t("dashboard.of")} {total} {t("dashboard.reports")}
-              </div>
-              {totalPages > 1 && (
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => page > 1 && setPage(page - 1)}
-                        className={
-                          page === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (pageNum) => {
-                        if (
-                          pageNum === 1 ||
-                          pageNum === totalPages ||
-                          (pageNum >= page - 1 && pageNum <= page + 1)
-                        ) {
-                          return (
-                            <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => setPage(pageNum)}
-                                isActive={pageNum === page}
-                                className="cursor-pointer"
-                              >
-                                {pageNum}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        } else if (
-                          pageNum === page - 2 ||
-                          pageNum === page + 2
-                        ) {
-                          return (
-                            <PaginationItem key={pageNum}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          );
-                        }
-                        return null;
-                      }
+        {total > 0 &&
+          (() => {
+            const derivedTotalPages = Math.max(1, Math.ceil(total / pageSize));
+            return (
+              <div className="px-4 py-3 border-t sticky bottom-0 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-muted-foreground">
+                    {t("dashboard.showing")} {(page - 1) * pageSize + 1}{" "}
+                    {t("dashboard.to")} {Math.min(page * pageSize, total)}{" "}
+                    {t("dashboard.of")} {total} {t("dashboard.reports")}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {derivedTotalPages > 1 && (
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() => page > 1 && setPage(page - 1)}
+                              className={
+                                page === 1 || isLoading
+                                  ? "pointer-events-none opacity-50"
+                                  : "cursor-pointer"
+                              }
+                            />
+                          </PaginationItem>
+                          {Array.from(
+                            { length: derivedTotalPages },
+                            (_, i) => i + 1
+                          ).map((pageNum) => {
+                            if (
+                              pageNum === 1 ||
+                              pageNum === derivedTotalPages ||
+                              (pageNum >= page - 1 && pageNum <= page + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={pageNum}>
+                                  <PaginationLink
+                                    onClick={() => setPage(pageNum)}
+                                    isActive={pageNum === page}
+                                    className="cursor-pointer"
+                                  >
+                                    {pageNum}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            } else if (
+                              pageNum === page - 2 ||
+                              pageNum === page + 2
+                            ) {
+                              return (
+                                <PaginationItem key={`ellipsis-${pageNum}`}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
+                          })}
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() =>
+                                page < derivedTotalPages && setPage(page + 1)
+                              }
+                              className={
+                                page === derivedTotalPages || isLoading
+                                  ? "pointer-events-none opacity-50"
+                                  : "cursor-pointer"
+                              }
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
                     )}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => page < totalPages && setPage(page + 1)}
-                        className={
-                          page === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-            </div>
-          </div>
-        )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
       </>
     );
   };
@@ -358,16 +366,29 @@ export default function ManagerReportPage() {
               {t("dashboard.viewReceivedAndSentReports")}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fetchReports()}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-          </Button>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {t("dashboard.perPage")}
+            </span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                const ps = parseInt(value);
+                setPageSize(ps);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-24 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Tabs for Received and Sent Reports */}
@@ -436,28 +457,7 @@ export default function ManagerReportPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {t("dashboard.show")}:
-                    </span>
-                    <Select
-                      value={pageSize.toString()}
-                      onValueChange={(value) => setPageSize(parseInt(value))}
-                    >
-                      <SelectTrigger className="w-[80px] h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="25">25</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                        <SelectItem value="100">100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span className="text-sm text-muted-foreground">
-                      {t("dashboard.itemsPerPage")}
-                    </span>
-                  </div>
+                  {/* Per-page selector moved to header to avoid duplication */}
                 </div>
               </CardContent>
             </Card>
@@ -533,28 +533,7 @@ export default function ManagerReportPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {t("dashboard.show")}:
-                    </span>
-                    <Select
-                      value={pageSize.toString()}
-                      onValueChange={(value) => setPageSize(parseInt(value))}
-                    >
-                      <SelectTrigger className="w-[80px] h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="25">25</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                        <SelectItem value="100">100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span className="text-sm text-muted-foreground">
-                      {t("dashboard.itemsPerPage")}
-                    </span>
-                  </div>
+                  {/* Per-page selector moved to header to avoid duplication */}
                 </div>
               </CardContent>
             </Card>

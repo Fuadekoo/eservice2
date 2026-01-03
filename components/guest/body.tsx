@@ -68,7 +68,7 @@ export function Body() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder={t("guest.searchPlaceholder")}
+                  placeholder={t("guest.searchOffices") || "Search offices"}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-4 pr-12 py-3 rounded-lg bg-transparent border-white text-white placeholder:text-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400"

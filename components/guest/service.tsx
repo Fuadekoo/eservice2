@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
@@ -25,6 +25,7 @@ import useTranslation from "@/hooks/useTranslation";
 import Image from "next/image";
 import { getLogoUrl } from "@/lib/utils/logo-url";
 import { useServiceDetailStore } from "@/app/[lang]/(guest)/service/[serviceId]/_store/service-detail-store";
+import Fuse from "fuse.js";
 
 interface Service {
   id: string;
@@ -208,22 +209,34 @@ export default function Service({ searchQuery = "" }: ServiceProps) {
     fetchServiceDetail(serviceId);
   };
 
-  // Filter offices based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setOfficesWithServices(allOfficesWithServices);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = allOfficesWithServices.filter((office) => {
-      const officeName = office.officeName.toLowerCase();
-      const officeSlogan = (office.officeSlogan || "").toLowerCase();
-      return officeName.includes(query) || officeSlogan.includes(query);
+  // Prepare Fuse instance for fast fuzzy searching across office and service names
+  const fuse = useMemo(() => {
+    return new Fuse(allOfficesWithServices, {
+      includeScore: true,
+      threshold: 0.35, // lower is stricter; balanced for quick, relevant matches
+      ignoreLocation: true,
+      minMatchCharLength: 2,
+      keys: [
+        { name: "officeName", weight: 0.7 },
+        { name: "officeSlogan", weight: 0.2 },
+        { name: "services.name", weight: 0.1 },
+      ],
     });
+  }, [allOfficesWithServices]);
 
-    setOfficesWithServices(filtered);
-  }, [searchQuery, allOfficesWithServices]);
+  // Fuzzy filter offices based on search query with a small debounce
+  useEffect(() => {
+    const q = searchQuery.trim();
+    const handle = setTimeout(() => {
+      if (!q) {
+        setOfficesWithServices(allOfficesWithServices);
+      } else {
+        const results = fuse.search(q);
+        setOfficesWithServices(results.map((r) => r.item));
+      }
+    }, 200);
+    return () => clearTimeout(handle);
+  }, [searchQuery, fuse, allOfficesWithServices]);
 
   if (isLoading) {
     return (
