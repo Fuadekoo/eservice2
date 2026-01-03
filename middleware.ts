@@ -6,7 +6,7 @@ const SUPPORTED_LANGUAGES = ["en", "am", "or"];
 
 // Initialize rate limiters for different purposes
 const authLimiter = rateLimit({
-  interval: 15 * 60 * 1000, // 15 minutes
+  interval: 10 * 1000, // 10 seconds
   uniqueTokenPerInterval: 500,
 });
 
@@ -17,36 +17,52 @@ const apiLimiter = rateLimit({
 
 export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  
+
   // Get IP address
   const forwarded = req.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(',')[0] : "127.0.0.1";
+  const ip = forwarded ? forwarded.split(",")[0] : "127.0.0.1";
 
   // Rate limiting for sensitive API routes
   if (
-    pathname.startsWith("/api/auth/login") || 
-    pathname.startsWith("/api/auth/signup") || 
+    pathname.startsWith("/api/auth/login") ||
+    pathname.startsWith("/api/auth/signup") ||
     pathname.startsWith("/api/auth/reset-password") ||
     pathname.startsWith("/api/auth/change-password") ||
-    pathname.startsWith("/api/otp/") || 
+    pathname.startsWith("/api/otp/") ||
     pathname.startsWith("/api/hahusms/")
   ) {
-    const isAllowed = authLimiter.check(new Response(), `auth_${ip}`, 5); // 5 attempts per 15 mins
-    if (!isAllowed) {
+    const rl = authLimiter.check(new Response(), `auth_${ip}`, 5); // 5 attempts per 10 seconds
+    if (!rl.allowed) {
       return NextResponse.json(
-        { error: "Too many attempts. Please try again later." },
-        { status: 429 }
+        {
+          error: "Too many attempts. Please try again.",
+          retryAfterSeconds: rl.retryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rl.retryAfterSeconds),
+          },
+        }
       );
     }
   }
 
   // General API rate limiting (optional, but good for security)
   if (pathname.startsWith("/api/") && !pathname.startsWith("/api/docs")) {
-    const isAllowed = apiLimiter.check(new Response(), `api_${ip}`, 60); // 60 requests per minute
-    if (!isAllowed) {
+    const rl = apiLimiter.check(new Response(), `api_${ip}`, 60); // 60 requests per minute
+    if (!rl.allowed) {
       return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later." },
-        { status: 429 }
+        {
+          error: "Rate limit exceeded. Please try again.",
+          retryAfterSeconds: rl.retryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rl.retryAfterSeconds),
+          },
+        }
       );
     }
   }

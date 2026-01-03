@@ -3,23 +3,36 @@ export interface RateLimitConfig {
   uniqueTokenPerInterval: number; // Max number of unique tokens per interval
 }
 
+export interface RateLimitResult {
+  allowed: boolean;
+  retryAfterSeconds: number;
+}
+
 export function rateLimit(options?: RateLimitConfig) {
   const tokenCache = new Map();
   const interval = options?.interval || 60000; // 1 minute default
   const limit = options?.uniqueTokenPerInterval || 500;
 
   return {
-    check: (res: Response, token: string, limitCount: number) => {
+    check: (
+      _res: Response,
+      token: string,
+      limitCount: number
+    ): RateLimitResult => {
       const now = Date.now();
       const tokenCount = tokenCache.get(token) || [0];
-      
+
       if (tokenCount[0] === 0) {
         tokenCache.set(token, [1, now]);
       } else {
         const [count, timestamp] = tokenCount;
         if (now - timestamp < interval) {
           if (count >= limitCount) {
-            return false;
+            const retryAfterMs = interval - (now - timestamp);
+            return {
+              allowed: false,
+              retryAfterSeconds: Math.max(1, Math.ceil(retryAfterMs / 1000)),
+            };
           }
           tokenCache.set(token, [count + 1, timestamp]);
         } else {
@@ -37,8 +50,7 @@ export function rateLimit(options?: RateLimitConfig) {
         }
       }
 
-      return true;
+      return { allowed: true, retryAfterSeconds: 0 };
     },
   };
 }
-
