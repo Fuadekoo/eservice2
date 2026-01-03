@@ -48,9 +48,16 @@ export default function middleware(req: NextRequest) {
     }
   }
 
-  // General API rate limiting (optional, but good for security)
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/docs")) {
-    const rl = apiLimiter.check(new Response(), `api_${ip}`, 60); // 60 requests per minute
+  // General API rate limiting (apply mainly to write actions to avoid blocking normal GET fetches)
+  const method = req.method.toUpperCase();
+  const isWriteMethod = method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
+
+  if (
+    isWriteMethod &&
+    pathname.startsWith("/api/") &&
+    !pathname.startsWith("/api/docs")
+  ) {
+    const rl = apiLimiter.check(new Response(), `api_${ip}`, 300); // 300 write requests per minute
     if (!rl.allowed) {
       return NextResponse.json(
         {
