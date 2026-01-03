@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requirePermission } from "@/lib/rbac";
-import { sendHahuSMS } from "@/lib/utils/hahu-sms";
+
+import { sendSMS } from "@/lib/utils/sms";
 
 /**
  * POST - Approve request as manager (requires request:approve-manager permission)
@@ -12,7 +13,10 @@ export async function POST(
 ) {
   try {
     // Check permission
-    const { response, userId } = await requirePermission(request, "request:approve-manager");
+    const { response, userId } = await requirePermission(
+      request,
+      "request:approve-manager"
+    );
     if (response) return response;
     if (!userId) {
       return NextResponse.json(
@@ -196,7 +200,12 @@ Odeeffannoo gammachuu! Gaaffii tajaajilaa keessan manaajeriin milkaa'eera.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Tajaajilaa: ${updatedRequest.service.name}
 ID Gaaffii: ${updatedRequest.id.slice(0, 8).toUpperCase()}
-Guyyaa Gaaffii: ${new Date(updatedRequest.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Guyyaa Gaaffii: ${new Date(updatedRequest.date).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
 Haala: ✅ MILKAA'EERA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -205,18 +214,20 @@ Waajjira: ${updatedRequest.service.office.name}
 Kutaa: ${updatedRequest.service.office.roomNumber}
 Teessoo: ${updatedRequest.service.office.address}
 
-${note ? `📝 Barreeffama Manaajerii: ${note}\n\n` : ''}Hojii Itti Aanuu:
-Gaaffii keessan amma hojii irratti jira. Yeroo dhiyeessaan hojii itti aanuu fi walgahii irratti nuun qunnamti.
+${note ? `📝 Barreeffama Manaajerii: ${note}\n\n` : ""}Hojii Itti Aanuu:
+Gaaffii keessan amma hojii irratti jira. Yeroo isinit toluu systema irra filadhati ragaa kessan yoo qaman fudhachuu barbadan nu qunamaa.
 
 Haala gaaffii keessan dashboard fayyadamaa keessan irratti ilaaluu dandeessan.
 
-E-Service Platform fayyadamuuf galata guddaa!
+Systema Kenya Wan fayyadamtanif Galatomaa!
 
-Haala gaariin,
-Gareen E-Service Platform`;
+guyaa garii fi milkii hawwina!,
+Godinaa shawa baha irraa`;
 
-        await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
-        console.log(`✅ Approval SMS sent to customer: ${updatedRequest.user.phoneNumber}`);
+        await sendSMS(updatedRequest.user.phoneNumber, customerMessage);
+        console.log(
+          `✅ Approval SMS sent to customer: ${updatedRequest.user.phoneNumber}`
+        );
       } catch (smsError: any) {
         console.error("⚠️ Failed to send approval SMS to customer:", smsError);
       }
@@ -226,7 +237,7 @@ Gareen E-Service Platform`;
 
 Maaloo ${updatedRequest.user.username},
 
-Gaaffii tajaajilaa keessan ilaalamtee yeroo kanaan milkaa'uu hin dandeenye jedhuun gaddisiisaa jirra.
+Gaaffii tajaajilaa keessan ilaalamtee yeroo kanaan milkaa'uu hin dandeenye ta uu issa dhifamaa gudaa walini isinif ibsinaa.
 
 📋 Odeeffannoo Gaaffii:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -235,15 +246,21 @@ ID Gaaffii: ${updatedRequest.id.slice(0, 8).toUpperCase()}
 Haala: ❌ HIN MILKAA'AMNE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${note ? `📝 Sababa: ${note}\n\n` : '📝 Odeeffannoo dabalataa argachuuf waajjira qunnamti.\n\n'}Gaaffii ykn murtii kana irratti mari'achuuf barbaaddan, waajjira qunnamti.
+${
+  note
+    ? `📝 Sababa: ${note}\n\n`
+    : "📝 Odeeffannoo dabalataa argachuuf waajjira qamaan argamuu dandesuuu.\n\n"
+}Gaaffii ykn murtii kana irratti mari'achuuf barbaaddan, waajjira kenna qamaan dhufuu ni dandesuu.
 
-Rakkoo ta'eef dhiifama gaafanna.
+wan issin hin kesumessinif  dhiifama gaafanna.
 
-Haala gaariin,
-Gareen E-Service Platform`;
+Guyaa garii fi milkii hawwina!,
+Godinaa shawaa bahaa irraa`;
 
-        await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
-        console.log(`✅ Rejection SMS sent to customer: ${updatedRequest.user.phoneNumber}`);
+        await sendSMS(updatedRequest.user.phoneNumber, customerMessage);
+        console.log(
+          `✅ Rejection SMS sent to customer: ${updatedRequest.user.phoneNumber}`
+        );
       } catch (smsError: any) {
         console.error("⚠️ Failed to send rejection SMS to customer:", smsError);
       }

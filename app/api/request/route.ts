@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requirePermission, requireAnyPermission } from "@/lib/rbac";
 import { randomUUID } from "crypto";
-import { sendHahuSMS } from "@/lib/utils/hahu-sms";
 import { generateRequestNumber } from "@/lib/utils";
+import { sendSMS } from "@/lib/utils/sms";
 
 /**
  * @swagger
@@ -225,7 +225,10 @@ import { generateRequestNumber } from "@/lib/utils";
 export async function POST(request: NextRequest) {
   try {
     // Check permission
-    const { response, userId } = await requirePermission(request, "request:create");
+    const { response, userId } = await requirePermission(
+      request,
+      "request:create"
+    );
     if (response) return response;
     if (!userId) {
       return NextResponse.json(
@@ -388,7 +391,12 @@ Maqaa Tajaajilaa: ${service.name}
 Maqaa Fayyadamaa: ${newRequest.user.username}
 Lakkoofsa Bilbilaa: ${newRequest.user.phoneNumber}
 Teessoo Tajaajilaa: ${currentAddress}
-Guyyaa Gaaffii: ${new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Guyyaa Gaaffii: ${new Date(date).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
 Lakkoofsa Gaaffii: ${requestNumber}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -398,16 +406,16 @@ Lakkoofsa Kutaa: ${service.office.roomNumber}
 Teessoo Waajjiraa: ${service.office.address}
 
 ⚠️ Hojii Barbaachisa:
-Maaloo dashboard hojjettoota keessan keessatti seenee gaaffii kana ilaaluu fi hojjachuuf yeroo dhiyeessaan.
+Maaloo dashboard hojjettoota keessan keessatti seenee gaaffii kana ilaaluun furmata hatatama abadhimatif kennaa.
 
-Fayyadamaa keessan deebii keessan eegaa jira. Hojii keessan yeroo qabduu tajaajila gaarii taasisuuf gargaara.
+Fayyadamaa keessan deebii keessan eegaa jira. furmata hatatama kennafii.
 
-Hojii keessan irratti galata guddaa.
+tatafiii godha jirtan irrati galataa gudda qabduu.
 
-E-Service Platform`;
+Godina Shawa Bahaa irraa`;
 
         try {
-          await sendHahuSMS(staffPhone, staffMessage);
+          await sendSMS(staffPhone, staffMessage);
           console.log(`✅ Notification SMS sent to staff: ${staffPhone}`);
         } catch (error: any) {
           console.error(`⚠️ Failed to send SMS to staff ${staffPhone}:`, error);
@@ -415,7 +423,9 @@ E-Service Platform`;
       });
 
       await Promise.allSettled(smsPromises);
-      console.log(`✅ Sent notifications to ${assignedStaff.length} staff member(s)`);
+      console.log(
+        `✅ Sent notifications to ${assignedStaff.length} staff member(s)`
+      );
     } catch (smsError: any) {
       // Don't fail request creation if SMS fails
       console.error("⚠️ Failed to send notification SMS to staff:", smsError);
@@ -581,16 +591,10 @@ export async function GET(request: NextRequest) {
     // or where at least one is pending (for pending)
     if (status) {
       if (status === "pending") {
-        where.OR = [
-          { statusbystaff: "pending" },
-          { statusbyadmin: "pending" },
-        ];
+        where.OR = [{ statusbystaff: "pending" }, { statusbyadmin: "pending" }];
       } else {
         // For approved/rejected, both must match
-        where.AND = [
-          { statusbystaff: status },
-          { statusbyadmin: status },
-        ];
+        where.AND = [{ statusbystaff: status }, { statusbyadmin: status }];
       }
     }
 
@@ -644,7 +648,7 @@ export async function GET(request: NextRequest) {
           select: { serviceId: true },
         });
         const serviceIds = assignedServices.map((a) => a.serviceId);
-        
+
         if (serviceIds.length > 0) {
           where.AND = [
             {

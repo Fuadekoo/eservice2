@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { requirePermission } from "@/lib/rbac";
 import { canStaffApproveService } from "@/lib/service-staff-assignment";
-import { sendHahuSMS } from "@/lib/utils/hahu-sms";
+import { sendSMS } from "@/lib/utils/sms";
 
 /**
  * POST - Approve request as staff (requires request:approve-staff permission)
@@ -13,7 +13,10 @@ export async function POST(
 ) {
   try {
     // Check permission
-    const { response, userId } = await requirePermission(request, "request:approve-staff");
+    const { response, userId } = await requirePermission(
+      request,
+      "request:approve-staff"
+    );
     if (response) return response;
     if (!userId) {
       return NextResponse.json(
@@ -219,9 +222,9 @@ Haala gaaffii keessan fi walgahii adda addaa dashboard fayyadamaa keessan irratt
 E-Service Platform filachuuf galata guddaa!
 
 Haala gaariin,
-Gareen E-Service Platform`;
+Godinaa shawa baha irraa`;
 
-          await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
+          await sendSMS(updatedRequest.user.phoneNumber, customerMessage);
           console.log(
             `✅ Final approval SMS sent to customer: ${updatedRequest.user.phoneNumber}`
           );
@@ -254,9 +257,8 @@ ${
 Obseessuu keessan irratti galata guddaa.
 
 Haala gaariin,
-Gareen E-Service Platform`;
-
-          await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
+Godina Shawa Bahaa irraa`;
+          await sendSMS(updatedRequest.user.phoneNumber, customerMessage);
           console.log(
             `✅ Staff approval SMS sent to customer: ${updatedRequest.user.phoneNumber}`
           );
@@ -293,7 +295,7 @@ Rakkoo ta'eef dhiifama gaafanna. Hubannoo keessan irratti galata guddaa.
 Haala gaariin,
 Gareen E-Service Platform`;
 
-        await sendHahuSMS(updatedRequest.user.phoneNumber, customerMessage);
+        await sendSMS(updatedRequest.user.phoneNumber, customerMessage);
         console.log(
           `✅ Rejection SMS sent to customer: ${updatedRequest.user.phoneNumber}`
         );

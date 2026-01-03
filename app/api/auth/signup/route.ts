@@ -3,7 +3,7 @@ import prisma from "@/lib/db";
 import { normalizePhoneNumber } from "@/lib/utils/phone-number";
 import bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
-import { sendHahuSMS } from "@/lib/utils/hahu-sms";
+import { sendSMS } from "@/lib/utils/sms";
 
 /**
  * @swagger
@@ -113,7 +113,10 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!name || !phoneNumber || !password) {
       return NextResponse.json(
-        { success: false, error: "Name, phone number, and password are required" },
+        {
+          success: false,
+          error: "Name, phone number, and password are required",
+        },
         { status: 400 }
       );
     }
@@ -227,14 +230,12 @@ Amma kan dandeessan:
 • Odeeffannoo gaaffii keessan irratti argachuu
 • Profaayilii fi filannoo keessan bulchuu
 
-E-Service Platform filachuuf galata guddaa. Tajaajila gaarii siif kennuuf haala hunda goona.
+Systema kenyaa wan Filatanif baayee  galatomma.
 
-Gaaffii ykn deeggarsa ta'ee, nu qunnamtii siif gochuuf hirkanneessina.
+yeroo Fariii isinif hawwinaa!,
+Godina shawa baha irraa`;
 
-Haala gaariin,
-Gareen E-Service Platform`;
-
-      await sendHahuSMS(normalizedPhone, welcomeMessage);
+      await sendSMS(normalizedPhone, welcomeMessage);
       console.log("✅ Welcome SMS sent to customer:", normalizedPhone);
     } catch (smsError: any) {
       // Don't fail registration if SMS fails
@@ -262,5 +263,3 @@ Gareen E-Service Platform`;
     );
   }
 }
-
-
