@@ -250,40 +250,6 @@ export default function ApplyServicePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedOfficeId, form.watch("date")]);
 
-  // Group slots into time-of-day categories similar to the reference UI
-  const categoryDefs = useMemo(
-    () => [
-      { key: "midnight", label: "Midnight", start: 0, end: 330 }, // 00:00 - 05:30
-      { key: "fajr", label: "Fajr", start: 330, end: 420 }, // 05:30 - 07:00
-      {
-        key: "morning",
-        label: t("dashboard.morning") || "Morning",
-        start: 420,
-        end: 720,
-      }, // 07:00-12:00
-      { key: "zuhur", label: "Zuhur", start: 720, end: 900 }, // 12:00-15:00
-      { key: "asr", label: "Asr", start: 900, end: 1020 }, // 15:00-17:00
-      { key: "maghrib", label: "Maghrib", start: 1020, end: 1140 }, // 17:00-19:00
-      { key: "isha", label: "Isha", start: 1140, end: 1440 }, // 19:00-24:00
-    ],
-    [t]
-  );
-
-  const categorizedSlots = useMemo(() => {
-    const toMinutes = (time: string) => {
-      const [h, m] = time.split(":").map(Number);
-      return h * 60 + m;
-    };
-    const byCategory: Record<string, string[]> = {};
-    categoryDefs.forEach((c) => (byCategory[c.key] = []));
-    availableSlots.forEach((s) => {
-      const mins = toMinutes(s);
-      const cat = categoryDefs.find((c) => mins >= c.start && mins < c.end);
-      if (cat) byCategory[cat.key].push(s);
-    });
-    return byCategory;
-  }, [availableSlots, categoryDefs]);
-
   return (
     <div
       ref={containerRef}
@@ -409,77 +375,7 @@ export default function ApplyServicePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Preferred Time Slot Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-semibold">
-                    {tr(
-                      "dashboard.selectPreferredTimeSlot",
-                      "Select Preferred Time Slot"
-                    )}
-                  </h4>
-                </div>
 
-                {/* Slots content */}
-                <div className="space-y-3">
-                  {slotsLoading && (
-                    <div className="p-4 border rounded-md flex items-center gap-2 text-sm">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {t("dashboard.loadingSlots") ||
-                        "Loading available time slots..."}
-                    </div>
-                  )}
-                  {!slotsLoading && slotError && (
-                    <div className="p-4 border rounded-md text-sm text-destructive bg-destructive/5">
-                      {slotError}
-                    </div>
-                  )}
-
-                  {!slotsLoading && availableSlots.length > 0 && (
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {(slotFilter === "all"
-                        ? categoryDefs
-                        : categoryDefs.filter((c) => c.key === slotFilter)
-                      ).map((cat) => {
-                        const slots = categorizedSlots[cat.key] || [];
-                        if (slots.length === 0) return null;
-                        return (
-                          <Card key={cat.key} className="border rounded-xl">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-base flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-                                {cat.label}
-                              </CardTitle>
-                              <CardDescription>
-                                {t("dashboard.available") || "Available"}:{" "}
-                                {slots.length}
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-2 gap-3">
-                              {slots.map((s) => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  onClick={() => setSelectedSlot(s)}
-                                  className={`text-left border rounded-lg px-3 py-3 transition shadow-sm hover:shadow ${
-                                    selectedSlot === s
-                                      ? "border-primary ring-2 ring-primary/30"
-                                      : "border-muted"
-                                  }`}
-                                >
-                                  <div className="font-semibold">{s}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {t("dashboard.available") || "Available"}
-                                  </div>
-                                </button>
-                              ))}
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
               <Controller
                 control={form.control}
                 name="serviceId"
