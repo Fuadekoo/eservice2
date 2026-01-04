@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { requirePermission } from "@/lib/rbac";
 
 const FILEDATA_DIR = path.join(process.cwd(), "filedata");
 // Remove the UPLOAD_DIR and use FILEDATA_DIR directly
@@ -11,11 +12,25 @@ function getTimestampUUID(ext: string) {
 
 export async function POST(req: Request) {
   try {
+    // Check permission (same as /api/upload/request-file)
+    const { response, userId } = await requirePermission(
+      req as any,
+      "file:upload"
+    );
+    if (response) return response as any;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const form = await req.formData();
     const chunk = form.get("chunk") as File | null;
     let filename = (form.get("filename") as string | null) || null;
     const chunkIndexStr = form.get("chunkIndex") as string | null;
     const totalChunksStr = form.get("totalChunks") as string | null;
+    const totalSizeStr = form.get("totalSize") as string | null;
 
     if (!chunk || chunk.size === 0) {
       return NextResponse.json(
@@ -28,6 +43,26 @@ export async function POST(req: Request) {
         { error: "Missing chunk indexes" },
         { status: 400 }
       );
+    }
+
+    // Basic validation: allow only common image extensions and PDFs
+    const candidateName = filename || (chunk.name as string | undefined) || "";
+    const extWithDot = path.extname(candidateName).toLowerCase();
+    const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".pdf"];
+    if (extWithDot && !allowedExts.includes(extWithDot)) {
+      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+    }
+
+    // Optional total size limit (client can send totalSize)
+    if (totalSizeStr) {
+      const totalSize = parseInt(totalSizeStr, 10);
+      const maxTotalSize = 50 * 1024 * 1024; // 50MB
+      if (Number.isFinite(totalSize) && totalSize > maxTotalSize) {
+        return NextResponse.json(
+          { error: "File size exceeds 50MB limit" },
+          { status: 400 }
+        );
+      }
     }
 
     // Ensure directory exists

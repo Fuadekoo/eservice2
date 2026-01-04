@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
+import { createWriteStream } from "fs";
 import path from "path";
 import { requirePermission } from "@/lib/rbac";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 
 const FILEDATA_DIR = path.join(process.cwd(), "filedata");
 
@@ -30,7 +33,10 @@ function generateFilename(originalName: string): string {
 export async function POST(request: NextRequest) {
   try {
     // Check permission
-    const { response, userId } = await requirePermission(request, "file:upload");
+    const { response, userId } = await requirePermission(
+      request,
+      "file:upload"
+    );
     if (response) return response;
     if (!userId) {
       return NextResponse.json(
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
       "image/webp",
       "application/pdf",
     ];
-    
+
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         {
@@ -78,6 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file size (max 10MB)
+    // Larger files should use chunked upload via /api/upload
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       return NextResponse.json(
@@ -93,11 +100,11 @@ export async function POST(request: NextRequest) {
     const filename = generateFilename(file.name);
     const filePath = path.join(FILEDATA_DIR, filename);
 
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    await fs.writeFile(filePath, buffer);
+    // Stream file to disk to avoid buffering large payloads in memory
+    await pipeline(
+      Readable.fromWeb(file.stream() as any),
+      createWriteStream(filePath)
+    );
 
     // Return the file path (will be served via API endpoint)
     const filepath = `filedata/${filename}`;
@@ -122,4 +129,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

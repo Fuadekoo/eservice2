@@ -174,10 +174,17 @@ export const useApplyServiceStore = create<ApplyServiceStore>((set, get) => ({
         return;
       }
 
-      // Validate file size (10MB)
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        toast.error(`${file.name} exceeds 10MB limit.`);
+      // Validate file size
+      // Images: 10MB (keeps UI snappy)
+      // PDFs: allow larger via chunked upload (up to 50MB)
+      const maxImageSize = 10 * 1024 * 1024;
+      const maxPdfSize = 50 * 1024 * 1024;
+      if (isImage && file.size > maxImageSize) {
+        toast.error(`${file.name} exceeds 10MB image limit.`);
+        return;
+      }
+      if (isPDF && file.size > maxPdfSize) {
+        toast.error(`${file.name} exceeds 50MB PDF limit.`);
         return;
       }
 
@@ -226,9 +233,9 @@ export const useApplyServiceStore = create<ApplyServiceStore>((set, get) => ({
       // Upload files first
       const uploadedFiles: UploadedFile[] = [];
 
-      for (const filePreview of get().files) {
+      const uploadSmallFile = async (file: File) => {
         const formData = new FormData();
-        formData.append("file", filePreview.file);
+        formData.append("file", file);
 
         const uploadResponse = await fetch("/api/upload/request-file", {
           method: "POST",
@@ -236,14 +243,77 @@ export const useApplyServiceStore = create<ApplyServiceStore>((set, get) => ({
         });
 
         const uploadResult = await uploadResponse.json();
-        if (uploadResult.success) {
+        if (uploadResult?.success) {
+          return uploadResult.data?.filepath as string;
+        }
+
+        const message =
+          uploadResult?.error ||
+          `Failed to upload file (${uploadResponse.status})`;
+        throw new Error(message);
+      };
+
+      const uploadChunkedFile = async (file: File) => {
+        const chunkSize = 2 * 1024 * 1024; // 2MB
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        const ext = file.name.includes(".")
+          ? `.${file.name.split(".").pop()}`
+          : "";
+        const uniqueName = `req-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}${ext}`;
+
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+          const start = chunkIndex * chunkSize;
+          const end = Math.min(start + chunkSize, file.size);
+          const chunkBlob = file.slice(start, end);
+
+          const formData = new FormData();
+          formData.append("chunk", chunkBlob, uniqueName);
+          formData.append("filename", uniqueName);
+          formData.append("chunkIndex", String(chunkIndex));
+          formData.append("totalChunks", String(totalChunks));
+          formData.append("totalSize", String(file.size));
+
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const json = await res.json();
+          if (!res.ok || !json?.success) {
+            const message =
+              json?.error || `Chunk upload failed (${res.status})`;
+            throw new Error(message);
+          }
+
+          // Final chunk returns the filename
+          if (chunkIndex + 1 === totalChunks) {
+            const finalName = (json.filename as string) || uniqueName;
+            return `filedata/${finalName}`;
+          }
+        }
+
+        throw new Error("Chunk upload failed");
+      };
+
+      for (const filePreview of get().files) {
+        const file = filePreview.file;
+
+        // Use chunked upload for larger files to avoid slow failures/timeouts
+        const useChunked = file.size > 10 * 1024 * 1024;
+        const filepath = useChunked
+          ? await uploadChunkedFile(file)
+          : await uploadSmallFile(file);
+
+        if (filepath) {
           uploadedFiles.push({
-            name: filePreview.file.name,
-            filepath: uploadResult.data.filepath,
+            name: file.name,
+            filepath,
             description: data.notes || undefined,
           });
         } else {
-          throw new Error(uploadResult.error || "Failed to upload file");
+          throw new Error("Failed to upload file");
         }
       }
 
