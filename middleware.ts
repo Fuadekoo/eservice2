@@ -22,6 +22,9 @@ export default function middleware(req: NextRequest) {
   const forwarded = req.headers.get("x-forwarded-for");
   const ip = forwarded ? forwarded.split(",")[0] : "127.0.0.1";
 
+  // Rate limiting is temporarily DISABLED (commented out) for today.
+  // Re-enable by removing the block comment below.
+  /*
   // Rate limiting for sensitive API routes
   if (
     pathname.startsWith("/api/auth/login") ||
@@ -50,7 +53,8 @@ export default function middleware(req: NextRequest) {
 
   // General API rate limiting (apply mainly to write actions to avoid blocking normal GET fetches)
   const method = req.method.toUpperCase();
-  const isWriteMethod = method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
+  const isWriteMethod =
+    method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
 
   if (
     isWriteMethod &&
@@ -73,6 +77,7 @@ export default function middleware(req: NextRequest) {
       );
     }
   }
+  */
 
   // Skip middleware for API routes, static files, docs, and Next.js internals for language redirection
   if (
