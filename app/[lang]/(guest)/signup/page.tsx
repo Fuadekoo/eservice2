@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormOTPInput } from "@/components/form-otp";
 import { SignUpSchema, signUpSchema } from "./_schema";
 import { Loader2, User, Phone, KeyRound, Lock } from "lucide-react";
 import Image from "next/image";
@@ -21,19 +20,7 @@ export default function SignUpPage() {
   const lang = params.lang || "en";
   const { t } = useTranslation();
 
-  const {
-    step,
-    phoneNumber,
-    otpVerified,
-    countdown,
-    isSendingOTP,
-    isVerifyingOTP,
-    isRegistering,
-    setStep,
-    sendOTP,
-    verifyOTP,
-    register,
-  } = useSignUpStore();
+  const { step, isRegistering, setStep, register } = useSignUpStore();
 
   const form = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema),
@@ -42,41 +29,13 @@ export default function SignUpPage() {
       password: "",
       confirmPassword: "",
       name: "",
-      otpCode: "",
     },
   });
 
-  // Format countdown as SS (seconds only) or MM:SS if over 60 seconds
-  const formatCountdown = (seconds: number) => {
-    if (seconds < 60) {
-      return `${seconds}s`;
-    }
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const handleSendOTP = async () => {
-    // Validate form before sending OTP
+  const handleContinueToPassword = async () => {
     const isValid = await form.trigger(["name", "phoneNumber"]);
-    if (!isValid) {
-      return;
-    }
-
-    const phone = form.getValues("phoneNumber");
-    await sendOTP(phone);
-  };
-
-  const handleVerifyOTP = async () => {
-    const otpCode = form.getValues("otpCode");
-    if (!otpCode) {
-      return;
-    }
-
-    const normalizedPhone = phoneNumber || form.getValues("phoneNumber");
-    await verifyOTP(normalizedPhone, otpCode);
+    if (!isValid) return;
+    setStep("password");
   };
 
   const handleRegister = form.handleSubmit(async (data) => {
@@ -108,12 +67,7 @@ export default function SignUpPage() {
                 step === "details"
                   ? (e) => {
                       e.preventDefault();
-                      handleSendOTP();
-                    }
-                  : step === "otp"
-                  ? (e) => {
-                      e.preventDefault();
-                      handleVerifyOTP();
+                      handleContinueToPassword();
                     }
                   : handleRegister
               }
@@ -171,85 +125,17 @@ export default function SignUpPage() {
 
                   <Button
                     type="submit"
-                    disabled={form.formState.isSubmitting || isSendingOTP}
+                    disabled={form.formState.isSubmitting}
                     className="w-full"
                   >
-                    {(form.formState.isSubmitting || isSendingOTP) && (
+                    {form.formState.isSubmitting && (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     )}
-                    {isSendingOTP ? t("guest.sendingOTP") : t("guest.getOTP")}
+                    {t("common.next")}
                   </Button>
-                </>
-              ) : step === "otp" ? (
-                <>
-                  {/* Countdown Timer */}
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-blue-800 dark:text-blue-300">
-                        {t("guest.otpSentTo")}{" "}
-                        <span className="font-semibold">{phoneNumber}</span>
-                      </p>
-                      {countdown > 0 ? (
-                        <div className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">
-                          {formatCountdown(countdown)}
-                        </div>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleSendOTP}
-                          disabled={isSendingOTP}
-                        >
-                          {isSendingOTP ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            t("guest.resend")
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <FormOTPInput
-                    control={form.control}
-                    name="otpCode"
-                    label={t("guest.otpCode")}
-                    description={t("guest.otpDescription")}
-                    length={6}
-                  />
-
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep("details")}
-                      className="flex-1"
-                    >
-                      {t("guest.back")}
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={form.formState.isSubmitting || isVerifyingOTP}
-                      className="flex-1"
-                    >
-                      {(form.formState.isSubmitting || isVerifyingOTP) && (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      )}
-                      {isVerifyingOTP
-                        ? t("guest.verifying")
-                        : t("guest.verifyContinue")}
-                    </Button>
-                  </div>
                 </>
               ) : (
                 <>
-                  <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg mb-4">
-                    <p className="text-sm text-green-800 dark:text-green-300 text-center">
-                      {t("guest.otpVerified")}
-                    </p>
-                  </div>
-
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
                       {t("auth.password")}
@@ -297,7 +183,7 @@ export default function SignUpPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setStep("otp")}
+                      onClick={() => setStep("details")}
                       className="flex-1"
                     >
                       {t("guest.back")}
